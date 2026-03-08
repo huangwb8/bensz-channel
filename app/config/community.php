@@ -1,5 +1,24 @@
 <?php
 
+$enabledAuthMethods = array_values(array_intersect(
+    ['email_code', 'email_password', 'wechat_qr', 'qq_qr'],
+    array_filter(array_map('trim', explode(',', (string) env('AUTH_ENABLED_METHODS', 'email_code,email_password,wechat_qr,qq_qr')))),
+));
+
+if ($enabledAuthMethods === []) {
+    $enabledAuthMethods = ['email_code', 'email_password', 'wechat_qr', 'qq_qr'];
+}
+
+$qrProviders = [];
+
+if (in_array('wechat_qr', $enabledAuthMethods, true)) {
+    $qrProviders[] = 'wechat';
+}
+
+if (in_array('qq_qr', $enabledAuthMethods, true)) {
+    $qrProviders[] = 'qq';
+}
+
 return [
     'site' => [
         'name' => env('SITE_NAME', 'Bensz Channel'),
@@ -12,7 +31,8 @@ return [
         'otp_length' => (int) env('AUTH_OTP_LENGTH', 6),
         'qr_ttl_minutes' => (int) env('AUTH_QR_TTL', 10),
         'preview_codes' => filter_var(env('AUTH_PREVIEW_CODES', true), FILTER_VALIDATE_BOOL),
-        'qr_providers' => ['wechat', 'qq'],
+        'enabled_methods' => $enabledAuthMethods,
+        'qr_providers' => $qrProviders,
     ],
 
     'admin' => [

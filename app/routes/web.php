@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ArticleController as AdminArticleController;
 use App\Http\Controllers\Admin\ChannelController as AdminChannelController;
 use App\Http\Controllers\Admin\DevtoolsController as AdminDevtoolsController;
+use App\Http\Controllers\Admin\SiteSettingsController as AdminSiteSettingsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\Auth\LoginController;
@@ -18,6 +19,7 @@ Route::get('/', HomeController::class)->name('home');
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/auth/code', [LoginController::class, 'sendCode'])->name('auth.code.send');
 Route::post('/auth/verify', [LoginController::class, 'verifyCode'])->name('auth.code.verify');
+Route::post('/auth/password', [LoginController::class, 'loginWithPassword'])->name('auth.password.login');
 Route::post('/auth/qr/{provider}', [LoginController::class, 'startQr'])->name('auth.qr.start');
 Route::get('/auth/qr/{qrLoginRequest}', [LoginController::class, 'showQr'])->name('auth.qr.show');
 Route::get('/auth/qr/{qrLoginRequest}/status', [LoginController::class, 'status'])->name('auth.qr.status');
@@ -34,6 +36,9 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/articles/{article}/comments', [CommentController::class, 'store'])->name('articles.comments.store');
     Route::get('/settings/subscriptions', [SubscriptionSettingsController::class, 'edit'])->name('settings.subscriptions.edit');
     Route::put('/settings/subscriptions', [SubscriptionSettingsController::class, 'update'])->name('settings.subscriptions.update');
+    Route::put('/settings/subscriptions/mail', [SubscriptionSettingsController::class, 'updateMailSettings'])
+        ->middleware('admin')
+        ->name('settings.subscriptions.mail.update');
 });
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function (): void {
@@ -57,4 +62,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('/devtools/keys', [AdminDevtoolsController::class, 'createKey'])->name('devtools.keys.create');
     Route::post('/devtools/keys/{id}/revoke', [AdminDevtoolsController::class, 'revokeKey'])->name('devtools.keys.revoke');
     Route::delete('/devtools/connections/{id}', [AdminDevtoolsController::class, 'terminateConnection'])->name('devtools.connections.terminate');
+
+    Route::get('/site-settings', [AdminSiteSettingsController::class, 'edit'])->name('site-settings.edit');
+    Route::put('/site-settings', [AdminSiteSettingsController::class, 'update'])->name('site-settings.update');
 });

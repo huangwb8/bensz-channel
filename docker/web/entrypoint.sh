@@ -20,9 +20,12 @@ php artisan optimize:clear --ansi
 php artisan migrate --force --ansi
 php artisan db:seed --force --ansi
 php artisan storage:link --ansi || true
+mkdir -p public/$(php -r 'echo trim((string) getenv("STATIC_SITE_OUTPUT_DIR") ?: "static", "/");')
+chown -R www-data:www-data storage bootstrap/cache public/$(php -r 'echo trim((string) getenv("STATIC_SITE_OUTPUT_DIR") ?: "static", "/");')
 php artisan config:cache --ansi
 php artisan route:cache --ansi
 php artisan view:cache --ansi
 php artisan site:build-static --ansi
+chown -R www-data:www-data public/$(php -r 'echo trim((string) getenv("STATIC_SITE_OUTPUT_DIR") ?: "static", "/");')
 
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

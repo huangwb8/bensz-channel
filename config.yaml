@@ -1,4 +1,4 @@
 project_info:
   name: bensz-channel
-  version: 1.4.0
+  version: 1.8.0
   description: "类似 QQ 频道的 Web 社区平台，基于 PHP、PostgreSQL、Docker 构建"
