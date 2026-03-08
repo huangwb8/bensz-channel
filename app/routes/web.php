@@ -47,6 +47,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/channels', [AdminChannelController::class, 'index'])->name('channels.index');
     Route::post('/channels', [AdminChannelController::class, 'store'])->name('channels.store');
     Route::put('/channels/{channel}', [AdminChannelController::class, 'update'])->name('channels.update');
+    Route::delete('/channels/{channel}', [AdminChannelController::class, 'destroy'])->name('channels.destroy');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
@@ -56,6 +57,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('/articles', [AdminArticleController::class, 'store'])->name('articles.store');
     Route::get('/articles/{article}/edit', [AdminArticleController::class, 'edit'])->name('articles.edit');
     Route::put('/articles/{article}', [AdminArticleController::class, 'update'])->name('articles.update');
+    Route::delete('/articles/{article}', [AdminArticleController::class, 'destroy'])->name('articles.destroy');
 
     // DevTools — Vibe Coding remote management
     Route::get('/devtools', [AdminDevtoolsController::class, 'index'])->name('devtools.index');
