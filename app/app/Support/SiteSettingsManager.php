@@ -43,6 +43,7 @@ class SiteSettingsManager
             'site_name' => $setting?->site_name ?? (string) config('community.site.name'),
             'site_tagline' => $setting?->site_tagline ?? (string) config('community.site.tagline'),
             'auth_enabled_methods' => $this->normalizeAuthMethods($setting?->auth_enabled_methods),
+            'cdn_asset_url' => $setting?->cdn_asset_url ?? (string) config('app.asset_url'),
         ];
     }
 
@@ -56,6 +57,7 @@ class SiteSettingsManager
                 || filled($setting->site_name)
                 || filled($setting->site_tagline)
                 || $setting->auth_enabled_methods !== null
+                || filled($setting->cdn_asset_url)
             );
     }
 
@@ -82,6 +84,7 @@ class SiteSettingsManager
             'site_name' => $this->nullableString($validated['site_name'] ?? null),
             'site_tagline' => $this->nullableString($validated['site_tagline'] ?? null),
             'auth_enabled_methods' => $this->normalizeAuthMethods($validated['auth_enabled_methods'] ?? null),
+            'cdn_asset_url' => $this->normalizeUrl($validated['cdn_asset_url'] ?? null),
         ]);
         $setting->save();
 
@@ -108,6 +111,12 @@ class SiteSettingsManager
             }
 
             config(['community.auth.enabled_methods' => $this->normalizeAuthMethods($setting->auth_enabled_methods)]);
+
+            config([
+                'app.asset_url' => filled($setting->cdn_asset_url)
+                    ? rtrim($setting->cdn_asset_url, '/')
+                    : null,
+            ]);
         }
 
         config(['community.auth.qr_providers' => $this->enabledQrProvidersFromMethods((array) config('community.auth.enabled_methods', self::DEFAULT_AUTH_METHODS))]);
@@ -136,6 +145,18 @@ class SiteSettingsManager
         $trimmed = trim($value);
 
         return $trimmed !== '' ? $trimmed : null;
+    }
+
+
+    private function normalizeUrl(mixed $value): ?string
+    {
+        $normalized = $this->nullableString($value);
+
+        if ($normalized === null) {
+            return null;
+        }
+
+        return rtrim($normalized, '/');
     }
 
     private function normalizeAuthMethods(mixed $value): array

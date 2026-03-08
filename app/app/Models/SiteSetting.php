@@ -25,5 +25,6 @@ class SiteSetting extends Model
         'site_name',
         'site_tagline',
         'auth_enabled_methods',
+        'cdn_asset_url',
     ];
 }

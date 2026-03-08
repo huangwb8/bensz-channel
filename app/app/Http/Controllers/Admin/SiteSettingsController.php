@@ -36,6 +36,7 @@ class SiteSettingsController extends Controller
             'app_name' => ['required', 'string', 'max:120'],
             'site_name' => ['required', 'string', 'max:120'],
             'site_tagline' => ['required', 'string', 'max:255'],
+            'cdn_asset_url' => ['nullable', 'url', 'max:255'],
             'auth_enabled_methods' => ['required', 'array', 'min:1'],
             'auth_enabled_methods.*' => ['string', Rule::in($siteSettingsManager->availableAuthMethods())],
         ]);

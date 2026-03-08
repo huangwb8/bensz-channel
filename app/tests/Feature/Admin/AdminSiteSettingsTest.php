@@ -34,6 +34,7 @@ class AdminSiteSettingsTest extends TestCase
                 'app_name' => 'Bensz Channel Admin',
                 'site_name' => 'Bensz Community',
                 'site_tagline' => '一个支持静态游客访问与成员互动的频道式社区。',
+                'cdn_asset_url' => 'https://cdn.example.com',
                 'auth_enabled_methods' => ['email_code', 'qq_qr'],
             ])
             ->assertRedirect(route('admin.site-settings.edit'));
@@ -45,6 +46,7 @@ class AdminSiteSettingsTest extends TestCase
         ]);
 
         $setting = SiteSetting::query()->first();
+        $this->assertSame('https://cdn.example.com', $setting?->cdn_asset_url);
         $this->assertSame(['email_code', 'qq_qr'], $setting?->auth_enabled_methods);
     }
 
