@@ -1,6 +1,23 @@
 @extends('layouts.app')
 
 @section('content')
+    <section class="mb-6 rounded-xl border border-orange-200 bg-orange-50 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="text-sm font-semibold text-orange-900">RSS / SMTP 订阅</h2>
+                <p class="mt-1 text-sm text-orange-800">RSS 链接公开可用；SMTP 邮件提醒需要登录后在订阅设置中管理。</p>
+            </div>
+            <div class="flex flex-wrap gap-2 text-sm">
+                <a href="{{ route('feeds.articles') }}" class="rounded-lg border border-orange-300 bg-white px-3 py-2 text-orange-700 hover:bg-orange-100">RSS：全部版块</a>
+                @auth
+                    <a href="{{ route('settings.subscriptions.edit') }}" class="rounded-lg border border-blue-200 bg-white px-3 py-2 text-blue-700 hover:bg-blue-50">管理 SMTP 订阅</a>
+                @else
+                    <a href="{{ route('login') }}" class="rounded-lg border border-blue-200 bg-white px-3 py-2 text-blue-700 hover:bg-blue-50">登录开启 SMTP</a>
+                @endauth
+            </div>
+        </div>
+    </section>
+
     @if($featuredArticle)
         <!-- 置顶公告 -->
         <section class="mb-6 rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5">

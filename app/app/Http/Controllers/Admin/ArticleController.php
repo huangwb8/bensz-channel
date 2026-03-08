@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\Channel;
+use App\Support\ArticleSubscriptionNotifier;
 use App\Support\MarkdownRenderer;
 use App\Support\StaticPageBuilder;
 use Illuminate\Contracts\View\View;
@@ -39,16 +40,21 @@ class ArticleController extends Controller
     public function store(
         Request $request,
         MarkdownRenderer $markdownRenderer,
+        ArticleSubscriptionNotifier $articleSubscriptionNotifier,
         StaticPageBuilder $staticPageBuilder,
     ): RedirectResponse {
         $validated = $this->validateArticle($request);
 
-        Article::query()->create([
+        $article = Article::query()->create([
             ...$validated,
             'author_id' => $request->user()->id,
             'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
             'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
         ]);
+
+        if ($this->isLiveArticle($article)) {
+            $articleSubscriptionNotifier->send($article);
+        }
 
         $staticPageBuilder->buildAll();
 
@@ -69,8 +75,10 @@ class ArticleController extends Controller
         Request $request,
         Article $article,
         MarkdownRenderer $markdownRenderer,
+        ArticleSubscriptionNotifier $articleSubscriptionNotifier,
         StaticPageBuilder $staticPageBuilder,
     ): RedirectResponse {
+        $wasLive = $this->isLiveArticle($article);
         $validated = $this->validateArticle($request, $article);
 
         $article->update([
@@ -78,6 +86,10 @@ class ArticleController extends Controller
             'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
             'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
         ]);
+
+        if (! $wasLive && $this->isLiveArticle($article->fresh())) {
+            $articleSubscriptionNotifier->send($article->fresh(['channel', 'author']));
+        }
 
         $staticPageBuilder->buildAll();
 
@@ -102,5 +114,12 @@ class ArticleController extends Controller
         $validated['published_at'] = $validated['published_at'] ?? now();
 
         return $validated;
+    }
+
+    private function isLiveArticle(Article $article): bool
+    {
+        return $article->is_published
+            && $article->published_at !== null
+            && ! $article->published_at->isFuture();
     }
 }

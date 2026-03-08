@@ -9,8 +9,16 @@
                 <h1 class="text-xl font-semibold text-gray-900">{{ $currentChannel->name }}</h1>
                 <p class="text-sm text-gray-500">{{ $currentChannel->description }}</p>
             </div>
-            <div class="ml-auto text-sm text-gray-500">
-                共 {{ $channelArticles->count() }} 篇文章
+            <div class="ml-auto flex flex-wrap items-center justify-end gap-2 text-sm text-gray-500">
+                <span>共 {{ $channelArticles->count() }} 篇文章</span>
+                <a href="{{ route('feeds.channels.show', $currentChannel) }}" class="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-orange-700 hover:bg-orange-100">
+                    RSS 订阅本版块
+                </a>
+                @auth
+                    <a href="{{ route('settings.subscriptions.edit') }}" class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-blue-700 hover:bg-blue-100">
+                        SMTP 订阅设置
+                    </a>
+                @endif
             </div>
         </div>
     </section>

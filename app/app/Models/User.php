@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -71,6 +72,53 @@ class User extends Authenticatable
     public function socialAccounts(): HasMany
     {
         return $this->hasMany(SocialAccount::class);
+    }
+
+    public function notificationPreference(): HasOne
+    {
+        return $this->hasOne(UserNotificationPreference::class);
+    }
+
+    public function emailChannelSubscriptions(): HasMany
+    {
+        return $this->hasMany(ChannelEmailSubscription::class);
+    }
+
+    public function ensureNotificationPreference(): UserNotificationPreference
+    {
+        $preference = $this->relationLoaded('notificationPreference')
+            ? $this->getRelation('notificationPreference')
+            : $this->notificationPreference()->first();
+
+        if ($preference instanceof UserNotificationPreference) {
+            return $preference;
+        }
+
+        $preference = $this->notificationPreference()->create();
+        $this->setRelation('notificationPreference', $preference);
+
+        return $preference;
+    }
+
+    public function subscribesToChannelArticles(Channel|int $channel): bool
+    {
+        $channelId = $channel instanceof Channel ? $channel->id : $channel;
+        $preference = $this->ensureNotificationPreference();
+
+        if ($preference->email_all_articles) {
+            return true;
+        }
+
+        $subscriptions = $this->relationLoaded('emailChannelSubscriptions')
+            ? $this->getRelation('emailChannelSubscriptions')
+            : $this->emailChannelSubscriptions()->get();
+
+        return $subscriptions->contains(fn (ChannelEmailSubscription $subscription) => $subscription->channel_id === $channelId);
+    }
+
+    public function wantsMentionEmails(): bool
+    {
+        return $this->ensureNotificationPreference()->email_mentions;
     }
 
     public function isAdmin(): bool

@@ -7,6 +7,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\RssFeedController;
+use App\Http\Controllers\SubscriptionSettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -23,9 +25,13 @@ Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')-
 
 Route::get('/channels/{channel}', [ChannelController::class, 'show'])->name('channels.show');
 Route::get('/channels/{channel}/articles/{article}', [ArticleController::class, 'show'])->name('articles.show');
+Route::get('/feeds/articles.xml', [RssFeedController::class, 'all'])->name('feeds.articles');
+Route::get('/feeds/channels/{channel}.xml', [RssFeedController::class, 'channel'])->name('feeds.channels.show');
 
 Route::middleware('auth')->group(function (): void {
     Route::post('/articles/{article}/comments', [CommentController::class, 'store'])->name('articles.comments.store');
+    Route::get('/settings/subscriptions', [SubscriptionSettingsController::class, 'edit'])->name('settings.subscriptions.edit');
+    Route::put('/settings/subscriptions', [SubscriptionSettingsController::class, 'update'])->name('settings.subscriptions.update');
 });
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function (): void {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Comment;
+use App\Support\CommentMentionNotifier;
 use App\Support\MarkdownRenderer;
 use App\Support\StaticPageBuilder;
 use Illuminate\Http\RedirectResponse;
@@ -14,6 +15,7 @@ class CommentController extends Controller
     public function store(
         Request $request,
         Article $article,
+        CommentMentionNotifier $commentMentionNotifier,
         MarkdownRenderer $markdownRenderer,
         StaticPageBuilder $staticPageBuilder,
     ): RedirectResponse {
@@ -25,13 +27,15 @@ class CommentController extends Controller
             'body.required' => '评论内容不能为空。',
         ]);
 
-        Comment::query()->create([
+        $comment = Comment::query()->create([
             'article_id' => $article->id,
             'user_id' => $request->user()->id,
             'markdown_body' => $validated['body'],
             'html_body' => $markdownRenderer->toHtml($validated['body']),
             'is_visible' => true,
         ]);
+
+        $commentMentionNotifier->send($comment);
 
         $article->update([
             'comment_count' => $article->allComments()->count(),

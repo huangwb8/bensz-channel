@@ -30,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        User::created(function (User $user): void {
+            $user->notificationPreference()->firstOrCreate();
+        });
+
         Gate::define('access-admin', fn (User $user) => $user->isAdmin());
 
         View::composer(['layouts.app', 'layouts.auth'], function ($view): void {
