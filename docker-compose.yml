@@ -16,6 +16,10 @@ services:
         condition: service_started
       mailpit:
         condition: service_started
+    volumes:
+      - ./data/web/storage:/var/www/html/storage
+      - ./data/web/bootstrap-cache:/var/www/html/bootstrap/cache
+      - ./data/web/static:/var/www/html/public/${STATIC_SITE_OUTPUT_DIR:-static}
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/up || exit 1"]
       interval: 10s
@@ -44,7 +48,7 @@ services:
     env_file:
       - config/.compose.env
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bensz} -d ${POSTGRES_DB:-bensz_channel}"]
       interval: 5s
@@ -53,12 +57,14 @@ services:
 
   redis:
     image: redis:7-alpine
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --dir /data
+    volumes:
+      - ./data/redis:/data
 
   mailpit:
     image: axllent/mailpit:latest
+    command: ["--database", "/data/mailpit.db"]
     ports:
       - "${MAILPIT_PORT:-8025}:8025"
-
-volumes:
-  postgres-data:
+    volumes:
+      - ./data/mailpit:/data

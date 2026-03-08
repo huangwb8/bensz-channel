@@ -8,17 +8,24 @@
 
 ### Added（新增）
 
+- 新增了 GitHub Actions 工作流 `.github/workflows/publish-release-images.yml`：每 12 小时自动检查一次最新 GitHub Release，并在 Docker Hub 尚未存在对应版本镜像时构建并推送 `web` / `auth` 双镜像
 - 新增了 `skills/bensz-channel-devtools/CHANGELOG.md` 与对应 `plans/`、`tests/` 自动测试会话产物：用于沉淀本次 skill 级优化的可追溯记录
 
 ### Changed（变更）
 
+- 更新了 `config.yaml` 与 `README.md`：将项目版本推进到 `1.13.0`，并补充 Docker Hub 自动发布工作流所需的 GitHub Secrets / Variables 配置说明
 - 优化了 `skills/bensz-channel-devtools`：修复匿名 `ping` 被错误要求 KEY、列表查询未 URL 编码、`doctor` 未响应 `terminate: true` 等问题，并同步统一 URL 规范化与环境搜索配置集中化
+- 更新了 `docker-compose.yml`：将 PostgreSQL、Redis、Mailpit 与 Laravel 运行时写盘目录统一显式挂载到根目录 `./data/`，确保仓库更新与镜像重建不会覆盖现有用户数据
+- 更新了 `scripts/compose.sh`：新增首次升级时的旧命名卷 / 容器内运行时数据自动迁移逻辑，并在启动前自动创建 `./data/` 目录树
+- 更新了 `.gitignore` 与 `.dockerignore`：统一忽略 `./data/`，避免运行时数据进入 Git 历史或 Docker 构建上下文
+- 更新了 `README.md`：补充 `./data/` 持久化目录、升级迁移行为与推荐的重部署方式
 
 - 优化了管理员频道管理页的行内操作：将“保存”和“删除”改为带 tooltip 与无障碍标签的图标按钮，减少表格行宽占用并统一后台操作风格
 - 更新了图标按钮组件与图标库：支持 `aria-label` 属性透传，并新增保存图标供后台使用
 - 优化了“站点设置”页的管理入口：将“文章管理 / 频道管理 / 用户管理”改为统一的图标按钮，减少页头视觉噪声并保持后台管理入口风格一致
 
 ### Fixed（修复）
+- 修复了旧版 Docker 命名卷仅持久化 PostgreSQL 的问题：现在升级到新版本后可自动迁移到 `./data/`，避免用户在 `git pull` 后重建容器时丢失既有业务数据
 
 ## [1.12.0] - 2026-03-08
 

@@ -2,6 +2,10 @@
 
 ---
 
+为本项目添加一个自动化的Github Action，每12小时检查一次。如果发现有新的release，则生成最新的docker image并推送至docker hub。 
+
+---
+
 文件管理优化
 
 - 将 ./data 加入忽略名单

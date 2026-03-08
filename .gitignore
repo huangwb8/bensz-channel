@@ -119,3 +119,6 @@ app/bootstrap/cache/*.php
 
 # 上传文件目录
 uploads/
+
+# Docker 运行时数据
+data/

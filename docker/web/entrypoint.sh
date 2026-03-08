@@ -16,6 +16,14 @@ until php -r 'try { new PDO("pgsql:host=" . getenv("DB_HOST") . ";port=" . geten
   sleep 2
 done
 
+mkdir -p storage/app/private
+mkdir -p storage/app/public
+mkdir -p storage/framework/cache/data
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
+mkdir -p storage/logs
+mkdir -p bootstrap/cache
+
 php artisan optimize:clear --ansi
 php artisan migrate --force --ansi
 php artisan db:seed --force --ansi

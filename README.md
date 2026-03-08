@@ -33,10 +33,13 @@ cp config/.env.example config/.env
 ./scripts/compose.sh up --build -d
 ```
 
+`./scripts/compose.sh` 现在会自动创建 `./data/` 下的持久化目录，并在首次升级到当前版本时，自动把旧的 Docker 命名卷 / 容器内运行时数据迁移到 `./data/`，这样后续用户直接 `git pull` 后重新构建即可，不会因为仓库更新覆盖现有业务数据。
+
 配置职责约定：
 
 - `config/config.toml`：托管关键**非密钥**参数，例如端口、站点名、数据库主机、邮件主机、OTP TTL
 - `config/.env`：托管密码、密钥等**敏感**参数，例如 `APP_KEY`、数据库密码、Better Auth secrets
+- `data/`：托管 PostgreSQL、Redis、Mailpit 以及 Web 运行时持久化数据；该目录默认不纳入 Git
 
 如果 `config/.env` 里的 `APP_KEY` 还是空值，可先生成一个：
 
@@ -49,6 +52,28 @@ php -r 'echo "APP_KEY=base64:".base64_encode(random_bytes(32)), PHP_EOL;'
 - 站点首页：`http://localhost:6542`
 - 登录页：`http://localhost:6542/login`
 - Mailpit：`http://localhost:8025`
+
+## 自动发布 Docker 镜像
+
+项目现已包含 GitHub Actions 工作流 `publish-release-images`，会按 `0 */12 * * *`（UTC 每天 `00:00` 与 `12:00`）自动检查一次当前仓库最新的 **已发布 GitHub Release**。
+
+当 Docker Hub 中还不存在该 Release 对应的镜像标签时，工作流会自动构建并推送以下两个镜像：
+
+- `DOCKERHUB_NAMESPACE/<仓库名>-web:<release-tag>` 与 `:latest`
+- `DOCKERHUB_NAMESPACE/<仓库名>-auth:<release-tag>` 与 `:latest`
+
+如需自定义仓库名，可在 GitHub 仓库中配置以下 **Repository Variables**：
+
+- `DOCKERHUB_NAMESPACE`：Docker Hub 命名空间，必填（若未单独指定镜像仓库）
+- `DOCKERHUB_WEB_REPOSITORY`：可选，覆盖默认的 Web 镜像仓库名，例如 `yourname/bensz-channel-web`
+- `DOCKERHUB_AUTH_REPOSITORY`：可选，覆盖默认的 Auth 镜像仓库名，例如 `yourname/bensz-channel-auth`
+
+同时需要配置以下 **Repository Secrets**：
+
+- `DOCKERHUB_USERNAME`：Docker Hub 用户名
+- `DOCKERHUB_TOKEN`：Docker Hub Access Token
+
+工作流也支持在 GitHub Actions 页面手动触发，便于首次发布或调试发布链路。
 
 默认管理员：
 
@@ -98,12 +123,21 @@ bensz-channel/
 ├── auth-service/           # Better Auth 自托管认证服务
 ├── docker/                 # Dockerfile、Nginx、Supervisor 配置
 ├── docker-compose.yml      # 容器编排模板（由 scripts/compose.sh 注入环境）
+├── data/                   # Docker 持久化数据目录（自动创建，默认 Git 忽略）
 ├── config.yaml             # 项目版本单一事实来源
 ├── AGENTS.md               # Codex 项目指令
 ├── CLAUDE.md               # Claude Code 项目指令
 ├── CHANGELOG.md            # 变更记录
 └── README.md               # 项目说明
 ```
+
+## 数据持久化
+
+- PostgreSQL 数据显式挂载到 `./data/postgres`
+- Redis AOF 显式挂载到 `./data/redis`
+- Mailpit 数据库显式挂载到 `./data/mailpit`
+- Laravel 运行时存储与静态页面输出显式挂载到 `./data/web/`
+- 仓库更新时只需执行 `git pull` 后重新运行 `./scripts/compose.sh up --build -d`
 
 ## 认证说明
 

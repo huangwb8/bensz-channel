@@ -13,3 +13,4 @@ app/storage/framework/views
 app/public/build
 app/bootstrap/cache/*.php
 postgres-data
+data
