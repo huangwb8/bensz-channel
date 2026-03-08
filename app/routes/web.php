@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function (): void {
 });
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function (): void {
-    Route::redirect('/', '/admin/articles');
+    Route::redirect('/', '/admin/site-settings');
 
     Route::get('/channels', [AdminChannelController::class, 'index'])->name('channels.index');
     Route::post('/channels', [AdminChannelController::class, 'store'])->name('channels.store');

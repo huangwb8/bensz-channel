@@ -56,6 +56,9 @@
                                     <p class="text-xs text-gray-500">{{ auth()->user()->isAdmin() ? '管理员' : '成员' }}</p>
                                 </div>
                                 @if(auth()->user()->isAdmin())
+                                    <a href="{{ route('admin.site-settings.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                        ⚙️ 站点设置
+                                    </a>
                                     <a href="{{ route('admin.articles.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                         📝 管理文章
                                     </a>
@@ -65,16 +68,15 @@
                                     <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                         👥 管理用户
                                     </a>
-                                    <a href="{{ route('admin.site-settings.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                        ⚙️ 站点设置
-                                    </a>
-                                    <a href="{{ route('admin.devtools.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                        🔧 DevTools
-                                    </a>
                                 @endif
                                 <a href="{{ route('settings.subscriptions.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                     📮 订阅设置
                                 </a>
+                                @if(auth()->user()->isAdmin())
+                                    <a href="{{ route('admin.devtools.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                        🔧 DevTools
+                                    </a>
+                                @endif
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
                                     <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50">

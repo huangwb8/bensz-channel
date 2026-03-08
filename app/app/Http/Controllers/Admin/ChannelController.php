@@ -21,7 +21,10 @@ class ChannelController extends Controller
         $this->ensureUncategorizedChannel();
 
         return view('admin.channels.index', [
-            'channels' => Channel::query()->ordered()->get(),
+            'channels' => Channel::query()
+                ->ordered()
+                ->whereNotIn('slug', ['all', 'uncategorized'])
+                ->get(),
         ]);
     }
 

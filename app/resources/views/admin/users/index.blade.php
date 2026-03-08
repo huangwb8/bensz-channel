@@ -5,7 +5,7 @@
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
                 <h2 class="text-xl font-semibold text-gray-900">用户管理</h2>
-                <p class="mt-1 text-sm text-gray-500">查看社区成员、调整角色，并维护基础资料。</p>
+                <p class="mt-1 text-sm text-gray-500">查看社区成员、调整角色，并快速维护关键信息。</p>
             </div>
             <div class="icon-action-group">
                 <x-icon-button :href="route('admin.articles.index')" icon="document" label="文章管理" title="文章管理" />
@@ -52,10 +52,15 @@
         </form>
     </section>
 
-    <section class="mt-6 space-y-4">
+    <section class="mt-6 space-y-3">
         @forelse($users as $managedUser)
             @php
                 $isEditingRow = (int) old('editing_user_id', 0) === $managedUser->id;
+                $formName = $isEditingRow ? old('name', $managedUser->name) : $managedUser->name;
+                $formRole = $isEditingRow ? old('role', $managedUser->role) : $managedUser->role;
+                $formEmail = $isEditingRow ? old('email', $managedUser->email) : $managedUser->email;
+                $formPhone = $isEditingRow ? old('phone', $managedUser->phone) : $managedUser->phone;
+                $formBio = $isEditingRow ? old('bio', $managedUser->bio) : $managedUser->bio;
             @endphp
             <form action="{{ route('admin.users.update', $managedUser) }}" method="POST" class="article-card">
                 @csrf
@@ -70,59 +75,84 @@
                     </div>
                 @endif
 
-                <div class="flex flex-wrap items-start justify-between gap-4 border-b border-gray-100 pb-4">
-                    <div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <h3 class="text-lg font-semibold text-gray-900">{{ $managedUser->name }}</h3>
-                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs {{ $managedUser->isAdmin() ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-600' }}">
-                                {{ $managedUser->isAdmin() ? '管理员' : '成员' }}
-                            </span>
-                            @if(auth()->id() === $managedUser->id)
-                                <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">当前登录</span>
-                            @endif
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                    <div class="flex min-w-0 items-center gap-3">
+                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+                            {{ mb_substr($managedUser->name, 0, 1) }}
                         </div>
-                        <div class="mt-2 flex flex-wrap gap-4 text-xs text-gray-400">
-                            <span>发文 {{ $managedUser->articles_count }}</span>
-                            <span>评论 {{ $managedUser->comments_count }}</span>
-                            <span>最近活跃 {{ optional($managedUser->last_seen_at)->format('Y-m-d H:i') ?? '暂无记录' }}</span>
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="truncate text-base font-semibold text-gray-900">{{ $managedUser->name }}</h3>
+                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs {{ $managedUser->isAdmin() ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-600' }}">
+                                    {{ $managedUser->isAdmin() ? '管理员' : '成员' }}
+                                </span>
+                                @if(auth()->id() === $managedUser->id)
+                                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">当前登录</span>
+                                @endif
+                            </div>
+                            <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                                <span>{{ $managedUser->email ?: '未填写邮箱' }}</span>
+                                <span>{{ $managedUser->phone ?: '未填写手机号' }}</span>
+                                <span>发文 {{ $managedUser->articles_count }}</span>
+                                <span>评论 {{ $managedUser->comments_count }}</span>
+                                <span>最近活跃 {{ optional($managedUser->last_seen_at)->format('Y-m-d H:i') ?? '暂无记录' }}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="mt-4 grid gap-4 lg:grid-cols-2">
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700">昵称</label>
-                        <input type="text" name="name" value="{{ $isEditingRow ? old('name', $managedUser->name) : $managedUser->name }}" class="input-field h-11" required>
-                    </div>
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700">角色</label>
-                        <select name="role" class="input-field h-11">
-                            <option value="{{ \App\Models\User::ROLE_ADMIN }}" @selected(($isEditingRow ? old('role', $managedUser->role) : $managedUser->role) === \App\Models\User::ROLE_ADMIN)>管理员</option>
-                            <option value="{{ \App\Models\User::ROLE_MEMBER }}" @selected(($isEditingRow ? old('role', $managedUser->role) : $managedUser->role) === \App\Models\User::ROLE_MEMBER)>成员</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700">邮箱</label>
-                        <input type="email" name="email" value="{{ $isEditingRow ? old('email', $managedUser->email) : $managedUser->email }}" class="input-field h-11" placeholder="member@example.com">
-                    </div>
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700">手机号</label>
-                        <input type="text" name="phone" value="{{ $isEditingRow ? old('phone', $managedUser->phone) : $managedUser->phone }}" class="input-field h-11" placeholder="13800138000">
-                    </div>
-                </div>
-
-                <div class="mt-4">
-                    <label class="mb-2 block text-sm font-medium text-gray-700">简介</label>
-                    <textarea name="bio" rows="3" class="input-field text-sm" placeholder="介绍该用户在社区中的职责或背景">{{ $isEditingRow ? old('bio', $managedUser->bio) : $managedUser->bio }}</textarea>
-                </div>
-
-                <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-                    <div class="text-xs text-gray-400">
+                    <div class="flex flex-wrap items-center justify-end gap-2 text-xs text-gray-400">
                         <span>邮箱{{ $managedUser->email_verified_at ? '已验证' : '未验证' }}</span>
-                        <span class="mx-2">·</span>
                         <span>手机{{ $managedUser->phone_verified_at ? '已验证' : '未验证' }}</span>
                     </div>
-                    <button type="submit" class="btn-primary">保存用户</button>
+                </div>
+
+                <div class="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_160px_minmax(0,1.25fr)_180px_minmax(0,1.4fr)_auto]">
+                    <input
+                        type="text"
+                        name="name"
+                        value="{{ $formName }}"
+                        class="input-field h-10"
+                        placeholder="昵称"
+                        aria-label="昵称"
+                        required
+                    >
+                    <select name="role" class="input-field h-10" aria-label="角色">
+                        <option value="{{ \App\Models\User::ROLE_ADMIN }}" @selected($formRole === \App\Models\User::ROLE_ADMIN)>管理员</option>
+                        <option value="{{ \App\Models\User::ROLE_MEMBER }}" @selected($formRole === \App\Models\User::ROLE_MEMBER)>成员</option>
+                    </select>
+                    <input
+                        type="email"
+                        name="email"
+                        value="{{ $formEmail }}"
+                        class="input-field h-10"
+                        placeholder="邮箱"
+                        aria-label="邮箱"
+                    >
+                    <input
+                        type="text"
+                        name="phone"
+                        value="{{ $formPhone }}"
+                        class="input-field h-10"
+                        placeholder="手机号"
+                        aria-label="手机号"
+                    >
+                    <input
+                        type="text"
+                        name="bio"
+                        value="{{ $formBio }}"
+                        class="input-field h-10"
+                        placeholder="简介 / 职责"
+                        aria-label="简介"
+                    >
+                    <div class="flex items-center justify-end gap-2">
+                        <x-icon-button
+                            icon="save"
+                            label="保存用户"
+                            title="保存用户"
+                            :aria-label="'保存用户：'.$managedUser->name"
+                            variant="primary"
+                            type="submit"
+                        />
+                    </div>
                 </div>
             </form>
         @empty
