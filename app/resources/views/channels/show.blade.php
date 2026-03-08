@@ -11,7 +11,15 @@
             </div>
             <div class="ml-auto flex flex-wrap items-center justify-end gap-2 text-sm text-gray-500">
                 <span>共 {{ $channelArticles->count() }} 篇文章</span>
-                <x-icon-button :href="route('feeds.channels.show', $currentChannel)" icon="rss" label="RSS 订阅本版块" title="RSS 订阅本版块" />
+                <button
+                    data-copy-rss="{{ route('feeds.channels.show', $currentChannel) }}"
+                    class="icon-action"
+                    title="点击复制 RSS 订阅链接"
+                    aria-label="复制 RSS 订阅链接"
+                >
+                    <x-icon name="rss" class="h-5 w-5" />
+                    <span class="sr-only">RSS 订阅本版块</span>
+                </button>
                 @auth
                     <x-icon-button :href="route('settings.subscriptions.edit')" icon="mail" label="SMTP 订阅设置" title="SMTP 订阅设置" />
                 @endif

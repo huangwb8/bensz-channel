@@ -8,11 +8,30 @@
                 <p class="mt-1 text-sm text-orange-800">RSS 链接公开可用；SMTP 邮件提醒需要登录后在订阅设置中管理。</p>
             </div>
             <div class="flex flex-wrap gap-2 text-sm">
-                <a href="{{ route('feeds.articles') }}" class="rounded-lg border border-orange-300 bg-white px-3 py-2 text-orange-700 hover:bg-orange-100">RSS：全部版块</a>
+                <button
+                    data-copy-rss="{{ route('feeds.articles') }}"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-orange-300 bg-white px-3 py-2 text-orange-700 hover:bg-orange-100 transition-colors"
+                    title="点击复制 RSS 订阅链接"
+                >
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+                    </svg>
+                    <span>RSS</span>
+                </button>
                 @auth
-                    <a href="{{ route('settings.subscriptions.edit') }}" class="rounded-lg border border-blue-200 bg-white px-3 py-2 text-blue-700 hover:bg-blue-50">管理 SMTP 订阅</a>
+                    <a href="{{ route('settings.subscriptions.edit') }}" class="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-2 text-blue-700 hover:bg-blue-50 transition-colors">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>SMTP</span>
+                    </a>
                 @else
-                    <a href="{{ route('login') }}" class="rounded-lg border border-blue-200 bg-white px-3 py-2 text-blue-700 hover:bg-blue-50">登录开启 SMTP</a>
+                    <a href="{{ route('login') }}" class="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-2 text-blue-700 hover:bg-blue-50 transition-colors">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>SMTP</span>
+                    </a>
                 @endauth
             </div>
         </div>

@@ -1,6 +1,52 @@
 import './bootstrap';
 import QRCode from 'qrcode';
 
+// RSS 复制功能
+document.querySelectorAll('[data-copy-rss]').forEach((button) => {
+    button.addEventListener('click', async () => {
+        const url = button.getAttribute('data-copy-rss');
+
+        try {
+            await navigator.clipboard.writeText(url);
+
+            // 保存原始内容
+            const originalHTML = button.innerHTML;
+
+            // 显示成功提示
+            button.innerHTML = `
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>已复制</span>
+            `;
+            button.classList.remove('hover:bg-orange-100');
+            button.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
+
+            // 2秒后恢复原状
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('bg-green-100', 'text-green-700', 'border-green-300');
+                button.classList.add('hover:bg-orange-100');
+            }, 2000);
+        } catch (error) {
+            // 复制失败时的提示
+            const originalHTML = button.innerHTML;
+            button.innerHTML = `
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                <span>复制失败</span>
+            `;
+            button.classList.add('bg-red-100', 'text-red-700', 'border-red-300');
+
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('bg-red-100', 'text-red-700', 'border-red-300');
+            }, 2000);
+        }
+    });
+});
+
 document.querySelectorAll('[data-qr-value]').forEach(async (element) => {
     const value = element.getAttribute('data-qr-value');
 
