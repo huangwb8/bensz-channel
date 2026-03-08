@@ -102,6 +102,8 @@ bensz-channel/
 
 ```bash
 cd app
+sh ./scripts/ensure-managed-vendor.sh
+composer install
 cp .env.example .env
 npm install
 php artisan key:generate
@@ -111,6 +113,10 @@ php artisan serve
 ```
 
 - `app/node_modules` 通过符号链接指向 `/Volumes/2T01/Test/bensz-channel/app/node_modules`
+- `app/vendor` 通过符号链接指向 `/Volumes/2T01/Test/bensz-channel/app/vendor`
+- `app/composer.json` 将 Composer 的 `vendor-dir` 固定为 `/Volumes/2T01/Test/bensz-channel/app/vendor`
+- `composer install` 会通过 `pre-autoload-dump` 自动执行 `app/scripts/ensure-managed-vendor.sh`，避免依赖回写到项目目录
+- Composer 缓存统一写入 `/Volumes/2T01/Test/bensz-channel/composer-cache`
 - `npm install` 会读取 `app/.npmrc`，将缓存统一写入 `/Volumes/2T01/Test/bensz-channel/npm-cache`
 - `npm install` 完成后会自动执行 `app/scripts/ensure-managed-node-modules.sh`，把可能被 npm 重建到项目内的依赖目录重新迁回托管路径
 

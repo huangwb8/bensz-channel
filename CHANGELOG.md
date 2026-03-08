@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-03-08
+
+### Changed（变更）
+
+- 优化了 `app/vendor` 的托管方式：将 Composer 依赖目录迁移到 `/Volumes/2T01/Test/bensz-channel/app/vendor`，并通过符号链接回连项目目录
+- 更新了 `app/composer.json`：增加 `pre-autoload-dump` 钩子与 Composer 缓存目录配置，确保后续 `composer install` 持续符合统一托管规则
+
+### Fixed（修复）
+
+- 修复了 PHP 第三方包仍落在项目目录内的问题：此前 `app/vendor` 为实体目录，不符合 `AGENTS.md` 的统一托管规则
+
 ## [1.1.1] - 2026-03-08
 
 ### Changed（变更）

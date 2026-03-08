@@ -48,6 +48,9 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "pre-autoload-dump": [
+            "sh ./scripts/ensure-managed-vendor.sh"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
@@ -73,6 +76,8 @@
         }
     },
     "config": {
+        "vendor-dir": "/Volumes/2T01/Test/bensz-channel/app/vendor",
+        "cache-dir": "/Volumes/2T01/Test/bensz-channel/composer-cache",
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
