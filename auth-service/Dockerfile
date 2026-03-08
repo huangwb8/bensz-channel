@@ -6,6 +6,7 @@ COPY auth-service/package.json auth-service/package-lock.json ./
 RUN npm ci --ignore-scripts
 
 COPY auth-service .
+COPY config /srv/config
 
 RUN chmod +x ./scripts/entrypoint.sh
 

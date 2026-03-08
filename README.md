@@ -28,13 +28,19 @@
 ## 快速部署
 
 ```bash
-docker compose up --build -d
+cp config/.env.example config/.env
+./scripts/compose.sh up --build -d
 ```
 
-如果本机 `6542` 已被占用，可改用：
+配置职责约定：
+
+- `config/config.toml`：托管关键**非密钥**参数，例如端口、站点名、数据库主机、邮件主机、OTP TTL
+- `config/.env`：托管密码、密钥等**敏感**参数，例如 `APP_KEY`、数据库密码、Better Auth secrets
+
+如果 `config/.env` 里的 `APP_KEY` 还是空值，可先生成一个：
 
 ```bash
-WEB_PORT=16542 docker compose up --build -d
+php -r 'echo "APP_KEY=base64:".base64_encode(random_bytes(32)), PHP_EOL;'
 ```
 
 启动后访问：
@@ -58,10 +64,12 @@ WEB_PORT=16542 docker compose up --build -d
 
 ```text
 bensz-channel/
+├── config/                 # 根配置：config.toml 放非密钥，.env 放密钥
+├── scripts/                # 配置导出与 Docker Compose 包装脚本
 ├── app/                    # Laravel 应用源码
 ├── auth-service/           # Better Auth 自托管认证服务
 ├── docker/                 # Dockerfile、Nginx、Supervisor 配置
-├── docker-compose.yml      # 本地/审查部署入口
+├── docker-compose.yml      # 容器编排模板（由 scripts/compose.sh 注入环境）
 ├── config.yaml             # 项目版本单一事实来源
 ├── AGENTS.md               # Codex 项目指令
 ├── CLAUDE.md               # Claude Code 项目指令
@@ -90,6 +98,7 @@ bensz-channel/
 - 邮箱验证码通过 Mailpit/SMTP 投递；手机号验证码保留演示模式回调
 - Better Auth 独立使用 PostgreSQL `auth` schema，避免与 Laravel 的 `public` schema 冲突
 - Laravel 通过内部共享密钥调用 `auth-service` 的 `/internal/otp/send` 与 `/internal/otp/verify`
+- `app/` 与 `auth-service/` 都会在启动早期自动加载根目录 `config/config.toml` 与 `config/.env`
 
 ### 游客
 
@@ -108,12 +117,13 @@ bensz-channel/
 如果需要在宿主机直接运行：
 
 ```bash
+cp config/.env.example config/.env
+# 手动补齐 APP_KEY / 各类密码密钥
+
 cd app
 sh ./scripts/ensure-managed-vendor.sh
 composer install
-cp .env.example .env
 npm install
-php artisan key:generate
 php artisan migrate --seed
 npm run build
 php artisan serve
@@ -126,6 +136,12 @@ cd auth-service
 npm install
 npm run migrate
 npm run start
+```
+
+如果只想查看当前会注入哪些运行时环境变量，可执行：
+
+```bash
+./scripts/load-config-env.sh env-file
 ```
 
 - `app/node_modules` 通过符号链接指向 `/Volumes/2T01/Test/bensz-channel/app/node_modules`

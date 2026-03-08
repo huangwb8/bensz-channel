@@ -1,3 +1,7 @@
+import { loadRootConfig } from './load-root-config.js';
+
+loadRootConfig();
+
 const parseBoolean = (value, fallback = false) => {
     if (value === undefined) {
         return fallback;
@@ -22,10 +26,12 @@ export const config = {
     nodeEnv: process.env.NODE_ENV ?? 'development',
     port: parseNumber(process.env.PORT, 3001),
     logLevel: process.env.LOG_LEVEL ?? 'info',
-    baseUrl: process.env.BETTER_AUTH_BASE_URL ?? `http://127.0.0.1:${parseNumber(process.env.PORT, 3001)}`,
+    baseUrl: process.env.BETTER_AUTH_BASE_URL
+        ?? process.env.BETTER_AUTH_URL
+        ?? `http://127.0.0.1:${parseNumber(process.env.PORT, 3001)}`,
     databaseUrl: process.env.BETTER_AUTH_DATABASE_URL
         ?? process.env.DATABASE_URL
-        ?? 'postgres://bensz:bensz_secret@postgres:5432/bensz_channel?options=-c%20search_path%3Dauth,public',
+        ?? `postgres://${encodeURIComponent(process.env.DB_USERNAME ?? 'bensz')}:${encodeURIComponent(process.env.DB_PASSWORD ?? process.env.POSTGRES_PASSWORD ?? 'bensz_secret')}@${process.env.DB_HOST ?? 'postgres'}:${parseNumber(process.env.DB_PORT, 5432)}/${process.env.DB_DATABASE ?? 'bensz_channel'}?options=-c%20search_path%3D${encodeURIComponent(process.env.AUTH_DB_SCHEMA ?? 'auth')},public`,
     betterAuthSecret: process.env.BETTER_AUTH_SECRET ?? 'dev-better-auth-secret-change-me',
     internalSecret: process.env.BETTER_AUTH_INTERNAL_SECRET ?? 'dev-internal-secret-change-me',
     otpLength: parseNumber(process.env.AUTH_OTP_LENGTH, 6),

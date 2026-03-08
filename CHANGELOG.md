@@ -6,6 +6,24 @@
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-03-08
+
+### Added（新增）
+
+- 新增了根目录 `config/config.toml` 与 `config/.env.example`：用于集中托管关键非密钥参数与敏感参数模板
+- 新增了 `scripts/load-config-env.sh` 与 `scripts/compose.sh`：用于从根配置生成运行时环境变量，并统一驱动 Docker Compose 启动
+- 新增了 `app/tests/Unit/Bootstrap/RootConfigLoaderTest.php` 与 `auth-service/tests/root-config-loader.test.js`：用于锁定根配置加载与“已有环境变量优先”的行为
+
+### Changed（变更）
+
+- 重构了 Laravel 与 Better Auth 的启动配置加载：现在都会在启动早期读取根目录 `config/config.toml` 与 `config/.env`
+- 更新了 `docker-compose.yml` 与相关 Dockerfile：容器运行参数改由 `config/.compose.env` 注入，减少配置分散与重复维护
+- 更新了 `README.md`：补充根配置分层规则、`./scripts/compose.sh` 启动方式与本地开发说明
+
+### Fixed（修复）
+
+- 修复了关键参数分散在 `docker-compose.yml`、`app/.env` 与 `auth-service` 环境变量中的问题：现在非密钥与密钥分别集中到 `config/config.toml` 与 `config/.env`
+
 ## [1.2.0] - 2026-03-08
 
 ### Added（新增）

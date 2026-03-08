@@ -48,6 +48,7 @@ RUN apk add --no-cache \
 
 # 复制应用代码（排除 vendor，.dockerignore 会处理）
 COPY app ./
+COPY config /var/www/config
 
 # 从 vendor 阶段复制已安装的依赖
 COPY --from=vendor /app/vendor ./vendor
