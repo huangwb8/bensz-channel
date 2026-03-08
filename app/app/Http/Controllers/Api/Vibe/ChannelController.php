@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\Vibe;
 
 use App\Http\Controllers\Controller;
+use App\Models\Article;
 use App\Models\Channel;
+use App\Models\ChannelEmailSubscription;
 use App\Support\StaticPageBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,6 +34,12 @@ class ChannelController extends Controller
 
     public function update(Request $request, Channel $channel, StaticPageBuilder $staticPageBuilder): JsonResponse
     {
+        if ($this->isReservedChannel($channel)) {
+            return response()->json([
+                'message' => '系统保留频道不可编辑。',
+            ], 422);
+        }
+
         $validated = $this->validateChannel($request, $channel);
 
         $channel->update($validated);
@@ -43,6 +51,22 @@ class ChannelController extends Controller
 
     public function destroy(Channel $channel, StaticPageBuilder $staticPageBuilder): JsonResponse
     {
+        if ($this->isReservedChannel($channel)) {
+            return response()->json([
+                'message' => '系统保留频道不可删除。',
+            ], 422);
+        }
+
+        $uncategorized = $this->ensureUncategorizedChannel();
+
+        Article::query()
+            ->where('channel_id', $channel->id)
+            ->update(['channel_id' => $uncategorized->id]);
+
+        ChannelEmailSubscription::query()
+            ->where('channel_id', $channel->id)
+            ->delete();
+
         $channel->delete();
 
         $staticPageBuilder->buildAll();
@@ -66,5 +90,30 @@ class ChannelController extends Controller
         $validated['is_public'] = true;
 
         return $validated;
+    }
+
+    private function ensureUncategorizedChannel(): Channel
+    {
+        $channel = Channel::query()->where('slug', 'uncategorized')->first();
+
+        if ($channel instanceof Channel) {
+            return $channel;
+        }
+
+        return Channel::query()->create([
+            'name' => '未分类',
+            'slug' => 'uncategorized',
+            'description' => '系统自动归类的文章将汇总在此。',
+            'accent_color' => '#64748b',
+            'icon' => '📦',
+            'sort_order' => 999,
+            'is_public' => true,
+        ]);
+    }
+
+    private function isReservedChannel(Channel $channel): bool
+    {
+        return in_array($channel->slug, ['all', 'uncategorized'], true)
+            || in_array($channel->name, ['全部', '未分类'], true);
     }
 }

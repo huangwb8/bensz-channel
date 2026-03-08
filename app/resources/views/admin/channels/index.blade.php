@@ -7,9 +7,9 @@
                 <h2 class="text-xl font-semibold text-gray-900">频道管理</h2>
                 <p class="mt-1 text-sm text-gray-500">管理社区的所有频道</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ route('admin.users.index') }}" class="btn-secondary">用户管理</a>
-                <a href="{{ route('admin.articles.index') }}" class="btn-secondary">文章管理</a>
+            <div class="icon-action-group">
+                <x-icon-button :href="route('admin.users.index')" icon="users" label="用户管理" title="用户管理" />
+                <x-icon-button :href="route('admin.articles.index')" icon="document" label="文章管理" title="文章管理" />
             </div>
         </div>
 
@@ -32,19 +32,35 @@
     <!-- 频道列表 -->
     <section class="mt-6 space-y-3">
         @foreach($channels as $channel)
-            <form action="{{ route('admin.channels.update', $channel) }}" method="POST" class="article-card">
-                @csrf
-                @method('PUT')
-                <div class="grid gap-4 lg:grid-cols-8 items-center">
-                    <input type="text" name="name" value="{{ $channel->name }}" class="input-field h-10">
-                    <input type="text" name="slug" value="{{ $channel->slug }}" class="input-field h-10">
-                    <input type="text" name="description" value="{{ $channel->description }}" class="input-field h-10 lg:col-span-2">
-                    <input type="text" name="icon" value="{{ $channel->icon }}" class="input-field h-10 text-center">
-                    <input type="text" name="accent_color" value="{{ $channel->accent_color }}" class="input-field h-10">
-                    <input type="number" name="sort_order" value="{{ $channel->sort_order }}" class="input-field h-10">
-                    <button type="submit" class="btn-primary h-10">保存</button>
-                </div>
-            </form>
+            @php($reserved = in_array($channel->slug, ['all','uncategorized'], true))
+            <div class="article-card">
+                <form action="{{ route('admin.channels.update', $channel) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="grid gap-4 lg:grid-cols-8 items-center">
+                        <input type="text" name="name" value="{{ $channel->name }}" class="input-field h-10" {{ $reserved ? 'readonly' : '' }}>
+                        <input type="text" name="slug" value="{{ $channel->slug }}" class="input-field h-10" {{ $reserved ? 'readonly' : '' }}>
+                        <input type="text" name="description" value="{{ $channel->description }}" class="input-field h-10 lg:col-span-2" {{ $reserved ? 'readonly' : '' }}>
+                        <input type="text" name="icon" value="{{ $channel->icon }}" class="input-field h-10 text-center" {{ $reserved ? 'readonly' : '' }}>
+                        <input type="text" name="accent_color" value="{{ $channel->accent_color }}" class="input-field h-10" {{ $reserved ? 'readonly' : '' }}>
+                        <input type="number" name="sort_order" value="{{ $channel->sort_order }}" class="input-field h-10" {{ $reserved ? 'readonly' : '' }}>
+                        <div class="flex gap-2">
+                            <button type="submit" class="btn-primary h-10" {{ $reserved ? 'disabled' : '' }}>保存</button>
+                            @if(! $reserved)
+                                <button type="submit" class="btn-secondary h-10" form="delete-channel-{{ $channel->id }}">删除</button>
+                            @else
+                                <button type="button" class="btn-secondary h-10" disabled>系统保留</button>
+                            @endif
+                        </div>
+                    </div>
+                </form>
+                @if(! $reserved)
+                    <form id="delete-channel-{{ $channel->id }}" action="{{ route('admin.channels.destroy', $channel) }}" method="POST" class="hidden" onsubmit="return confirm('确认删除该频道？文章将自动归入未分类。')">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                @endif
+            </div>
         @endforeach
     </section>
 @endsection

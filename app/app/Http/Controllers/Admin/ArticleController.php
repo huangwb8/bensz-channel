@@ -96,6 +96,15 @@ class ArticleController extends Controller
         return to_route('admin.articles.index')->with('status', '文章已更新。');
     }
 
+    public function destroy(Article $article, StaticPageBuilder $staticPageBuilder): RedirectResponse
+    {
+        $article->delete();
+
+        $staticPageBuilder->buildAll();
+
+        return to_route('admin.articles.index')->with('status', '文章已删除。');
+    }
+
     private function validateArticle(Request $request, ?Article $article = null): array
     {
         $validated = $request->validate([

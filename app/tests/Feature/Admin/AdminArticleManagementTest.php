@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\Article;
 use App\Models\Channel;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,15 +24,7 @@ class AdminArticleManagementTest extends TestCase
     public function test_admin_can_create_article(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
-        $channel = Channel::query()->create([
-            'name' => '公告',
-            'slug' => 'notice',
-            'description' => '公告频道',
-            'accent_color' => '#8b5cf6',
-            'icon' => '📢',
-            'sort_order' => 1,
-            'is_public' => true,
-        ]);
+        $channel = $this->createChannel();
 
         $this->actingAs($admin)
             ->post(route('admin.articles.store'), [
@@ -50,5 +43,98 @@ class AdminArticleManagementTest extends TestCase
             'slug' => 'admin-post-test',
             'title' => '后台发文测试',
         ]);
+    }
+
+    public function test_admin_can_update_article(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $channel = $this->createChannel();
+        $article = $this->createArticle($admin, $channel, [
+            'title' => '旧标题',
+            'slug' => 'old-title',
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('admin.articles.update', $article), [
+                'channel_id' => $channel->id,
+                'title' => '新标题',
+                'slug' => 'new-title',
+                'excerpt' => '新的摘要',
+                'markdown_body' => "# 新标题\n\n新的正文内容",
+                'cover_gradient' => 'from-sky-500 via-blue-500 to-indigo-500',
+                'published_at' => now()->format('Y-m-d H:i:s'),
+                'is_published' => 1,
+            ])
+            ->assertRedirect(route('admin.articles.index'));
+
+        $this->assertDatabaseHas('articles', [
+            'id' => $article->id,
+            'slug' => 'new-title',
+            'title' => '新标题',
+            'excerpt' => '新的摘要',
+        ]);
+    }
+
+    public function test_admin_can_delete_article(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $channel = $this->createChannel();
+        $article = $this->createArticle($admin, $channel);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.articles.destroy', $article))
+            ->assertRedirect(route('admin.articles.index'));
+
+        $this->assertDatabaseMissing('articles', [
+            'id' => $article->id,
+        ]);
+    }
+
+    public function test_admin_article_index_renders_icon_actions_with_tooltips(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $channel = $this->createChannel();
+        $article = $this->createArticle($admin, $channel, [
+            'title' => '图标按钮文章',
+            'slug' => 'icon-action-article',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.articles.index'))
+            ->assertOk()
+            ->assertSee('icon-action', false)
+            ->assertSee('title="查看文章"', false)
+            ->assertSee('title="编辑文章"', false)
+            ->assertSee('title="删除文章"', false)
+            ->assertSee('aria-label="编辑文章：'.$article->title.'"', false);
+    }
+
+    private function createChannel(): Channel
+    {
+        return Channel::query()->create([
+            'name' => '公告',
+            'slug' => 'notice',
+            'description' => '公告频道',
+            'accent_color' => '#8b5cf6',
+            'icon' => '📢',
+            'sort_order' => 1,
+            'is_public' => true,
+        ]);
+    }
+
+    private function createArticle(User $admin, Channel $channel, array $overrides = []): Article
+    {
+        return Article::query()->create(array_merge([
+            'channel_id' => $channel->id,
+            'author_id' => $admin->id,
+            'title' => '后台文章',
+            'slug' => 'admin-article',
+            'excerpt' => '文章摘要',
+            'markdown_body' => "# 标题\n\n正文内容",
+            'html_body' => '<h1>标题</h1><p>正文内容</p>',
+            'is_published' => true,
+            'published_at' => now(),
+            'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
+        ], $overrides));
     }
 }

@@ -7,7 +7,16 @@
                 <h2 class="text-xl font-semibold text-gray-900">{{ $article->exists ? '编辑文章' : '发布文章' }}</h2>
                 <p class="mt-1 text-sm text-gray-500">{{ $article->exists ? '修改现有文章内容' : '创建新的文章' }}</p>
             </div>
-            <a href="{{ route('admin.articles.index') }}" class="btn-secondary">返回列表</a>
+            <div class="icon-action-group">
+                <x-icon-button :href="route('admin.articles.index')" icon="arrow-left" label="返回列表" title="返回列表" />
+                @if($article->exists)
+                    <form action="{{ route('admin.articles.destroy', $article) }}" method="POST" onsubmit="return confirm('确定删除这篇文章吗？删除后不可恢复。');">
+                        @csrf
+                        @method('DELETE')
+                        <x-icon-button icon="trash" label="删除文章" title="删除文章" :aria-label="'删除文章：'.$article->title" variant="danger" type="submit" />
+                    </form>
+                @endif
+            </div>
         </div>
 
         <form action="{{ $formAction }}" method="POST" class="mt-8 space-y-5">

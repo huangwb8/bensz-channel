@@ -7,9 +7,9 @@
                 <h2 class="text-xl font-semibold text-gray-900">用户管理</h2>
                 <p class="mt-1 text-sm text-gray-500">查看社区成员、调整角色，并维护基础资料。</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ route('admin.articles.index') }}" class="btn-secondary">文章管理</a>
-                <a href="{{ route('admin.channels.index') }}" class="btn-secondary">频道管理</a>
+            <div class="icon-action-group">
+                <x-icon-button :href="route('admin.articles.index')" icon="document" label="文章管理" title="文章管理" />
+                <x-icon-button :href="route('admin.channels.index')" icon="folder" label="频道管理" title="频道管理" />
             </div>
         </div>
 
