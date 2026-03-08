@@ -22,6 +22,18 @@ class SubscriptionSettingsTest extends TestCase
         ]);
     }
 
+    public function test_member_only_sees_subscription_controls(): void
+    {
+        $member = User::factory()->create(['role' => User::ROLE_MEMBER]);
+
+        $this->actingAs($member)
+            ->get(route('settings.subscriptions.edit'))
+            ->assertOk()
+            ->assertSee('SMTP 邮件提醒')
+            ->assertDontSee('管理员 SMTP 配置')
+            ->assertDontSee('SMTP 服务器');
+    }
+
     public function test_member_can_update_subscription_preferences(): void
     {
         $member = User::factory()->create(['role' => User::ROLE_MEMBER]);

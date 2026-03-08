@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Services\Auth\BetterAuthGateway;
 use App\Services\Auth\LegacyOtpGateway;
 use App\Support\CommunityViewData;
+use App\Support\MailSettingsManager;
+use App\Support\SiteSettingsManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -30,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        app(SiteSettingsManager::class)->applyConfiguredSettings();
+        app(MailSettingsManager::class)->applyConfiguredSettings();
+
         User::created(function (User $user): void {
             $user->notificationPreference()->firstOrCreate();
         });
