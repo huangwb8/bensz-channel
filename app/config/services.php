@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'better_auth' => [
+        'base_url' => env('BETTER_AUTH_URL', 'http://auth:3001'),
+        'internal_secret' => env('BETTER_AUTH_INTERNAL_SECRET'),
+        'timeout' => (int) env('BETTER_AUTH_TIMEOUT', 5),
+    ],
+
 ];

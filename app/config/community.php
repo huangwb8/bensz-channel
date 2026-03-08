@@ -7,6 +7,7 @@ return [
     ],
 
     'auth' => [
+        'driver' => env('AUTH_DRIVER', 'better_auth'),
         'otp_ttl_minutes' => (int) env('AUTH_OTP_TTL', 10),
         'otp_length' => (int) env('AUTH_OTP_LENGTH', 6),
         'qr_ttl_minutes' => (int) env('AUTH_QR_TTL', 10),

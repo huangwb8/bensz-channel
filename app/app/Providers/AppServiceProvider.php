@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Contracts\Auth\OtpAuthGateway;
 use App\Models\User;
+use App\Services\Auth\BetterAuthGateway;
+use App\Services\Auth\LegacyOtpGateway;
 use App\Support\CommunityViewData;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
@@ -15,7 +18,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(OtpAuthGateway::class, function ($app) {
+            return config('community.auth.driver') === 'legacy'
+                ? $app->make(LegacyOtpGateway::class)
+                : $app->make(BetterAuthGateway::class);
+        });
     }
 
     /**

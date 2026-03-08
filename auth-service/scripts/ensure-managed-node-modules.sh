@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+
+APP_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+MANAGED_ROOT="/Volumes/2T01/Test/bensz-channel/auth-service"
+MANAGED_DIR="$MANAGED_ROOT/node_modules"
+LOCAL_DIR="$APP_DIR/node_modules"
+
+mkdir -p "$MANAGED_ROOT"
+
+if [ -L "$LOCAL_DIR" ]; then
+    TARGET=$(readlink "$LOCAL_DIR" || true)
+    if [ "$TARGET" = "$MANAGED_DIR" ]; then
+        exit 0
+    fi
+    rm -f "$LOCAL_DIR"
+fi
+
+if [ -d "$LOCAL_DIR" ]; then
+    mkdir -p "$MANAGED_DIR"
+    cp -R "$LOCAL_DIR"/. "$MANAGED_DIR"/
+    rm -rf "$LOCAL_DIR"
+fi
+
+if [ ! -d "$MANAGED_DIR" ]; then
+    mkdir -p "$MANAGED_DIR"
+fi
+
+rm -rf "$LOCAL_DIR"
+ln -s "$MANAGED_DIR" "$LOCAL_DIR"

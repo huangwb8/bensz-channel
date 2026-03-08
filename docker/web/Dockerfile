@@ -20,7 +20,7 @@ WORKDIR /app
 
 COPY app/package.json app/package-lock.json ./
 COPY app/scripts ./scripts
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 COPY app/resources ./resources
 COPY app/public ./public

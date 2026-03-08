@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Contracts\Auth\OtpAuthGateway;
 use App\Http\Controllers\Controller;
 use App\Models\LoginCode;
 use App\Models\QrLoginRequest;
-use App\Support\OtpLoginBroker;
+use App\Services\Auth\LoginUserResolver;
 use App\Support\QrLoginBroker;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -29,7 +30,7 @@ class LoginController extends Controller
         ]);
     }
 
-    public function sendCode(Request $request, OtpLoginBroker $broker): RedirectResponse
+    public function sendCode(Request $request, OtpAuthGateway $gateway): RedirectResponse
     {
         $validated = $request->validate([
             'channel' => ['required', Rule::in([LoginCode::CHANNEL_EMAIL, LoginCode::CHANNEL_PHONE])],
@@ -42,7 +43,7 @@ class LoginController extends Controller
                 : ['required', 'regex:/^\+?[0-9\-\s]{6,24}$/'],
         ]);
 
-        $code = $broker->issue($validated['channel'], $validated['target']);
+        $previewCode = $gateway->issue($validated['channel'], $validated['target']);
 
         $message = $validated['channel'] === LoginCode::CHANNEL_EMAIL
             ? '验证码已发送到邮箱，请查收后完成验证。'
@@ -52,14 +53,18 @@ class LoginController extends Controller
             ->withInput(['otp_channel' => $validated['channel'], 'otp_target' => $validated['target']])
             ->with('status', $message);
 
-        if ($this->shouldPreviewCode()) {
-            $redirect->with('otp_preview', $code);
+        if ($this->shouldPreviewCode() && filled($previewCode)) {
+            $redirect->with('otp_preview', $previewCode);
         }
 
         return $redirect;
     }
 
-    public function verifyCode(Request $request, OtpLoginBroker $broker): RedirectResponse
+    public function verifyCode(
+        Request $request,
+        OtpAuthGateway $gateway,
+        LoginUserResolver $resolver,
+    ): RedirectResponse
     {
         $validated = $request->validate([
             'channel' => ['required', Rule::in([LoginCode::CHANNEL_EMAIL, LoginCode::CHANNEL_PHONE])],
@@ -68,12 +73,14 @@ class LoginController extends Controller
             'name' => ['nullable', 'string', 'max:40'],
         ]);
 
-        $user = $broker->consume(
+        $identity = $gateway->consume(
             $validated['channel'],
             $validated['target'],
             $validated['code'],
             $validated['name'] ?? null,
         );
+
+        $user = $resolver->resolve($identity);
 
         Auth::login($user, true);
         $request->session()->regenerate();
