@@ -35,6 +35,8 @@ cp config/.env.example config/.env
 
 `./scripts/compose.sh` 现在会自动创建 `./data/` 下的持久化目录，并在首次升级到当前版本时，自动把旧的 Docker 命名卷 / 容器内运行时数据迁移到 `./data/`，这样后续用户直接 `git pull` 后重新构建即可，不会因为仓库更新覆盖现有业务数据。
 
+当前 Docker 启动流程只会自动完成**数据库迁移**与**系统基础初始化**（默认管理员账号等必需记录），**不会自动灌入示例频道 / 文章 / 评论 / 示例成员**。如果你确实需要演示数据，请在容器启动后手动执行 `docker compose exec web php artisan db:seed`。
+
 配置职责约定：
 
 - `config/config.toml`：托管关键**非密钥**参数，例如端口、站点名、数据库主机、邮件主机、OTP TTL
@@ -80,15 +82,9 @@ php -r 'echo "APP_KEY=base64:".base64_encode(random_bytes(32)), PHP_EOL;'
 - 邮箱：`admin@example.com`
 - 密码：`admin123456`
 
-默认成员（非管理员）：
-
-- 邮箱：`member@example.com`
-- 密码：`member123456`
-- 手机号：`13800138000`（验证码登录）
-
 登录审查建议：
 
-- 邮箱验证码：在登录页选择“邮箱 + 验证码”，填写任意邮箱，例如 `member@example.com`
+- 邮箱验证码：在登录页选择“邮箱 + 验证码”，填写任意可接收邮件的邮箱；Docker 审查环境请到 Mailpit 查看验证码
 - 邮箱密码：可直接使用管理员邮箱 `admin@example.com` 与配置密码登录
 - 微信 / QQ：在登录页选择对应扫码方式后生成二维码继续审查
 - Docker 审查环境默认不在页面展示验证码，请到 Mailpit 查看邮件验证码
@@ -137,6 +133,7 @@ bensz-channel/
 - Redis AOF 显式挂载到 `./data/redis`
 - Mailpit 数据库显式挂载到 `./data/mailpit`
 - Laravel 运行时存储与静态页面输出显式挂载到 `./data/web/`
+- Web 容器启动时只执行 `migrate + SystemBootstrapSeeder`，避免重部署时反复写入 demo 内容
 - 仓库更新时只需执行 `git pull` 后重新运行 `./scripts/compose.sh up --build -d`
 
 ## 认证说明

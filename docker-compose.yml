@@ -1,5 +1,8 @@
 services:
   web:
+    # 推荐默认使用本地构建：直接 git clone 后执行 `docker compose up --build`
+    # 如需改用远程已发布镜像，可注释掉下面的 `build:`，并启用示例 `image:`
+    # image: "${WEB_IMAGE:-your-dockerhub-namespace/bensz-channel-web:latest}"
     build:
       context: .
       dockerfile: docker/web/Dockerfile
@@ -27,6 +30,9 @@ services:
       retries: 12
 
   auth:
+    # 推荐默认使用本地构建：直接 git clone 后执行 `docker compose up --build`
+    # 如需改用远程已发布镜像，可注释掉下面的 `build:`，并启用示例 `image:`
+    # image: "${AUTH_IMAGE:-your-dockerhub-namespace/bensz-channel-auth:latest}"
     build:
       context: .
       dockerfile: auth-service/Dockerfile

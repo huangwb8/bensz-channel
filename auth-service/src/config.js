@@ -26,6 +26,7 @@ export const config = {
     nodeEnv: process.env.NODE_ENV ?? 'development',
     port: parseNumber(process.env.PORT, 3001),
     logLevel: process.env.LOG_LEVEL ?? 'info',
+    authDbSchema: process.env.AUTH_DB_SCHEMA ?? 'auth',
     baseUrl: process.env.BETTER_AUTH_BASE_URL
         ?? process.env.BETTER_AUTH_URL
         ?? `http://127.0.0.1:${parseNumber(process.env.PORT, 3001)}`,

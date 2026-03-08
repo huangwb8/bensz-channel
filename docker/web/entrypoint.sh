@@ -26,7 +26,7 @@ mkdir -p bootstrap/cache
 
 php artisan optimize:clear --ansi
 php artisan migrate --force --ansi
-php artisan db:seed --force --ansi
+php artisan db:seed --class=SystemBootstrapSeeder --force --ansi
 php artisan storage:link --ansi || true
 mkdir -p public/$(php -r 'echo trim((string) getenv("STATIC_SITE_OUTPUT_DIR") ?: "static", "/");')
 chown -R www-data:www-data storage bootstrap/cache public/$(php -r 'echo trim((string) getenv("STATIC_SITE_OUTPUT_DIR") ?: "static", "/");')

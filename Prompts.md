@@ -2,6 +2,14 @@
 
 ---
 
+目前， 所有关键的信息是否已经可以在数据库里持久化了？我不需要demo，我需要数据库确实能够工作。使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
+
+---
+
+/bensz-channel-devtools  新建一个文章，向用户介绍 /Volumes/2T01/Github/ChineseResearchLaTeX 这个项目最新release的相关情况
+
+---
+
 skills/bensz-channel-devtools 优化
 
 - 目前，skill的功能也许未经常实际的测试。 在 .env 里可用的API信息供测试用。 请你测试所有 该skill应该具有的功能是否能正常运行； 如果不能，应该优化它或者bensz-channel的源代码，直至所有功能稳定、高效、正常地运行为止。

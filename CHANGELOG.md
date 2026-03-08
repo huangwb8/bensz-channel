@@ -11,10 +11,12 @@
 - 新增了 GitHub Actions 工作流 `.github/workflows/publish-release-images.yml`：每 12 小时自动检查一次最新 GitHub Release，并在 Docker Hub 尚未存在对应版本镜像时构建并推送 `web` / `auth` 双镜像
 - 新增了 `skills/bensz-channel-devtools/CHANGELOG.md` 与对应 `plans/`、`tests/` 自动测试会话产物：用于沉淀本次 skill 级优化的可追溯记录
 - 新增了 `app/tests/Feature/Api/Vibe/DevtoolsApiTest.php` 与 `skills/bensz-channel-devtools/tests/v202603082316/_scripts/live_smoke.sh`：分别用于锁定 DevTools API 回归点与执行真实 Docker 环境 CLI smoke test
+- 新增了 `app/database/seeders/SystemBootstrapSeeder.php`、`app/tests/Feature/Database/SystemBootstrapSeederTest.php` 与 `auth-service/tests/ensure-schema.test.js`：用于保证生产启动仅初始化必要系统数据，并锁定 auth schema 初始化行为
 
 ### Changed（变更）
 
 - 更新了 `config.yaml` 与 `README.md`：将项目版本推进到 `1.13.1`，并补充 Docker Hub 自动发布工作流所需的 GitHub Secrets / Variables 配置说明
+- 更新了 `docker-compose.yml`：为 `web` 与 `auth` 服务补充了已注释的远程镜像示例，便于需要时切换到 Docker Hub 发布镜像，同时保留“直接克隆仓库后本地 build”为默认推荐方式
 - 优化了 `skills/bensz-channel-devtools`：修复匿名 `ping` 被错误要求 KEY、列表查询未 URL 编码、`doctor` 未响应 `terminate: true` 等问题，并同步统一 URL 规范化与环境搜索配置集中化
 - 优化了 DevTools Vibe API：频道与文章端点现在同时支持数值 `id` 与 `slug` 标识；频道 / 文章 / 用户更新支持 partial update；文章与评论列表的 `published=false` / `visible=false` 过滤已按真实布尔语义处理
 - 更新了 `skills/bensz-channel-devtools/tests/v202603082316/`：补充本轮真实 Docker 环境 smoke test 产物、环境脚本检查结果与修复闭环记录
@@ -22,6 +24,10 @@
 - 更新了 `scripts/compose.sh`：新增首次升级时的旧命名卷 / 容器内运行时数据自动迁移逻辑，并在启动前自动创建 `./data/` 目录树
 - 更新了 `.gitignore` 与 `.dockerignore`：统一忽略 `./data/`，避免运行时数据进入 Git 历史或 Docker 构建上下文
 - 更新了 `README.md`：补充 `./data/` 持久化目录、升级迁移行为与推荐的重部署方式
+- 更新了 `docker/web/entrypoint.sh`：容器启动时改为执行 `SystemBootstrapSeeder`，仅初始化默认管理员等必需基线数据，不再自动写入示例频道、文章、评论与示例成员
+- 更新了 `README.md`：明确 Docker 审查环境默认不再注入 demo 数据，并补充手动加载演示数据的方法
+- 更新了 `auth-service/src/ensure-schema.js` 与 `auth-service/src/config.js`：auth schema 初始化改为读取 `AUTH_DB_SCHEMA` 配置，并增加安全的 SQL 标识符转义
+- 更新了 `auth-service/scripts/entrypoint.sh` 与 `auth-service/src/wait-for-database.js`：auth 服务启动前会主动等待 PostgreSQL 就绪，避免整栈重启时因数据库尚未接受连接而启动失败
 
 - 优化了管理员频道管理页的行内操作：将“保存”和“删除”改为带 tooltip 与无障碍标签的图标按钮，减少表格行宽占用并统一后台操作风格
 - 更新了图标按钮组件与图标库：支持 `aria-label` 属性透传，并新增保存图标供后台使用
@@ -32,6 +38,8 @@
 - 修复了 DevTools 频道创建在省略 `slug` 时触发 500 的问题：改为安全生成 slug，并在中文标题无法转写时提供稳定 fallback，避免空 slug 或未定义数组键
 - 修复了 DevTools 频道 / 文章 `show`、`update`、`delete` 命令与服务端路由绑定不一致的问题：skill 传递数值 `id` 时现已可被 API 正确解析
 - 修复了 DevTools 用户更新只能整表提交的问题：现在可按 skill 文档仅提交变更字段，同时保持“至少一个联系方式”和“最后一位管理员不可降级”的服务端约束
+- 修复了 Docker 重部署会重复灌入 demo 业务数据的问题：现在重启后只保留真实数据库内容与必要系统基线，避免审查环境被示例数据污染
+- 修复了 auth-service schema 初始化写死为 `auth` 的问题：自定义 `AUTH_DB_SCHEMA` 时现在也能正确建库
 
 ## [1.12.0] - 2026-03-08
 
