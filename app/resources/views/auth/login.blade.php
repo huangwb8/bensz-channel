@@ -3,39 +3,41 @@
 @section('content')
     @php
         $emailCodeTarget = old('target', old('otp_target'));
-        $activeMethod = old('login_method', 'email-code');
-        $methodIds = ['email-code', 'email-password', 'wechat', 'qq'];
+        $methodCatalog = [
+            'email_code' => [
+                'id' => 'email-code',
+                'label' => '邮箱 + 验证码',
+                'summary' => '适合首次登录与临时设备',
+            ],
+            'email_password' => [
+                'id' => 'email-password',
+                'label' => '邮箱 + 密码',
+                'summary' => '适合常用设备快速登录',
+            ],
+            'wechat_qr' => [
+                'id' => 'wechat',
+                'label' => '微信扫码',
+                'summary' => '使用微信确认登录',
+            ],
+            'qq_qr' => [
+                'id' => 'qq',
+                'label' => 'QQ扫码',
+                'summary' => '使用 QQ 客户端扫码',
+            ],
+        ];
+
+        $enabledMethodKeys = array_values(array_filter((array) ($enabledAuthMethods ?? []), fn ($method) => is_string($method) && array_key_exists($method, $methodCatalog)));
+        $methods = array_map(fn ($methodKey) => $methodCatalog[$methodKey], $enabledMethodKeys);
+        $methodIds = array_map(fn ($method) => $method['id'], $methods);
+        $activeMethod = old('login_method', $methodIds[0] ?? null);
 
         if (! in_array($activeMethod, $methodIds, true)) {
-            $activeMethod = 'email-code';
+            $activeMethod = $methodIds[0] ?? null;
         }
 
         $providerEnabled = [
             'wechat' => in_array('wechat', $providers ?? [], true),
             'qq' => in_array('qq', $providers ?? [], true),
-        ];
-
-        $methods = [
-            [
-                'id' => 'email-code',
-                'label' => '邮箱 + 验证码',
-                'summary' => '适合首次登录与临时设备',
-            ],
-            [
-                'id' => 'email-password',
-                'label' => '邮箱 + 密码',
-                'summary' => '适合常用设备快速登录',
-            ],
-            [
-                'id' => 'wechat',
-                'label' => '微信扫码',
-                'summary' => '使用微信确认登录',
-            ],
-            [
-                'id' => 'qq',
-                'label' => 'QQ扫码',
-                'summary' => '使用 QQ 客户端扫码',
-            ],
         ];
     @endphp
 
@@ -54,7 +56,7 @@
             <header class="card-header">
                 <a href="{{ route('home') }}" class="brand-mark" aria-label="返回主页">
                     <span aria-hidden="true">💬</span>
-                    <span class="brand-text">Bensz Channel</span>
+                    <span class="brand-text">{{ $siteName ?? 'Bensz Channel' }}</span>
                 </a>
                 <p class="auth-badge">Better Auth 驱动的自托管安全登录</p>
                 <h1 class="page-title">欢迎回来</h1>
@@ -88,26 +90,32 @@
 
             <div class="section-kicker">选择登录方式</div>
             <div class="method-switcher">
-                @foreach ($methods as $method)
-                    <input
-                        id="method-{{ $method['id'] }}"
-                        class="method-toggle"
-                        type="radio"
-                        name="auth_method_switcher"
-                        @checked($activeMethod === $method['id'])
-                    >
-                @endforeach
-
-                <div class="method-tabs" role="tablist" aria-label="登录方式列表">
+                @if ($methods === [])
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-900">
+                        当前暂未开放任何登录 / 注册方式，请联系管理员处理后台配置。
+                    </div>
+                @else
                     @foreach ($methods as $method)
-                        <label for="method-{{ $method['id'] }}" class="method-tab">
-                            <span class="method-tab-title">{{ $method['label'] }}</span>
-                            <span class="method-tab-summary">{{ $method['summary'] }}</span>
-                        </label>
+                        <input
+                            id="method-{{ $method['id'] }}"
+                            class="method-toggle"
+                            type="radio"
+                            name="auth_method_switcher"
+                            @checked($activeMethod === $method['id'])
+                        >
                     @endforeach
-                </div>
 
-                <div class="method-panels">
+                    <div class="method-tabs" role="tablist" aria-label="登录方式列表">
+                        @foreach ($methods as $method)
+                            <label for="method-{{ $method['id'] }}" class="method-tab">
+                                <span class="method-tab-title">{{ $method['label'] }}</span>
+                                <span class="method-tab-summary">{{ $method['summary'] }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+
+                    <div class="method-panels">
+                    @if (in_array('email-code', $methodIds, true))
                     <section class="method-panel method-panel-email-code" aria-label="邮箱验证码登录">
                         <div class="panel-header">
                             <div>
@@ -195,7 +203,9 @@
                             </form>
                         </div>
                     </section>
+                    @endif
 
+                    @if (in_array('email-password', $methodIds, true))
                     <section class="method-panel method-panel-email-password" aria-label="邮箱密码登录">
                         <div class="panel-header panel-header-single">
                             <div>
@@ -248,7 +258,9 @@
                             </button>
                         </form>
                     </section>
+                    @endif
 
+                    @if (in_array('wechat', $methodIds, true))
                     <section class="method-panel method-panel-wechat" aria-label="微信扫码登录">
                         <div class="panel-header panel-header-single">
                             <div>
@@ -277,7 +289,9 @@
                             @endif
                         </div>
                     </section>
+                    @endif
 
+                    @if (in_array('qq', $methodIds, true))
                     <section class="method-panel method-panel-qq" aria-label="QQ扫码登录">
                         <div class="panel-header panel-header-single">
                             <div>
@@ -306,7 +320,9 @@
                             @endif
                         </div>
                     </section>
+                    @endif
                 </div>
+                @endif
             </div>
 
             <p class="card-footer">登录即表示同意我们的服务条款与隐私政策</p>

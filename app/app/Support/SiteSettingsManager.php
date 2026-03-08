@@ -64,6 +64,16 @@ class SiteSettingsManager
         return self::AVAILABLE_AUTH_METHODS;
     }
 
+    public function enabledAuthMethods(): array
+    {
+        return $this->normalizeAuthMethods($this->current()?->auth_enabled_methods);
+    }
+
+    public function enabledQrProviders(): array
+    {
+        return $this->enabledQrProvidersFromMethods($this->enabledAuthMethods());
+    }
+
     public function save(array $validated): SiteSetting
     {
         $setting = SiteSetting::query()->firstOrNew(['id' => 1]);
@@ -100,7 +110,7 @@ class SiteSettingsManager
             config(['community.auth.enabled_methods' => $this->normalizeAuthMethods($setting->auth_enabled_methods)]);
         }
 
-        config(['community.auth.qr_providers' => $this->enabledQrProviders((array) config('community.auth.enabled_methods', self::DEFAULT_AUTH_METHODS))]);
+        config(['community.auth.qr_providers' => $this->enabledQrProvidersFromMethods((array) config('community.auth.enabled_methods', self::DEFAULT_AUTH_METHODS))]);
     }
 
     public function forgetCached(): void
@@ -140,7 +150,7 @@ class SiteSettingsManager
         return $methods !== [] ? $methods : self::DEFAULT_AUTH_METHODS;
     }
 
-    private function enabledQrProviders(array $methods): array
+    private function enabledQrProvidersFromMethods(array $methods): array
     {
         $providers = [];
 

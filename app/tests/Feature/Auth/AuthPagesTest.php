@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\QrLoginRequest;
+use App\Models\SiteSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -24,6 +25,20 @@ class AuthPagesTest extends TestCase
             ->assertDontSee(config('community.admin.password'))
             ->assertDontSee('member@example.com')
             ->assertDontSee('member123456');
+    }
+
+    public function test_login_page_only_shows_enabled_methods_from_site_settings(): void
+    {
+        SiteSetting::query()->create([
+            'auth_enabled_methods' => ['email_code', 'qq_qr'],
+        ]);
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('邮箱 + 验证码')
+            ->assertSee('QQ扫码')
+            ->assertDontSee('邮箱 + 密码')
+            ->assertDontSee('微信扫码');
     }
 
     public function test_qr_login_pages_can_be_rendered(): void

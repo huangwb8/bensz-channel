@@ -21,7 +21,8 @@ class AdminSiteSettingsTest extends TestCase
             ->assertSee('站点设置')
             ->assertSee('APP_NAME')
             ->assertSee('SITE_NAME')
-            ->assertSee('SITE_TAGLINE');
+            ->assertSee('SITE_TAGLINE')
+            ->assertSee('允许用户使用的登录 / 注册方式');
     }
 
     public function test_admin_can_update_site_settings(): void
@@ -33,6 +34,7 @@ class AdminSiteSettingsTest extends TestCase
                 'app_name' => 'Bensz Channel Admin',
                 'site_name' => 'Bensz Community',
                 'site_tagline' => '一个支持静态游客访问与成员互动的频道式社区。',
+                'auth_enabled_methods' => ['email_code', 'qq_qr'],
             ])
             ->assertRedirect(route('admin.site-settings.edit'));
 
@@ -41,6 +43,9 @@ class AdminSiteSettingsTest extends TestCase
             'site_name' => 'Bensz Community',
             'site_tagline' => '一个支持静态游客访问与成员互动的频道式社区。',
         ]);
+
+        $setting = SiteSetting::query()->first();
+        $this->assertSame(['email_code', 'qq_qr'], $setting?->auth_enabled_methods);
     }
 
     public function test_member_cannot_access_site_settings_page(): void

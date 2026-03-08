@@ -8,6 +8,7 @@ use App\Models\LoginCode;
 use App\Models\QrLoginRequest;
 use App\Services\Auth\LoginUserResolver;
 use App\Support\QrLoginBroker;
+use App\Support\SiteSettingsManager;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -25,9 +26,11 @@ class LoginController extends Controller
             return to_route('home');
         }
 
+        $siteSettingsManager = app(SiteSettingsManager::class);
+
         return view('auth.login', [
             'pageTitle' => '登录 / 注册',
-            'providers' => config('community.auth.qr_providers'),
+            'providers' => $siteSettingsManager->enabledQrProviders(),
             'enabledAuthMethods' => $this->enabledAuthMethods(),
         ]);
     }
@@ -124,7 +127,7 @@ class LoginController extends Controller
 
     public function startQr(string $provider, QrLoginBroker $broker): RedirectResponse
     {
-        abort_unless(in_array($provider, config('community.auth.qr_providers'), true), 404);
+        abort_unless(in_array($provider, app(SiteSettingsManager::class)->enabledQrProviders(), true), 404);
 
         return to_route('auth.qr.show', $broker->create($provider));
     }
@@ -216,7 +219,7 @@ class LoginController extends Controller
 
     private function enabledAuthMethods(): array
     {
-        return array_values(array_filter((array) config('community.auth.enabled_methods', []), static fn (mixed $method): bool => is_string($method) && $method !== ''));
+        return app(SiteSettingsManager::class)->enabledAuthMethods();
     }
 
     private function ensureAuthMethodEnabled(string $method): void

@@ -8,6 +8,7 @@ use App\Support\StaticPageBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SiteSettingsController extends Controller
 {
@@ -17,6 +18,12 @@ class SiteSettingsController extends Controller
             'pageTitle' => '站点设置',
             'siteSettingsForm' => $siteSettingsManager->formData(),
             'siteSettingsUsingOverrides' => $siteSettingsManager->usingOverrides(),
+            'authMethodOptions' => [
+                'email_code' => ['label' => '邮箱 + 验证码', 'description' => '支持新用户注册，也可用于已有账号登录。'],
+                'email_password' => ['label' => '邮箱 + 密码', 'description' => '适合已有账号的快速登录，不承担注册入口。'],
+                'wechat_qr' => ['label' => '微信扫码', 'description' => '支持通过微信扫码登录/注册。'],
+                'qq_qr' => ['label' => 'QQ扫码', 'description' => '支持通过 QQ 扫码登录/注册。'],
+            ],
         ]);
     }
 
@@ -29,6 +36,8 @@ class SiteSettingsController extends Controller
             'app_name' => ['required', 'string', 'max:120'],
             'site_name' => ['required', 'string', 'max:120'],
             'site_tagline' => ['required', 'string', 'max:255'],
+            'auth_enabled_methods' => ['required', 'array', 'min:1'],
+            'auth_enabled_methods.*' => ['string', Rule::in($siteSettingsManager->availableAuthMethods())],
         ]);
 
         $siteSettingsManager->save($validated);
