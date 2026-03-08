@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\StaticPageBuilder;
+use App\Support\UserAccountManager;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -52,28 +52,32 @@ class UserController extends Controller
         ]);
     }
 
-    public function update(Request $request, User $user, StaticPageBuilder $staticPageBuilder): RedirectResponse
-    {
-        $this->normalizeInput($request);
+    public function update(
+        Request $request,
+        User $user,
+        StaticPageBuilder $staticPageBuilder,
+        UserAccountManager $userAccountManager,
+    ): RedirectResponse {
+        $request->merge($userAccountManager->normalizeProfileInput($request->only([
+            'name',
+            'email',
+            'phone',
+            'avatar_url',
+            'bio',
+        ])));
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:40'],
-            'email' => ['nullable', 'email', 'max:120', Rule::unique('users', 'email')->ignore($user->id)],
-            'phone' => ['nullable', 'string', 'max:32', Rule::unique('users', 'phone')->ignore($user->id)],
+            ...$userAccountManager->profileValidationRules($user),
             'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_MEMBER])],
-            'bio' => ['nullable', 'string', 'max:500'],
         ]);
 
-        if (blank($validated['email'] ?? null) && blank($validated['phone'] ?? null)) {
-            throw ValidationException::withMessages([
-                'email' => '邮箱和手机号至少保留一个，避免用户失去登录标识。',
-                'phone' => '邮箱和手机号至少保留一个，避免用户失去登录标识。',
-            ]);
-        }
+        $userAccountManager->assertHasLoginIdentifier($validated);
 
         $this->guardAdminInvariant($user, $validated['role']);
 
-        $user->update($validated);
+        $userAccountManager->fillProfile($user, $validated);
+        $user->role = $validated['role'];
+        $user->save();
 
         $staticPageBuilder->buildAll();
 
@@ -82,16 +86,6 @@ class UserController extends Controller
         }
 
         return to_route('admin.users.index', $request->only(['q', 'role_filter']))->with('status', '用户信息已更新。');
-    }
-
-    private function normalizeInput(Request $request): void
-    {
-        $request->merge([
-            'name' => trim((string) $request->input('name')),
-            'email' => $this->normalizeOptionalEmail($request->input('email')),
-            'phone' => $this->normalizeOptionalPhone($request->input('phone')),
-            'bio' => Str::of((string) $request->input('bio'))->trim()->value() ?: null,
-        ]);
     }
 
     private function guardAdminInvariant(User $user, string $nextRole): void
@@ -109,27 +103,5 @@ class UserController extends Controller
         throw ValidationException::withMessages([
             'role' => '至少需要保留 1 位管理员，不能降级最后一位管理员。',
         ]);
-    }
-
-    private function normalizeOptionalEmail(mixed $value): ?string
-    {
-        if (! is_string($value)) {
-            return null;
-        }
-
-        $email = Str::lower(trim($value));
-
-        return $email !== '' ? $email : null;
-    }
-
-    private function normalizeOptionalPhone(mixed $value): ?string
-    {
-        if (! is_string($value)) {
-            return null;
-        }
-
-        $phone = preg_replace('/\D+/', '', $value) ?: '';
-
-        return $phone !== '' ? $phone : null;
     }
 }

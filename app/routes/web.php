@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\Admin\ArticleController as AdminArticleController;
 use App\Http\Controllers\Admin\ChannelController as AdminChannelController;
 use App\Http\Controllers\Admin\DevtoolsController as AdminDevtoolsController;
@@ -34,6 +35,9 @@ Route::get('/feeds/channels/{channel}.xml', [RssFeedController::class, 'channel'
 
 Route::middleware('auth')->group(function (): void {
     Route::post('/articles/{article}/comments', [CommentController::class, 'store'])->name('articles.comments.store');
+    Route::get('/settings/account', [AccountSettingsController::class, 'edit'])->name('settings.account.edit');
+    Route::put('/settings/account/profile', [AccountSettingsController::class, 'updateProfile'])->name('settings.account.profile.update');
+    Route::put('/settings/account/password', [AccountSettingsController::class, 'updatePassword'])->name('settings.account.password.update');
     Route::get('/settings/subscriptions', [SubscriptionSettingsController::class, 'edit'])->name('settings.subscriptions.edit');
     Route::put('/settings/subscriptions', [SubscriptionSettingsController::class, 'update'])->name('settings.subscriptions.update');
     Route::put('/settings/subscriptions/mail', [SubscriptionSettingsController::class, 'updateMailSettings'])

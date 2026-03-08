@@ -55,6 +55,9 @@
                                     <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
                                     <p class="text-xs text-gray-500">{{ auth()->user()->isAdmin() ? '管理员' : '成员' }}</p>
                                 </div>
+                                <a href="{{ route('settings.account.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    👤 账户设置
+                                </a>
                                 @if(auth()->user()->isAdmin())
                                     <a href="{{ route('admin.site-settings.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                         ⚙️ 站点设置

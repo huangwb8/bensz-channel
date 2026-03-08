@@ -8,6 +8,9 @@
 
 ### Added（新增）
 
+- 新增了用户自助“账户设置”页面与对应控制器 / 视图 / 回归测试：登录用户现在可直接修改昵称、邮箱、手机号、头像链接、个人简介与登录密码
+- 新增了账户设置实现计划 `docs/plans/2026-03-08-account-settings.md`：用于沉淀本次“用户可自助修改账户信息”功能的实现路径与验证步骤
+
 - 新增了 GitHub Actions 工作流 `.github/workflows/publish-release-images.yml`：每 12 小时自动检查一次最新 GitHub Release，并在 Docker Hub 尚未存在对应版本镜像时构建并推送 `web` / `auth` 双镜像
 - 新增了 `skills/bensz-channel-devtools/CHANGELOG.md` 与对应 `plans/`、`tests/` 自动测试会话产物：用于沉淀本次 skill 级优化的可追溯记录
 - 新增了 `app/tests/Feature/Api/Vibe/DevtoolsApiTest.php` 与 `skills/bensz-channel-devtools/tests/v202603082316/_scripts/live_smoke.sh`：分别用于锁定 DevTools API 回归点与执行真实 Docker 环境 CLI smoke test
@@ -15,6 +18,8 @@
 
 ### Changed（变更）
 
+- 更新了 `config.yaml` 与 `README.md`：将项目版本推进到 `1.14.0`，并补充“账户设置”能力与审查说明
+- 重构了用户资料更新逻辑：新增共享的 `UserAccountManager`，统一自助设置与后台用户编辑的输入归一化、唯一性校验、登录标识约束与联系方式变更后的验证状态处理
 - 更新了 `config.yaml` 与 `README.md`：将项目版本推进到 `1.13.1`，并补充 Docker Hub 自动发布工作流所需的 GitHub Secrets / Variables 配置说明
 - 更新了 `docker-compose.yml`：为 `web` 与 `auth` 服务补充了已注释的远程镜像示例，便于需要时切换到 Docker Hub 发布镜像，同时保留“直接克隆仓库后本地 build”为默认推荐方式
 - 优化了 `skills/bensz-channel-devtools`：修复匿名 `ping` 被错误要求 KEY、列表查询未 URL 编码、`doctor` 未响应 `terminate: true` 等问题，并同步统一 URL 规范化与环境搜索配置集中化
@@ -34,6 +39,8 @@
 - 优化了“站点设置”页的管理入口：将“文章管理 / 频道管理 / 用户管理”改为统一的图标按钮，减少页头视觉噪声并保持后台管理入口风格一致
 
 ### Fixed（修复）
+- 修复了普通用户无法修改自己密码、邮箱及其它账户资料的问题：现在已登录用户可通过“账户设置”完成自助维护，且不会影响现有登录、订阅与后台管理链路
+- 修复了后台编辑用户资料与前台账户设置规则可能漂移的问题：两条链路现已复用同一套资料归一化与约束校验逻辑
 - 修复了旧版 Docker 命名卷仅持久化 PostgreSQL 的问题：现在升级到新版本后可自动迁移到 `./data/`，避免用户在 `git pull` 后重建容器时丢失既有业务数据
 - 修复了 DevTools 频道创建在省略 `slug` 时触发 500 的问题：改为安全生成 slug，并在中文标题无法转写时提供稳定 fallback，避免空 slug 或未定义数组键
 - 修复了 DevTools 频道 / 文章 `show`、`update`、`delete` 命令与服务端路由绑定不一致的问题：skill 传递数值 `id` 时现已可被 API 正确解析
