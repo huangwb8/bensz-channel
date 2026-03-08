@@ -43,6 +43,8 @@ def main() -> int:
     print(f"  来源: {env.url_source.kind} → {env.url_source.detail}")
     print(f"\n✓ KEY: {env.key_prefix()}")
     print(f"  来源: {env.key_source.kind} → {env.key_source.detail}")
+    if env.env_file_path:
+        print(f"\n✓ 使用的 .env 文件: {env.env_file_path}")
 
     if args.verbose:
         print("\n" + "=" * 60)

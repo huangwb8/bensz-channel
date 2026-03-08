@@ -434,10 +434,12 @@ def main(argv: list[str]) -> int:
                           env_file=Path(args.env_file).expanduser() if args.env_file else None)
     if getattr(args, "url", None):
         from _bdc_env import BdcEnv
-        env = BdcEnv(url=normalize_base_url(args.url), key=env.key, url_source=env.url_source, key_source=env.key_source)
+        env = BdcEnv(url=normalize_base_url(args.url), key=env.key, url_source=env.url_source,
+                     key_source=env.key_source, env_file_path=env.env_file_path)
     if getattr(args, "key", None):
         from _bdc_env import BdcEnv
-        env = BdcEnv(url=env.url, key=args.key.strip(), url_source=env.url_source, key_source=env.key_source)
+        env = BdcEnv(url=env.url, key=args.key.strip(), url_source=env.url_source,
+                     key_source=env.key_source, env_file_path=env.env_file_path)
 
     if args.cmd != "ping":
         _ensure_key(env)

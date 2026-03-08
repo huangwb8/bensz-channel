@@ -15,6 +15,7 @@ class BdcEnv:
     key: str
     url_source: EnvSource
     key_source: EnvSource
+    env_file_path: Path | None  # 实际使用的 .env 文件路径（如果有）
 
     def key_prefix(self) -> str:
         return redact_secret(self.key, keep=12)
@@ -68,38 +69,41 @@ def resolve_bdc_env(*, skill_root: Path, env_file: Path | None = None) -> BdcEnv
 
     url_source = EnvSource(kind="default", detail=str(config_path))
     key_source = EnvSource(kind="missing", detail="not found")
+    used_env_file: Path | None = None  # 记录实际使用的 .env 文件路径
 
-    sources: list[tuple[EnvSource, dict[str, str]]] = []
+    sources: list[tuple[EnvSource, dict[str, str], Path | None]] = []
     search_max_depth = int(config.scalars.get("env_search_max_depth", "5"))
 
     # 1. OS 环境变量（最高优先级）
     os_env = {k: v for k, v in os.environ.items() if isinstance(v, str)}
-    sources.append((EnvSource(kind="os_env", detail="process"), os_env))
+    sources.append((EnvSource(kind="os_env", detail="process"), os_env, None))
 
     # 2. 用户指定的 env 文件
     if env_file is not None:
-        sources.append((EnvSource(kind="env_file", detail=str(env_file)), load_dotenv_file(env_file)))
+        sources.append((EnvSource(kind="env_file", detail=str(env_file)), load_dotenv_file(env_file), env_file))
 
     # 3. 当前工作目录及向上递归查找 .env 文件
     candidates = config.lists.get("env_file_candidates", [".env", ".env.local"])
     found_env_files = _find_env_files_upward(Path.cwd(), candidates, max_depth=search_max_depth)
     for p in found_env_files:
-        sources.append((EnvSource(kind="cwd_env", detail=str(p)), load_dotenv_file(p)))
+        sources.append((EnvSource(kind="cwd_env", detail=str(p)), load_dotenv_file(p), p))
 
     # 4. Fallback 配置文件（用户主目录等）
     for p in expand_user_paths(config.lists.get("fallback_env_files", [])):
-        sources.append((EnvSource(kind="fallback_env", detail=str(p)), load_dotenv_file(p)))
+        sources.append((EnvSource(kind="fallback_env", detail=str(p)), load_dotenv_file(p), p))
 
     url_value: str | None = None
     key_value: str | None = None
 
-    for src, env in sources:
+    for src, env, file_path in sources:
         if url_value is None:
             k, v = _first_present(env, url_keys)
             if v is not None:
                 url_value = v
                 if src.kind in {"env_file", "cwd_env", "fallback_env"}:
                     url_source = EnvSource(kind=src.kind, detail=f"{k or '?'} ({src.detail})")
+                    if used_env_file is None and file_path is not None:
+                        used_env_file = file_path
                 else:
                     url_source = EnvSource(kind=src.kind, detail=k or src.detail)
         if key_value is None:
@@ -108,6 +112,8 @@ def resolve_bdc_env(*, skill_root: Path, env_file: Path | None = None) -> BdcEnv
                 key_value = v
                 if src.kind in {"env_file", "cwd_env", "fallback_env"}:
                     key_source = EnvSource(kind=src.kind, detail=f"{k or '?'} ({src.detail})")
+                    if used_env_file is None and file_path is not None:
+                        used_env_file = file_path
                 else:
                     key_source = EnvSource(kind=src.kind, detail=k or src.detail)
         if url_value is not None and key_value is not None:
@@ -116,4 +122,4 @@ def resolve_bdc_env(*, skill_root: Path, env_file: Path | None = None) -> BdcEnv
     url = normalize_base_url(url_value or default_url)
     key = (key_value or "").strip()
 
-    return BdcEnv(url=url, key=key, url_source=url_source, key_source=key_source)
+    return BdcEnv(url=url, key=key, url_source=url_source, key_source=key_source, env_file_path=used_env_file)

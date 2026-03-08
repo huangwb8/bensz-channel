@@ -47,6 +47,8 @@ metadata:
 - URL：`bensz_channel_url`、`bdc_url`
 - KEY：`bensz_channel_key`、`bdc_key`
 
+**配置传递机制**：找到 .env 文件后，会将其路径记录在 `BdcEnv.env_file_path` 中，确保工作函数能够明确知道配置来源，便于调试和日志记录。
+
 ### 配置文件搜索顺序（优先级从高到低）
 
 1. **OS 环境变量**（最高优先级）
