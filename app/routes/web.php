@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\ArticleController as AdminArticleController;
 use App\Http\Controllers\Admin\ChannelController as AdminChannelController;
+use App\Http\Controllers\Admin\DevtoolsController as AdminDevtoolsController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ChannelController;
@@ -41,9 +43,18 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('/channels', [AdminChannelController::class, 'store'])->name('channels.store');
     Route::put('/channels/{channel}', [AdminChannelController::class, 'update'])->name('channels.update');
 
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+
     Route::get('/articles', [AdminArticleController::class, 'index'])->name('articles.index');
     Route::get('/articles/create', [AdminArticleController::class, 'create'])->name('articles.create');
     Route::post('/articles', [AdminArticleController::class, 'store'])->name('articles.store');
     Route::get('/articles/{article}/edit', [AdminArticleController::class, 'edit'])->name('articles.edit');
     Route::put('/articles/{article}', [AdminArticleController::class, 'update'])->name('articles.update');
+
+    // DevTools — Vibe Coding remote management
+    Route::get('/devtools', [AdminDevtoolsController::class, 'index'])->name('devtools.index');
+    Route::post('/devtools/keys', [AdminDevtoolsController::class, 'createKey'])->name('devtools.keys.create');
+    Route::post('/devtools/keys/{id}/revoke', [AdminDevtoolsController::class, 'revokeKey'])->name('devtools.keys.revoke');
+    Route::delete('/devtools/connections/{id}', [AdminDevtoolsController::class, 'terminateConnection'])->name('devtools.connections.terminate');
 });

@@ -7,7 +7,10 @@
                 <h2 class="text-xl font-semibold text-gray-900">频道管理</h2>
                 <p class="mt-1 text-sm text-gray-500">管理社区的所有频道</p>
             </div>
-            <a href="{{ route('admin.articles.index') }}" class="btn-secondary">文章管理</a>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.users.index') }}" class="btn-secondary">用户管理</a>
+                <a href="{{ route('admin.articles.index') }}" class="btn-secondary">文章管理</a>
+            </div>
         </div>
 
         <!-- 新增频道表单 -->

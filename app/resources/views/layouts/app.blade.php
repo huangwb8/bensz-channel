@@ -62,6 +62,12 @@
                                     <a href="{{ route('admin.channels.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                         📁 管理频道
                                     </a>
+                                    <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                        👥 管理用户
+                                    </a>
+                                    <a href="{{ route('admin.devtools.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                        🔧 DevTools
+                                    </a>
                                 @endif
                                 <a href="{{ route('settings.subscriptions.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                     📮 订阅设置
@@ -100,6 +106,17 @@
             @if (session('otp_preview'))
                 <div class="mb-4 alert-warning">
                     开发环境验证码预览：<span class="font-mono font-semibold tracking-widest">{{ session('otp_preview') }}</span>
+                </div>
+            @endif
+
+            @if (isset($errors) && $errors->any())
+                <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <p class="font-medium">请先修正以下问题：</p>
+                    <ul class="mt-2 list-disc space-y-1 pl-5">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
 

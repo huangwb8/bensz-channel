@@ -2,6 +2,22 @@
 
 ---
 
+新增功能：通过Claude Code/Codex等vibe coding工具远程管理软件的各种配置。具体你可以参考一下  /Volumes/2T01/winE/Starup/dudu，它那里也有类似的东西。 你可以：
+
+- 为本项目添加API接口，让vibe coding工具可以远程控制项目的配置，包括
+  - 编辑频道、文章、评论
+  - 管理用户
+- 这个API接口需要有一个像dudu那个的可以管理的界面
+- 在 ./skills 里添加一个名为 bensz-channel-devtools 的skill。 安装这个skill后，用户可以基于该skill使用vibe coding工具对软件配置进行远程操作。基于skill只能改配置（可以认为是操作数据库），但不能修改软件源代码。skill的开发要符合 https://github.com/huangwb8/skills/blob/main/AGENTS.md 的规范
+
+使用 awesome-code  skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
+
+---
+
+管理员除了文章、频道，还可以管理用户。 这个功能目前没有。 使用 awesome-code  skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
+
+---
+
 新增订阅功能：支持RSS和SMTP功能
 
 - SMTP功能

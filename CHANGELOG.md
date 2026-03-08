@@ -8,12 +8,45 @@
 
 ### Added（新增）
 
-- 新增了 SMTP 邮件订阅与 RSS 订阅能力：用于支持全部/指定版块文章提醒，以及评论中的 @ 用户提醒
-- 新增了公开 RSS Feed 路由与订阅设置页：用于让游客直接订阅内容、让注册用户自行管理邮件提醒
+### Changed（变更）
+
+## [1.5.0] - 2026-03-08
+
+### Added（新增）
+
+- 新增 DevTools 远程管理 API 系统：允许 Claude Code、Codex CLI 等 Vibe Coding 工具通过 API 密钥远程管理社区内容（频道/文章/评论/用户），操作限于数据层不涉及源代码修改
+  - `devtools_api_keys` 表：存储 API 密钥（SHA-256 哈希 + 前缀，不明文保存）
+  - `devtools_connections` 表：记录工具连接会话（含心跳监控和终止请求机制）
+  - `EnsureVibeApiKey` 中间件：通过 `X-Devtools-Key` 请求头鉴权
+  - `routes/api.php`：完整的 RESTful API 路由（`/api/vibe/*`）
+  - `Api/Vibe/AgentController`：连接生命周期管理（connect/heartbeat/disconnect）
+  - `Api/Vibe/ChannelController`：频道 CRUD
+  - `Api/Vibe/ArticleController`：文章 CRUD（支持 Markdown 渲染 + 订阅通知）
+  - `Api/Vibe/CommentController`：评论列表/可见性/删除
+  - `Api/Vibe/UserController`：用户列表/资料更新
+- 新增管理员 DevTools 管理界面（`/admin/devtools`）：支持生成/撤销 API 密钥，以及查看和终止活跃连接
+- 新增 `skills/bensz-channel-devtools/`：零依赖 Python Skill，提供 `client.py`（频道/文章/评论/用户全操作）和 `env_check.py`（环境诊断）
 
 ### Changed（变更）
 
-- 更新了 `README.md`：补充 SMTP / RSS 订阅的使用说明与访问入口
+- 更新管理员下拉菜单：新增 "🔧 DevTools" 入口，管理员可一键跳转至 DevTools 管理页面
+- `bootstrap/app.php` 注册 `api.php` 路由文件和 `vibe-api` 中间件别名
+
+## [1.4.0] - 2026-03-08
+
+### Added（新增）
+
+- 新增了管理员用户管理页面与后台路由：用于按昵称/邮箱/手机号筛选用户，并维护昵称、邮箱、手机号、简介和角色
+- 新增了 `app/tests/Feature/Admin/AdminUserManagementTest.php`：用于覆盖普通成员越权访问、管理员更新用户资料与“最后一位管理员不可降级”回归场景
+
+### Changed（变更）
+
+- 更新了后台导航与管理入口：文章、频道、用户三类管理能力现在可互相跳转，管理员菜单同步展示“管理用户”入口
+- 更新了 `README.md`：补充管理员可管理用户资料与角色的能力说明
+
+### Fixed（修复）
+
+- 修复了管理员修改用户公开资料后静态页面可能继续显示旧身份信息的问题：现在保存用户后会自动重新构建静态站点
 
 ## [1.3.0] - 2026-03-08
 

@@ -7,7 +7,8 @@
                 <h2 class="text-xl font-semibold text-gray-900">文章管理</h2>
                 <p class="mt-1 text-sm text-gray-500">管理所有频道的文章内容</p>
             </div>
-            <div class="flex gap-3">
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ route('admin.users.index') }}" class="btn-secondary">用户管理</a>
                 <a href="{{ route('admin.channels.index') }}" class="btn-secondary">频道管理</a>
                 <a href="{{ route('admin.articles.create') }}" class="btn-primary">新建文章</a>
             </div>
