@@ -39,7 +39,7 @@ services:
       MAIL_PORT: 1025
       MAIL_FROM_ADDRESS: noreply@bensz-channel.local
       MAIL_FROM_NAME: Bensz Channel
-      AUTH_PREVIEW_CODES: "true"
+      AUTH_PREVIEW_CODES: "false"
       STATIC_SITE_ENABLED: "true"
       ADMIN_NAME: 频道管理员
       ADMIN_EMAIL: admin@example.com

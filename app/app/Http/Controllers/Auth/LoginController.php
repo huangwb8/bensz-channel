@@ -45,14 +45,14 @@ class LoginController extends Controller
         $code = $broker->issue($validated['channel'], $validated['target']);
 
         $message = $validated['channel'] === LoginCode::CHANNEL_EMAIL
-            ? '验证码已发送到邮箱。'
-            : '验证码已发送到手机渠道（开发环境会显示预览码）。';
+            ? '验证码已发送到邮箱，请查收后完成验证。'
+            : '验证码已发送到手机渠道，请查收后完成验证。';
 
         $redirect = back()
             ->withInput(['otp_channel' => $validated['channel'], 'otp_target' => $validated['target']])
             ->with('status', $message);
 
-        if (config('community.auth.preview_codes')) {
+        if ($this->shouldPreviewCode()) {
             $redirect->with('otp_preview', $code);
         }
 
@@ -171,5 +171,11 @@ class LoginController extends Controller
             'wechat' => '微信',
             'qq' => 'QQ',
         ], $provider, strtoupper($provider));
+    }
+
+    private function shouldPreviewCode(): bool
+    {
+        return config('community.auth.preview_codes')
+            && app()->environment(['local', 'testing']);
     }
 }
