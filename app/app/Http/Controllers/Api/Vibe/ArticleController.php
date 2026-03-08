@@ -23,8 +23,8 @@ class ArticleController extends Controller
             $query->where('channel_id', $request->integer('channel_id'));
         }
 
-        if ($request->filled('published')) {
-            $query->where('is_published', (bool) $request->input('published'));
+        if ($request->has('published')) {
+            $query->where('is_published', $request->boolean('published'));
         }
 
         $articles = $query->latest()->paginate(20);
@@ -32,8 +32,10 @@ class ArticleController extends Controller
         return response()->json($articles);
     }
 
-    public function show(Article $article): JsonResponse
+    public function show(string $article): JsonResponse
     {
+        $article = $this->resolveArticle($article);
+
         return response()->json(['article' => $article->load(['channel:id,name,slug', 'author:id,name'])]);
     }
 
@@ -65,19 +67,26 @@ class ArticleController extends Controller
 
     public function update(
         Request $request,
-        Article $article,
+        string $article,
         MarkdownRenderer $markdownRenderer,
         ArticleSubscriptionNotifier $articleSubscriptionNotifier,
         StaticPageBuilder $staticPageBuilder,
     ): JsonResponse {
+        $article = $this->resolveArticle($article);
         $wasLive = $this->isLiveArticle($article);
         $validated = $this->validateArticle($request, $article);
 
-        $article->update([
-            ...$validated,
-            'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
-            'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
-        ]);
+        $payload = $validated;
+
+        if (array_key_exists('markdown_body', $validated)) {
+            $payload['html_body'] = $markdownRenderer->toHtml($validated['markdown_body']);
+
+            if (! array_key_exists('excerpt', $validated) || $validated['excerpt'] === '') {
+                $payload['excerpt'] = $markdownRenderer->excerpt($validated['markdown_body']);
+            }
+        }
+
+        $article->update($payload);
 
         if (! $wasLive && $this->isLiveArticle($article->fresh())) {
             $articleSubscriptionNotifier->send($article->fresh(['channel', 'author']));
@@ -88,8 +97,10 @@ class ArticleController extends Controller
         return response()->json(['article' => $article->fresh(['channel:id,name,slug', 'author:id,name'])]);
     }
 
-    public function destroy(Article $article, StaticPageBuilder $staticPageBuilder): JsonResponse
+    public function destroy(string $article, StaticPageBuilder $staticPageBuilder): JsonResponse
     {
+        $article = $this->resolveArticle($article);
+
         $article->delete();
 
         $staticPageBuilder->buildAll();
@@ -99,24 +110,74 @@ class ArticleController extends Controller
 
     private function validateArticle(Request $request, ?Article $article = null): array
     {
+        $isUpdate = $article !== null;
+
         $validated = $request->validate([
-            'channel_id' => ['required', 'exists:channels,id'],
-            'title' => ['required', 'string', 'max:120'],
-            'slug' => ['nullable', 'string', 'max:140', Rule::unique('articles', 'slug')->ignore($article?->id)],
-            'excerpt' => ['nullable', 'string', 'max:200'],
-            'markdown_body' => ['required', 'string'],
-            'cover_gradient' => ['nullable', 'string', 'max:128'],
-            'published_at' => ['nullable', 'date'],
-            'is_published' => ['nullable', 'boolean'],
+            'channel_id' => [$isUpdate ? 'sometimes' : 'required', 'exists:channels,id'],
+            'title' => [$isUpdate ? 'sometimes' : 'required', 'string', 'max:120'],
+            'slug' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'string', 'max:140', Rule::unique('articles', 'slug')->ignore($article?->id)],
+            'excerpt' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'string', 'max:200'],
+            'markdown_body' => [$isUpdate ? 'sometimes' : 'required', 'string'],
+            'cover_gradient' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'string', 'max:128'],
+            'published_at' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'date'],
+            'is_published' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'boolean'],
         ]);
 
-        $validated['slug'] = Str::slug($validated['slug'] ?: $validated['title']);
-        $validated['is_published'] = (bool) ($validated['is_published'] ?? false);
-        $validated['published_at'] = $validated['published_at'] ?? now();
-        $validated['cover_gradient'] ??= 'from-violet-500 via-fuchsia-500 to-cyan-500';
-        $validated['excerpt'] ??= '';
+        if (array_key_exists('slug', $validated) || array_key_exists('title', $validated) || ! $isUpdate) {
+            $validated['slug'] = $this->makeArticleSlug(
+                $validated['slug'] ?? $validated['title'] ?? null,
+                $article,
+            );
+        }
+
+        if (array_key_exists('is_published', $validated)) {
+            $validated['is_published'] = (bool) $validated['is_published'];
+        } elseif (! $isUpdate) {
+            $validated['is_published'] = false;
+        }
+
+        if (! array_key_exists('published_at', $validated)) {
+            if (! $isUpdate) {
+                $validated['published_at'] = ($validated['is_published'] ?? false) ? now() : null;
+            } elseif (($validated['is_published'] ?? false) && $article?->published_at === null) {
+                $validated['published_at'] = now();
+            }
+        }
+
+        if (! $isUpdate) {
+            $validated['cover_gradient'] ??= 'from-violet-500 via-fuchsia-500 to-cyan-500';
+            $validated['excerpt'] ??= '';
+        }
 
         return $validated;
+    }
+
+    private function resolveArticle(string $identifier): Article
+    {
+        return Article::query()
+            ->where(function ($query) use ($identifier): void {
+                $query->where('slug', $identifier);
+
+                if (ctype_digit($identifier)) {
+                    $query->orWhere('id', (int) $identifier);
+                }
+            })
+            ->firstOrFail();
+    }
+
+    private function makeArticleSlug(?string $source, ?Article $article = null): string
+    {
+        $slug = Str::slug((string) $source);
+
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        if ($article instanceof Article && $article->slug !== '') {
+            return $article->slug;
+        }
+
+        return 'article-' . Str::lower(Str::random(8));
     }
 
     private function isLiveArticle(Article $article): bool

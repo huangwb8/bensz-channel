@@ -17,8 +17,8 @@ class CommentController extends Controller
             $query->where('article_id', $request->integer('article_id'));
         }
 
-        if ($request->filled('visible')) {
-            $query->where('is_visible', (bool) $request->input('visible'));
+        if ($request->has('visible')) {
+            $query->where('is_visible', $request->boolean('visible'));
         }
 
         $comments = $query->latest()->paginate(50);

@@ -35,15 +35,19 @@ class UserController extends Controller
     public function update(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:40'],
-            'email' => ['nullable', 'email', 'max:120', Rule::unique('users', 'email')->ignore($user->id)],
-            'phone' => ['nullable', 'string', 'max:32', Rule::unique('users', 'phone')->ignore($user->id)],
-            'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_MEMBER])],
-            'bio' => ['nullable', 'string', 'max:500'],
+            'name' => ['sometimes', 'string', 'max:40'],
+            'email' => ['sometimes', 'nullable', 'email', 'max:120', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:32', Rule::unique('users', 'phone')->ignore($user->id)],
+            'role' => ['sometimes', Rule::in([User::ROLE_ADMIN, User::ROLE_MEMBER])],
+            'bio' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
+        $nextEmail = array_key_exists('email', $validated) ? $validated['email'] : $user->email;
+        $nextPhone = array_key_exists('phone', $validated) ? $validated['phone'] : $user->phone;
+        $nextRole = $validated['role'] ?? $user->role;
+
         // At least one contact method required
-        if (empty($validated['email']) && empty($validated['phone'])) {
+        if (empty($nextEmail) && empty($nextPhone)) {
             return response()->json([
                 'error' => 'validation_failed',
                 'message' => '邮箱和手机号至少需保留一个。',
@@ -51,7 +55,7 @@ class UserController extends Controller
         }
 
         // Prevent demoting the last admin
-        if ($validated['role'] === User::ROLE_MEMBER && $user->isAdmin()) {
+        if ($nextRole === User::ROLE_MEMBER && $user->isAdmin()) {
             $adminCount = User::query()->where('role', User::ROLE_ADMIN)->count();
             if ($adminCount <= 1) {
                 return response()->json([
@@ -63,6 +67,8 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        return response()->json(['user' => $user->fresh(['id', 'name', 'email', 'phone', 'role', 'bio'])]);
+        $user->refresh();
+
+        return response()->json(['user' => $user->only(['id', 'name', 'email', 'phone', 'role', 'bio'])]);
     }
 }

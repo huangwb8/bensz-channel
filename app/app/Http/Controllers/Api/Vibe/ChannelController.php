@@ -32,8 +32,10 @@ class ChannelController extends Controller
         return response()->json(['channel' => $channel], 201);
     }
 
-    public function update(Request $request, Channel $channel, StaticPageBuilder $staticPageBuilder): JsonResponse
+    public function update(Request $request, string $channel, StaticPageBuilder $staticPageBuilder): JsonResponse
     {
+        $channel = $this->resolveChannel($channel);
+
         if ($this->isReservedChannel($channel)) {
             return response()->json([
                 'message' => '系统保留频道不可编辑。',
@@ -49,8 +51,10 @@ class ChannelController extends Controller
         return response()->json(['channel' => $channel->fresh()]);
     }
 
-    public function destroy(Channel $channel, StaticPageBuilder $staticPageBuilder): JsonResponse
+    public function destroy(string $channel, StaticPageBuilder $staticPageBuilder): JsonResponse
     {
+        $channel = $this->resolveChannel($channel);
+
         if ($this->isReservedChannel($channel)) {
             return response()->json([
                 'message' => '系统保留频道不可删除。',
@@ -76,20 +80,63 @@ class ChannelController extends Controller
 
     private function validateChannel(Request $request, ?Channel $channel = null): array
     {
+        $isUpdate = $channel !== null;
+
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:40'],
+            'name' => [$isUpdate ? 'sometimes' : 'required', 'string', 'max:40'],
             'slug' => ['nullable', 'string', 'max:60', Rule::unique('channels', 'slug')->ignore($channel?->id)],
-            'description' => ['nullable', 'string', 'max:500'],
-            'accent_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'icon' => ['required', 'string', 'max:8'],
-            'sort_order' => ['nullable', 'integer', 'min:0', 'max:999'],
+            'description' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'string', 'max:500'],
+            'accent_color' => [$isUpdate ? 'sometimes' : 'required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'icon' => [$isUpdate ? 'sometimes' : 'required', 'string', 'max:8'],
+            'sort_order' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'integer', 'min:0', 'max:999'],
         ]);
 
-        $validated['slug'] = Str::slug($validated['slug'] ?: $validated['name']);
-        $validated['sort_order'] = (int) ($validated['sort_order'] ?? 0);
-        $validated['is_public'] = true;
+        if (array_key_exists('slug', $validated) || array_key_exists('name', $validated) || ! $isUpdate) {
+            $validated['slug'] = $this->makeChannelSlug(
+                $validated['slug'] ?? $validated['name'] ?? null,
+                $channel,
+            );
+        }
+
+        if (array_key_exists('sort_order', $validated)) {
+            $validated['sort_order'] = (int) $validated['sort_order'];
+        } elseif (! $isUpdate) {
+            $validated['sort_order'] = 0;
+        }
+
+        if (! $isUpdate) {
+            $validated['is_public'] = true;
+        }
 
         return $validated;
+    }
+
+    private function resolveChannel(string $identifier): Channel
+    {
+        return Channel::query()
+            ->where(function ($query) use ($identifier): void {
+                $query->where('slug', $identifier);
+
+                if (ctype_digit($identifier)) {
+                    $query->orWhere('id', (int) $identifier);
+                }
+            })
+            ->firstOrFail();
+    }
+
+    private function makeChannelSlug(?string $source, ?Channel $channel = null): string
+    {
+        $slug = Str::slug((string) $source);
+
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        if ($channel instanceof Channel && $channel->slug !== '') {
+            return $channel->slug;
+        }
+
+        return 'channel-' . Str::lower(Str::random(8));
     }
 
     private function ensureUncategorizedChannel(): Channel

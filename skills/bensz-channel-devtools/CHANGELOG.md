@@ -6,6 +6,16 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+### Fixed（修复）
+- 修复 DevTools API 中频道创建省略 `slug` 时触发 500 的问题，并在中文名称无法生成 ASCII slug 时提供非空 fallback。
+- 修复 `channels` / `articles` 子命令按文档传数值 `--id` 时与服务端 `slug` 路由绑定不一致的问题，现已支持 `id` 与 `slug` 双解析。
+- 修复频道 / 文章 / 用户更新接口只能全量提交的问题，现已支持与 `client.py` 一致的 partial update 语义。
+- 修复文章与评论列表接口对 `published=false` / `visible=false` 的布尔过滤误判问题，避免字符串 `'false'` 被当成真值。
+
+### Changed（变更）
+- 更新 `config.yaml` 中的 `skill_version` 为 `1.0.2`，使版本号与本轮 API 兼容性修复保持一致。
+- 新增 `tests/v202603082316/_scripts/live_smoke.sh` 与对应 `_artifacts/`：用于在真实 Docker 服务上覆盖 `ping`、`doctor`、频道、文章、评论、用户和环境脚本的全链路 smoke test。
+
 ## [1.0.1] - 2026-03-08
 
 ### Fixed（修复）
