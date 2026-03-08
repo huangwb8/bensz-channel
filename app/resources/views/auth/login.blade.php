@@ -283,18 +283,18 @@
 /* Card header */
 .card-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.625rem;
 }
 .brand-mark {
     display: inline-flex;
     align-items: center;
     gap: .5rem;
     text-decoration: none;
-    margin-bottom: 1.25rem;
+    margin-bottom: .875rem;
     transition: opacity .15s ease;
 }
 .brand-mark:hover { opacity: .7; }
-.brand-mark > span:first-child { font-size: 1.75rem; line-height: 1; }
+.brand-mark > span:first-child { font-size: 1.5rem; line-height: 1; }
 .brand-text {
     font-family: 'Syne', sans-serif;
     font-weight: 800;
@@ -305,7 +305,7 @@
 .page-title {
     font-family: 'Syne', sans-serif;
     font-weight: 700;
-    font-size: 1.875rem;
+    font-size: 1.625rem;
     color: #0f172a;
     letter-spacing: -.04em;
     line-height: 1.15;
@@ -354,19 +354,19 @@
 .steps {
     display: flex;
     align-items: center;
-    margin-bottom: 1.75rem;
+    margin-bottom: 1.5rem;
 }
 .step {
     display: flex;
     align-items: center;
-    gap: .4rem;
-    font-size: .775rem;
+    gap: .45rem;
+    font-size: .8125rem;
     color: #94a3b8;
     font-weight: 500;
     white-space: nowrap;
 }
 .step-dot {
-    width: 1.625rem; height: 1.625rem;
+    width: 1.75rem; height: 1.75rem;
     border-radius: 50%;
     background: #f1f5f9;
     border: 1.5px solid #e2e8f0;
@@ -374,7 +374,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: .6875rem;
+    font-size: .75rem;
     font-weight: 700;
     font-family: 'Syne', sans-serif;
     flex-shrink: 0;
@@ -434,8 +434,8 @@
 /* OTP input */
 .input-otp {
     text-align: center !important;
-    font-size: 1.625rem !important;
-    letter-spacing: .55em !important;
+    font-size: 1.25rem !important;
+    letter-spacing: .38em !important;
     padding-left: .5rem !important;
     padding-right: .5rem !important;
     font-family: 'Courier New', monospace !important;
