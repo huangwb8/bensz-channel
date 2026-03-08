@@ -16,7 +16,8 @@
     };
 
     $tooltip = $title ?? $label;
-    $accessibleLabel = $ariaLabel ?? $label;
+    $accessibleLabel = $ariaLabel ?? $attributes->get('aria-label') ?? $label;
+    $buttonAttributes = $attributes->except('aria-label');
 @endphp
 
 @if($href)
@@ -24,7 +25,7 @@
         href="{{ $href }}"
         title="{{ $tooltip }}"
         aria-label="{{ $accessibleLabel }}"
-        {{ $attributes->class([$variantClasses]) }}
+        {{ $buttonAttributes->class([$variantClasses]) }}
     >
         <x-icon :name="$icon" class="h-5 w-5" />
         <span class="sr-only">{{ $label }}</span>
@@ -34,7 +35,7 @@
         type="{{ $type }}"
         title="{{ $tooltip }}"
         aria-label="{{ $accessibleLabel }}"
-        {{ $attributes->class([$variantClasses]) }}
+        {{ $buttonAttributes->class([$variantClasses]) }}
     >
         <x-icon :name="$icon" class="h-5 w-5" />
         <span class="sr-only">{{ $label }}</span>

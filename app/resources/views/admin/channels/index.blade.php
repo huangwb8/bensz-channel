@@ -44,12 +44,27 @@
                         <input type="text" name="icon" value="{{ $channel->icon }}" class="input-field h-10 text-center" {{ $reserved ? 'readonly' : '' }}>
                         <input type="text" name="accent_color" value="{{ $channel->accent_color }}" class="input-field h-10" {{ $reserved ? 'readonly' : '' }}>
                         <input type="number" name="sort_order" value="{{ $channel->sort_order }}" class="input-field h-10" {{ $reserved ? 'readonly' : '' }}>
-                        <div class="flex gap-2">
-                            <button type="submit" class="btn-primary h-10" {{ $reserved ? 'disabled' : '' }}>保存</button>
-                            @if(! $reserved)
-                                <button type="submit" class="btn-secondary h-10" form="delete-channel-{{ $channel->id }}">删除</button>
+                        <div class="flex items-center justify-end gap-2">
+                            @if($reserved)
+                                <span class="text-sm font-medium text-gray-400">系统保留</span>
                             @else
-                                <button type="button" class="btn-secondary h-10" disabled>系统保留</button>
+                                <x-icon-button
+                                    icon="save"
+                                    label="保存频道"
+                                    title="保存频道"
+                                    :aria-label="'保存频道：'.$channel->name"
+                                    variant="primary"
+                                    type="submit"
+                                />
+                                <x-icon-button
+                                    icon="trash"
+                                    label="删除频道"
+                                    title="删除频道"
+                                    :aria-label="'删除频道：'.$channel->name"
+                                    variant="danger"
+                                    type="submit"
+                                    form="delete-channel-{{ $channel->id }}"
+                                />
                             @endif
                         </div>
                     </div>

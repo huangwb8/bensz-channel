@@ -52,6 +52,13 @@
         </svg>
         @break
 
+    @case('save')
+        <svg {{ $attributes->merge(['viewBox' => '0 0 24 24', 'fill' => 'none', 'stroke' => 'currentColor']) }}>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6.75 4.5h9.879c.597 0 1.169.237 1.591.659l.621.621c.422.422.659.994.659 1.591V18A2.25 2.25 0 0 1 17.25 20.25H6.75A2.25 2.25 0 0 1 4.5 18V6.75A2.25 2.25 0 0 1 6.75 4.5Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8.25 4.5v4.875A1.125 1.125 0 0 0 9.375 10.5h5.25a1.125 1.125 0 0 0 1.125-1.125V4.5M9 15.75h6" />
+        </svg>
+        @break
+
     @case('rss')
         <svg {{ $attributes->merge(['viewBox' => '0 0 24 24', 'fill' => 'none', 'stroke' => 'currentColor']) }}>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5.25 19.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm-1.5-8.25a9.75 9.75 0 0 1 9.75 9.75m-9.75-15a15 15 0 0 1 15 15" />
