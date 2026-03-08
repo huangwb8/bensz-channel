@@ -25,6 +25,24 @@ class AdminSiteSettingsTest extends TestCase
             ->assertSee('允许用户使用的登录 / 注册方式');
     }
 
+    public function test_admin_site_settings_page_renders_iconified_management_shortcuts(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.site-settings.edit'))
+            ->assertOk()
+            ->assertSee('title="文章管理"', false)
+            ->assertSee('aria-label="文章管理"', false)
+            ->assertSee('title="频道管理"', false)
+            ->assertSee('aria-label="频道管理"', false)
+            ->assertSee('title="用户管理"', false)
+            ->assertSee('aria-label="用户管理"', false)
+            ->assertDontSee('<a href="'.route('admin.articles.index').'" class="btn-secondary">文章管理</a>', false)
+            ->assertDontSee('<a href="'.route('admin.channels.index').'" class="btn-secondary">频道管理</a>', false)
+            ->assertDontSee('<a href="'.route('admin.users.index').'" class="btn-secondary">用户管理</a>', false);
+    }
+
     public function test_admin_can_update_site_settings(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);

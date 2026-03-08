@@ -7,10 +7,10 @@
                 <h2 class="text-xl font-semibold text-gray-900">站点设置</h2>
                 <p class="mt-1 text-sm text-gray-500">管理员可以在这里覆盖 `config/config.toml` 中的站点名称、标语，以及允许用户使用的登录/注册方式默认值。</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ route('admin.articles.index') }}" class="btn-secondary">文章管理</a>
-                <a href="{{ route('admin.channels.index') }}" class="btn-secondary">频道管理</a>
-                <a href="{{ route('admin.users.index') }}" class="btn-secondary">用户管理</a>
+            <div class="icon-action-group">
+                <x-icon-button :href="route('admin.articles.index')" icon="document" label="文章管理" title="文章管理" />
+                <x-icon-button :href="route('admin.channels.index')" icon="folder" label="频道管理" title="频道管理" />
+                <x-icon-button :href="route('admin.users.index')" icon="users" label="用户管理" title="用户管理" />
             </div>
         </div>
     </section>
