@@ -65,6 +65,9 @@
                                     <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                         👥 管理用户
                                     </a>
+                                    <a href="{{ route('admin.site-settings.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                        ⚙️ 站点设置
+                                    </a>
                                     <a href="{{ route('admin.devtools.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                         🔧 DevTools
                                     </a>
