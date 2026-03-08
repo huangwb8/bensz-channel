@@ -7,8 +7,9 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator
+from urllib.parse import urlencode
 
-from _bdc_env import BdcEnv, resolve_bdc_env
+from _bdc_env import BdcEnv, normalize_base_url, resolve_bdc_env
 from _flat_yaml import load_flat_yaml
 from _http_json import HttpResult, request_json
 from _redact import redact_secret
@@ -30,12 +31,13 @@ def _config() -> dict[str, Any]:
     }
 
 
-def _headers(env: BdcEnv, *, connection_id: str | None = None) -> dict[str, str]:
+def _headers(env: BdcEnv, *, connection_id: str | None = None, include_auth: bool = True) -> dict[str, str]:
     cfg = _config()
     headers = {
         "user-agent": f"{cfg['name']}/{cfg['version']} ({platform.system()} {platform.release()})",
-        "x-devtools-key": env.key,
     }
+    if include_auth:
+        headers["x-devtools-key"] = env.key
     if connection_id:
         headers["x-bdc-connection"] = connection_id
     return headers
@@ -46,6 +48,13 @@ def _url(env: BdcEnv, path: str) -> str:
     if not path.startswith("/"):
         path = "/" + path
     return base + path
+
+
+def _url_with_query(env: BdcEnv, path: str, params: dict[str, Any]) -> str:
+    filtered = [(key, value) for key, value in params.items() if value is not None and value != ""]
+    if not filtered:
+        return _url(env, path)
+    return _url(env, path) + "?" + urlencode(filtered)
 
 
 def _call(
@@ -94,12 +103,28 @@ def _ensure_key(env: BdcEnv) -> None:
         raise SystemExit("Invalid key (length < 20).")
 
 
+def _connect_payload() -> dict[str, str]:
+    return {
+        "clientName": "bensz-channel-devtools",
+        "clientVersion": _config()["version"],
+        "machine": platform.node(),
+        "workdir": str(Path.cwd()),
+    }
+
+
+def _raise_if_terminated(res: HttpResult, *, action: str) -> None:
+    payload = res.json if isinstance(res.json, dict) else None
+    if not payload or payload.get("terminate") is not True:
+        return
+    reason = str(payload.get("reason") or payload.get("message") or "server requested terminate").strip()
+    raise SystemExit(f"{action}: terminate=true ({reason})")
+
+
 @contextmanager
 def _auto_connection(env: BdcEnv, *, timeout_seconds: int) -> Iterator[str | None]:
     if DRY_RUN:
         _call("POST", _url(env, "/api/vibe/connect"), headers=_headers(env),
-              json_body={"clientName": "bensz-channel-devtools", "clientVersion": _config()["version"],
-                         "machine": platform.node(), "workdir": str(Path.cwd())},
+              json_body=_connect_payload(),
               timeout_seconds=timeout_seconds, retries=0)
         fake_conn = "00000000-0000-0000-0000-000000000000"
         try:
@@ -110,8 +135,7 @@ def _auto_connection(env: BdcEnv, *, timeout_seconds: int) -> Iterator[str | Non
         return
 
     res = _call("POST", _url(env, "/api/vibe/connect"), headers=_headers(env),
-                json_body={"clientName": "bensz-channel-devtools", "clientVersion": _config()["version"],
-                           "machine": platform.node(), "workdir": str(Path.cwd())},
+                json_body=_connect_payload(),
                 timeout_seconds=timeout_seconds, retries=2)
     if res.status != 200:
         raise SystemExit(f"connect failed: HTTP {res.status} {res.body_text[:200]}")
@@ -132,9 +156,9 @@ def _auto_connection(env: BdcEnv, *, timeout_seconds: int) -> Iterator[str | Non
 
 def cmd_ping(env: BdcEnv, timeout_seconds: int) -> int:
     if DRY_RUN:
-        _call("GET", _url(env, "/api/vibe/ping"), headers=_headers(env), timeout_seconds=timeout_seconds, retries=0)
+        _call("GET", _url(env, "/api/vibe/ping"), headers=_headers(env, include_auth=False), timeout_seconds=timeout_seconds, retries=0)
         return 0
-    res = _call("GET", _url(env, "/api/vibe/ping"), headers=_headers(env), timeout_seconds=timeout_seconds, retries=2)
+    res = _call("GET", _url(env, "/api/vibe/ping"), headers=_headers(env, include_auth=False), timeout_seconds=timeout_seconds, retries=2)
     _print_json(_result_payload(res))
     return 0 if res.status == 200 else 1
 
@@ -148,6 +172,7 @@ def cmd_doctor(env: BdcEnv, timeout_seconds: int) -> int:
         hb = _call("POST", _url(env, "/api/vibe/heartbeat"), headers=_headers(env),
                    json_body={"connectionId": conn_id}, timeout_seconds=timeout_seconds, retries=0)
         _print_json({"heartbeat": _result_payload(hb)})
+        _raise_if_terminated(hb, action="heartbeat")
     return 0
 
 
@@ -199,13 +224,10 @@ def cmd_channels_delete(env: BdcEnv, timeout_seconds: int, channel_id: str) -> i
 # ─── Articles ─────────────────────────────────────────────────────────────────
 
 def cmd_articles_list(env: BdcEnv, timeout_seconds: int, channel_id: str | None, published: str | None) -> int:
-    params: list[str] = []
-    if channel_id:
-        params.append(f"channel_id={channel_id}")
-    if published is not None:
-        params.append(f"published={published}")
-    qs = "?" + "&".join(params) if params else ""
-    res = _call("GET", _url(env, f"/api/vibe/articles{qs}"), headers=_headers(env),
+    res = _call("GET", _url_with_query(env, "/api/vibe/articles", {
+                    "channel_id": channel_id,
+                    "published": published,
+                }), headers=_headers(env),
                 timeout_seconds=timeout_seconds, retries=2)
     _print_json(_result_payload(res))
     return 0 if res.status == 200 else 1
@@ -262,13 +284,10 @@ def cmd_articles_delete(env: BdcEnv, timeout_seconds: int, article_id: str) -> i
 # ─── Comments ─────────────────────────────────────────────────────────────────
 
 def cmd_comments_list(env: BdcEnv, timeout_seconds: int, article_id: str | None, visible: str | None) -> int:
-    params: list[str] = []
-    if article_id:
-        params.append(f"article_id={article_id}")
-    if visible is not None:
-        params.append(f"visible={visible}")
-    qs = "?" + "&".join(params) if params else ""
-    res = _call("GET", _url(env, f"/api/vibe/comments{qs}"), headers=_headers(env),
+    res = _call("GET", _url_with_query(env, "/api/vibe/comments", {
+                    "article_id": article_id,
+                    "visible": visible,
+                }), headers=_headers(env),
                 timeout_seconds=timeout_seconds, retries=2)
     _print_json(_result_payload(res))
     return 0 if res.status == 200 else 1
@@ -295,13 +314,10 @@ def cmd_comments_delete(env: BdcEnv, timeout_seconds: int, comment_id: str) -> i
 # ─── Users ────────────────────────────────────────────────────────────────────
 
 def cmd_users_list(env: BdcEnv, timeout_seconds: int, q: str | None, role: str | None) -> int:
-    params: list[str] = []
-    if q:
-        params.append(f"q={q}")
-    if role:
-        params.append(f"role={role}")
-    qs = "?" + "&".join(params) if params else ""
-    res = _call("GET", _url(env, f"/api/vibe/users{qs}"), headers=_headers(env),
+    res = _call("GET", _url_with_query(env, "/api/vibe/users", {
+                    "q": q,
+                    "role": role,
+                }), headers=_headers(env),
                 timeout_seconds=timeout_seconds, retries=2)
     _print_json(_result_payload(res))
     return 0 if res.status == 200 else 1
@@ -418,12 +434,13 @@ def main(argv: list[str]) -> int:
                           env_file=Path(args.env_file).expanduser() if args.env_file else None)
     if getattr(args, "url", None):
         from _bdc_env import BdcEnv
-        env = BdcEnv(url=args.url.rstrip("/"), key=env.key, url_source=env.url_source, key_source=env.key_source)
+        env = BdcEnv(url=normalize_base_url(args.url), key=env.key, url_source=env.url_source, key_source=env.key_source)
     if getattr(args, "key", None):
         from _bdc_env import BdcEnv
         env = BdcEnv(url=env.url, key=args.key.strip(), url_source=env.url_source, key_source=env.key_source)
 
-    _ensure_key(env)
+    if args.cmd != "ping":
+        _ensure_key(env)
 
     timeout_seconds = int(getattr(args, "timeout", None) or _config()["timeout"])
 

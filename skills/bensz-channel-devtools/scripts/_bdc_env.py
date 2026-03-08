@@ -28,13 +28,32 @@ def _first_present(env: dict[str, str], keys: list[str]) -> tuple[str | None, st
     return None, None
 
 
-def _normalize_base_url(url: str) -> str:
+def normalize_base_url(url: str) -> str:
     u = (url or "").strip()
     if not u:
         return u
     if not (u.startswith("http://") or u.startswith("https://")):
         u = "http://" + u
     return u.rstrip("/")
+
+
+def _find_env_files_upward(start_dir: Path, filenames: list[str], max_depth: int = 5) -> list[Path]:
+    """向上递归查找 .env 文件（类似 git 查找 .git 目录）"""
+    found: list[Path] = []
+    current = start_dir.resolve()
+
+    for _ in range(max_depth):
+        for name in filenames:
+            candidate = current / name
+            if candidate.is_file():
+                found.append(candidate)
+
+        parent = current.parent
+        if parent == current:  # 到达根目录
+            break
+        current = parent
+
+    return found
 
 
 def resolve_bdc_env(*, skill_root: Path, env_file: Path | None = None) -> BdcEnv:
@@ -45,24 +64,29 @@ def resolve_bdc_env(*, skill_root: Path, env_file: Path | None = None) -> BdcEnv
     key_keys = config.lists.get("env_key_keys", ["BENSZ_CHANNEL_KEY", "bensz_channel_key", "bdc_key"])
 
     default_url = config.scalars.get("default_url", "http://localhost:6542").strip()
-    default_url = _normalize_base_url(default_url)
+    default_url = normalize_base_url(default_url)
 
     url_source = EnvSource(kind="default", detail=str(config_path))
     key_source = EnvSource(kind="missing", detail="not found")
 
     sources: list[tuple[EnvSource, dict[str, str]]] = []
+    search_max_depth = int(config.scalars.get("env_search_max_depth", "5"))
 
+    # 1. OS 环境变量（最高优先级）
     os_env = {k: v for k, v in os.environ.items() if isinstance(v, str)}
     sources.append((EnvSource(kind="os_env", detail="process"), os_env))
 
+    # 2. 用户指定的 env 文件
     if env_file is not None:
         sources.append((EnvSource(kind="env_file", detail=str(env_file)), load_dotenv_file(env_file)))
 
+    # 3. 当前工作目录及向上递归查找 .env 文件
     candidates = config.lists.get("env_file_candidates", [".env", ".env.local"])
-    for name in candidates:
-        p = (Path.cwd() / name).resolve()
+    found_env_files = _find_env_files_upward(Path.cwd(), candidates, max_depth=search_max_depth)
+    for p in found_env_files:
         sources.append((EnvSource(kind="cwd_env", detail=str(p)), load_dotenv_file(p)))
 
+    # 4. Fallback 配置文件（用户主目录等）
     for p in expand_user_paths(config.lists.get("fallback_env_files", [])):
         sources.append((EnvSource(kind="fallback_env", detail=str(p)), load_dotenv_file(p)))
 
@@ -89,7 +113,7 @@ def resolve_bdc_env(*, skill_root: Path, env_file: Path | None = None) -> BdcEnv
         if url_value is not None and key_value is not None:
             break
 
-    url = _normalize_base_url(url_value or default_url)
+    url = normalize_base_url(url_value or default_url)
     key = (key_value or "").strip()
 
     return BdcEnv(url=url, key=key, url_source=url_source, key_source=key_source)

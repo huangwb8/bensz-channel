@@ -10,24 +10,64 @@
 
 ### 2. 配置环境变量
 
+**推荐方式：使用配置向导**
+
+```bash
+cd skills/bensz-channel-devtools
+
+# 在当前目录创建 .env
+python3 scripts/env_init.py
+
+# 或在用户主目录创建全局配置
+python3 scripts/env_init.py --global
+```
+
+**手动配置方式：**
+
 ```bash
 # 方式一：导出环境变量
 export BENSZ_CHANNEL_URL=http://your-server:6542
 export BENSZ_CHANNEL_KEY=bdc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # 方式二：写入 .env 文件（项目根目录或 ~/.bensz-channel.env）
+cat > .env << 'EOF'
 BENSZ_CHANNEL_URL=http://your-server:6542
 BENSZ_CHANNEL_KEY=bdc_xxxxxxxx...
+EOF
 ```
 
 ### 3. 验证连接
 
 ```bash
 cd skills/bensz-channel-devtools
-python3 scripts/env_check.py       # 检查环境变量
-python3 scripts/client.py ping     # 检查服务器连通性
-python3 scripts/client.py doctor   # 完整诊断
+
+# 检查环境变量配置
+python3 scripts/env_check.py
+
+# 显示详细的配置文件搜索路径
+python3 scripts/env_check.py --verbose
+
+# 检查服务器连通性
+python3 scripts/client.py ping
+
+# 完整诊断
+python3 scripts/client.py doctor
 ```
+
+## 配置文件搜索顺序
+
+工具会按以下优先级自动查找配置：
+
+1. **OS 环境变量**（最高优先级）
+   - 通过 `export` 命令设置的环境变量
+
+2. **当前工作目录及父目录的 .env 文件**
+   - 自动向上递归查找（最多 5 层）
+   - 支持 `.env` 和 `.env.local`
+
+3. **用户主目录配置文件**（fallback）
+   - `~/.bensz-channel.env`
+   - `~/.config/bensz-channel/devtools.env`
 
 ## 常用命令
 

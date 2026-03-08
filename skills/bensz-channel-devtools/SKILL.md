@@ -47,19 +47,50 @@ metadata:
 - URL：`bensz_channel_url`、`bdc_url`
 - KEY：`bensz_channel_key`、`bdc_key`
 
-在 `~/.bensz-channel.env` 或项目根目录 `.env` 中设置。
+### 配置文件搜索顺序（优先级从高到低）
+
+1. **OS 环境变量**（最高优先级）
+   - 通过 `export` 命令设置的环境变量
+
+2. **当前工作目录及父目录的 .env 文件**
+   - 自动向上递归查找（最多 5 层）
+   - 支持 `.env` 和 `.env.local`
+
+3. **用户主目录配置文件**（fallback）
+   - `~/.bensz-channel.env`
+   - `~/.config/bensz-channel/devtools.env`
+
+### 快速配置
+
+使用配置向导快速生成 .env 文件：
+
+```bash
+# 在当前目录创建 .env
+python3 scripts/env_init.py
+
+# 在用户主目录创建全局配置
+python3 scripts/env_init.py --global
+
+# 指定自定义路径
+python3 scripts/env_init.py --path /path/to/.env
+```
 
 ## 首次使用流程
 
 1. 登录 bensz-channel 管理界面，进入 **管理员 → DevTools 远程管理**
 2. 生成一个 API 密钥并复制（仅显示一次）
-3. 设置环境变量：
+3. 使用配置向导设置环境变量：
+   ```bash
+   python3 scripts/env_init.py
+   ```
+   或手动设置：
    ```bash
    export BENSZ_CHANNEL_URL=http://your-server:6542
    export BENSZ_CHANNEL_KEY=bdc_xxxxxxxx...
    ```
 4. 验证连接：
    ```bash
+   # ping 可在未配置 KEY 时使用
    python3 scripts/env_check.py
    python3 scripts/client.py ping
    python3 scripts/client.py doctor
@@ -67,18 +98,26 @@ metadata:
 
 ## 标准工作流
 
-1. **环境检查**（不泄露 Key）
+1. **快速配置**（首次使用）
    ```bash
-   python3 scripts/env_check.py
+   python3 scripts/env_init.py
    ```
 
-2. **健康检查**
+2. **环境检查**（不泄露 Key）
    ```bash
+   python3 scripts/env_check.py           # 基本检查
+   python3 scripts/env_check.py --verbose # 显示详细搜索路径
+   ```
+
+3. **健康检查**
+   ```bash
+   # 仅检查服务是否可达，不要求 KEY
    python3 scripts/client.py ping
+   # 需要 KEY，会执行 connect → heartbeat → disconnect
    python3 scripts/client.py doctor
    ```
 
-3. **执行操作**（按需选择子命令）
+4. **执行操作**（按需选择子命令）
 
 ## 常见任务映射
 
