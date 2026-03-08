@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('devtools_connections', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->uuid('key_id');
             $table->foreign('key_id')->references('id')->on('devtools_api_keys')->cascadeOnDelete();
             $table->string('client_name', 120)->nullable();

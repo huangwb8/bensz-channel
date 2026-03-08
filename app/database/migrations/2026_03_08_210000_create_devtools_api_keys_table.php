@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('devtools_api_keys', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('name', 80)->default('default');
             $table->string('key_hash', 64); // SHA-256 hex
