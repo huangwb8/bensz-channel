@@ -1,57 +1,102 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="panel overflow-hidden p-0">
-        <div class="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:p-8">
-            <div>
-                <p class="text-xs uppercase tracking-[0.35em] text-cyan-300/80">社区总览</p>
-                <h2 class="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">一个接近 QQ 频道体验的 Web 社区雏形</h2>
-                <p class="mt-4 max-w-3xl text-base leading-7 text-slate-300">
-                    基于 PHP、PostgreSQL、Redis 与 Docker 构建；管理员发文、成员评论、游客静态访问三条主路径已经打通。
-                </p>
-
-                <div class="mt-6 flex flex-wrap gap-3">
-                    <a href="{{ route('login') }}" class="btn-primary">立即登录</a>
-                    @if($featuredArticle)
-                        <a href="{{ route('articles.show', [$featuredArticle->channel, $featuredArticle]) }}" class="btn-secondary">查看最新公告</a>
-                    @endif
-                </div>
-            </div>
-
-            <div class="rounded-3xl border border-white/10 bg-slate-900/80 p-5">
-                <p class="text-sm font-semibold text-slate-200">登录方式</p>
-                <div class="mt-4 space-y-3 text-sm text-slate-300">
-                    <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-4">邮箱验证码登录</div>
-                    <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-4">手机号验证码登录</div>
-                    <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-4">微信 / QQ 扫码演示登录</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     @if($featuredArticle)
-        <section class="mt-6 panel p-6 lg:p-8">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.35em] text-violet-300/80">推荐内容</p>
-                    <h2 class="mt-2 text-2xl font-semibold">{{ $featuredArticle->title }}</h2>
+        <!-- 置顶公告 -->
+        <section class="mb-6 rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="inline-flex items-center rounded-full bg-blue-600 px-2.5 py-0.5 text-xs font-semibold text-white">
+                            置顶
+                        </span>
+                        <span class="text-xs text-gray-500">{{ $featuredArticle->channel->icon }} {{ $featuredArticle->channel->name }}</span>
+                    </div>
+                    <h2 class="text-lg font-semibold text-gray-900 truncate">
+                        <a href="{{ route('articles.show', [$featuredArticle->channel, $featuredArticle]) }}" class="hover:text-blue-600">
+                            {{ $featuredArticle->title }}
+                        </a>
+                    </h2>
+                    <p class="mt-1 text-sm text-gray-600 line-clamp-2">{{ $featuredArticle->excerpt }}</p>
                 </div>
-                <a href="{{ route('articles.show', [$featuredArticle->channel, $featuredArticle]) }}" class="btn-secondary">打开文章</a>
+                <a href="{{ route('articles.show', [$featuredArticle->channel, $featuredArticle]) }}" class="shrink-0 inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                    查看详情
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
             </div>
-            <p class="mt-4 text-sm leading-7 text-slate-300">{{ $featuredArticle->excerpt }}</p>
         </section>
     @endif
 
-    <section class="mt-6">
-        <div class="mb-4 flex items-center justify-between gap-3">
-            <h2 class="text-xl font-semibold">最新文章</h2>
-            <span class="text-sm text-slate-400">按发布时间倒序</span>
+    <!-- 帖子列表 -->
+    <section>
+        <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">
+                @if($currentChannel)
+                    {{ $currentChannel->icon }} {{ $currentChannel->name }}
+                @else
+                    📋 最新帖子
+                @endif
+            </h2>
+            <span class="text-sm text-gray-500">
+                共 {{ $latestArticles->count() }} 篇
+            </span>
         </div>
-        <div class="space-y-4">
+
+        <div class="space-y-3">
             @forelse($latestArticles as $article)
-                @include('partials.article-card', ['article' => $article])
+                <article class="article-card">
+                    <div class="flex gap-4">
+                        <!-- 左侧内容 -->
+                        <div class="flex-1 min-w-0">
+                            <!-- 频道标签 -->
+                            <div class="channel-badge mb-2">
+                                <span>{{ $article->channel->icon }}</span>
+                                <span>{{ $article->channel->name }}</span>
+                            </div>
+
+                            <!-- 标题 -->
+                            <h3 class="text-base font-semibold text-gray-900 mb-1">
+                                <a href="{{ route('articles.show', [$article->channel, $article]) }}" class="hover:text-blue-600 line-clamp-2">
+                                    {{ $article->title }}
+                                </a>
+                            </h3>
+
+                            <!-- 摘要 -->
+                            <p class="text-sm text-gray-600 line-clamp-2 mb-3">
+                                {{ $article->excerpt }}
+                            </p>
+
+                            <!-- 底部信息 -->
+                            <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                                <span class="flex items-center gap-1">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                    {{ $article->author->name }}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    {{ optional($article->published_at)->diffForHumans() }}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    {{ $article->comment_count }} 条评论
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
             @empty
-                <div class="panel p-6 text-slate-400">还没有公开文章，管理员登录后即可发布。</div>
+                <div class="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500">
+                    <div class="text-4xl mb-2">📭</div>
+                    <p>还没有公开文章，管理员登录后即可发布。</p>
+                </div>
             @endforelse
         </div>
     </section>

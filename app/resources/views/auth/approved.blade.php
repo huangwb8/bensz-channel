@@ -1,10 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="mx-auto max-w-2xl panel p-6 text-center lg:p-8">
-        <div class="mx-auto flex h-18 w-18 items-center justify-center rounded-full bg-emerald-500/15 text-4xl">✅</div>
-        <p class="mt-6 text-xs uppercase tracking-[0.35em] text-emerald-300/80">{{ $providerLabel }}扫码成功</p>
-        <h2 class="mt-3 text-3xl font-semibold">桌面端会在数秒内自动登录</h2>
-        <p class="mt-4 text-sm leading-7 text-slate-300">当前授权账号：{{ $user->name }}。你现在可以关闭这个页面，回到二维码发起页继续操作。</p>
+    <section class="mx-auto max-w-2xl rounded-xl border border-gray-200 bg-white p-6 text-center">
+        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">✅</div>
+        <h2 class="mt-6 text-xl font-semibold text-gray-900">{{ $providerLabel }}扫码成功</h2>
+        <p class="mt-3 text-sm text-gray-600">桌面端会在数秒内自动登录</p>
+        <p class="mt-4 text-sm text-gray-500">当前授权账号：<span class="font-medium text-gray-700">{{ $user->name }}</span></p>
+        <p class="mt-2 text-xs text-gray-400">你现在可以关闭这个页面，回到二维码发起页继续操作。</p>
     </section>
 @endsection

@@ -2,19 +2,17 @@ FROM composer:2 AS vendor
 
 WORKDIR /app
 
+# 复制 composer 文件
 COPY app/composer.json app/composer.lock ./
-RUN composer install \
+
+# 安装依赖，使用 COMPOSER_VENDOR_DIR 环境变量覆盖本地配置
+RUN COMPOSER_VENDOR_DIR=/app/vendor composer install \
     --no-dev \
     --no-interaction \
     --no-progress \
     --prefer-dist \
     --optimize-autoloader \
     --no-scripts
-
-COPY app ./
-RUN rm -f bootstrap/cache/*.php \
-    && php artisan package:discover --ansi \
-    && composer dump-autoload --no-dev --optimize --classmap-authoritative --no-scripts
 
 FROM node:22.12-alpine AS frontend
 
@@ -48,18 +46,29 @@ RUN apk add --no-cache \
     && docker-php-ext-enable redis \
     && apk del $PHPIZE_DEPS
 
-COPY --from=vendor /app /var/www/html
-COPY --from=frontend /app/public/build /var/www/html/public/build
+# 复制应用代码（排除 vendor，.dockerignore 会处理）
+COPY app ./
+
+# 从 vendor 阶段复制已安装的依赖
+COPY --from=vendor /app/vendor ./vendor
+
+# 从 frontend 阶段复制构建的前端资源
+COPY --from=frontend /app/public/build ./public/build
+
+# 复制 Docker 配置
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 COPY docker/web/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY docker/web/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-RUN chmod +x /usr/local/bin/entrypoint.sh \
+# 运行 Laravel 优化命令和权限设置
+RUN rm -f bootstrap/cache/*.php \
+    && php artisan package:discover --ansi \
+    && chmod +x /usr/local/bin/entrypoint.sh \
     && mkdir -p /run/nginx /var/log/supervisor \
-    && mkdir -p /var/www/html/storage/framework/cache \
-    && mkdir -p /var/www/html/storage/framework/sessions \
-    && mkdir -p /var/www/html/storage/framework/views \
-    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+    && mkdir -p storage/framework/cache \
+    && mkdir -p storage/framework/sessions \
+    && mkdir -p storage/framework/views \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 EXPOSE 80
 
