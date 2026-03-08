@@ -18,8 +18,9 @@ if [ -L "$LOCAL_DIR" ]; then
 fi
 
 if [ -d "$LOCAL_DIR" ]; then
-    rm -rf "$MANAGED_DIR"
-    mv "$LOCAL_DIR" "$MANAGED_DIR"
+    mkdir -p "$MANAGED_DIR"
+    cp -R "$LOCAL_DIR"/. "$MANAGED_DIR"/
+    rm -rf "$LOCAL_DIR"
 fi
 
 if [ ! -d "$MANAGED_DIR" ]; then

@@ -26,6 +26,7 @@
                     <span aria-hidden="true">💬</span>
                     <span class="brand-text">Bensz Channel</span>
                 </a>
+                <p class="auth-badge">Better Auth 驱动的自托管安全登录</p>
                 <h1 class="page-title">欢迎回来</h1>
                 <p class="page-subtitle">登录以继续访问社区内容</p>
             </header>
@@ -71,6 +72,7 @@
             </div>
 
             {{-- Step 1: Send code --}}
+            <div class="section-kicker">邮箱或手机号登录</div>
             <form action="{{ route('auth.code.send') }}" method="POST" class="form-block" novalidate>
                 @csrf
                 <div class="field">
@@ -149,6 +151,7 @@
 
             {{-- Social login --}}
             @if(!empty($providers))
+                <div class="section-kicker section-kicker-muted">扫码登录</div>
                 <div class="divider" aria-hidden="true"><span>或使用</span></div>
                 <div class="social-row">
                     @foreach ($providers as $provider)
@@ -316,6 +319,34 @@
     color: #64748b;
     line-height: 1.55;
     margin: 0;
+}
+
+.auth-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 0 .95rem;
+    padding: .38rem .8rem;
+    border-radius: 999px;
+    border: 1px solid rgba(99,102,241,.18);
+    background: rgba(99,102,241,.08);
+    color: #4f46e5;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+
+.section-kicker {
+    margin: 1rem 0 .85rem;
+    color: #64748b;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.section-kicker-muted {
+    margin-top: 1.45rem;
 }
 
 /* Alert messages */
