@@ -21,6 +21,7 @@ FROM node:22.12-alpine AS frontend
 WORKDIR /app
 
 COPY app/package.json app/package-lock.json ./
+COPY app/scripts ./scripts
 RUN npm ci
 
 COPY app/resources ./resources

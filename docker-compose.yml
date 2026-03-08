@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: docker/web/Dockerfile
     ports:
-      - "${WEB_PORT:-8080}:80"
+      - "${WEB_PORT:-6542}:80"
     depends_on:
       postgres:
         condition: service_healthy
@@ -16,7 +16,7 @@ services:
       APP_NAME: Bensz Channel
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: http://localhost:${WEB_PORT:-8080}
+      APP_URL: http://localhost:${WEB_PORT:-6542}
       SITE_NAME: Bensz Channel
       SITE_TAGLINE: 类 QQ 频道的 Web 社区原型，支持静态游客访问与成员互动
       LOG_CHANNEL: stack

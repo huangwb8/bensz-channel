@@ -3,6 +3,8 @@
     "private": true,
     "type": "module",
     "scripts": {
+        "postinstall": "sh ./scripts/ensure-managed-node-modules.sh",
+        "deps:sync": "sh ./scripts/ensure-managed-node-modules.sh",
         "build": "vite build",
         "dev": "vite"
     },

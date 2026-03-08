@@ -30,15 +30,15 @@
 docker compose up --build -d
 ```
 
-如果本机 `8080` 已被占用，可改用：
+如果本机 `6542` 已被占用，可改用：
 
 ```bash
-WEB_PORT=18080 docker compose up --build -d
+WEB_PORT=16542 docker compose up --build -d
 ```
 
 启动后访问：
 
-- 站点首页：`http://localhost:8080`
+- 站点首页：`http://localhost:6542`
 - Mailpit：`http://localhost:8025`
 
 默认管理员：
@@ -109,6 +109,10 @@ php artisan migrate --seed
 npm run build
 php artisan serve
 ```
+
+- `app/node_modules` 通过符号链接指向 `/Volumes/2T01/Test/bensz-channel/app/node_modules`
+- `npm install` 会读取 `app/.npmrc`，将缓存统一写入 `/Volumes/2T01/Test/bensz-channel/npm-cache`
+- `npm install` 完成后会自动执行 `app/scripts/ensure-managed-node-modules.sh`，把可能被 npm 重建到项目内的依赖目录重新迁回托管路径
 
 ## 后续可扩展点
 
