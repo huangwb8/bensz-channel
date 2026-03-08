@@ -1,103 +1,117 @@
 # bensz-channel
 
-一个类似 **QQ 频道** 的 Web 版在线社区/论坛平台。用户通过浏览器访问，支持实时交流、频道管理、内容分享等核心功能。
+一个基于 **Laravel（PHP）+ PostgreSQL + Redis + Docker** 的 Web 社区原型，交互形态参考 **QQ 频道**：左侧频道导航，中间内容流，右侧用户与社区信息。
 
-## 核心特性
+## 已实现能力
 
-- **频道系统** - 支持创建、管理多个主题频道
-- **实时通信** - 频道内实时消息收发与通知
-- **用户系统** - 注册、登录、权限管理
-- **内容管理** - 帖子发布、评论互动、资源分享
-- **社交功能** - 关注、私信、@提醒等
-- **模块化设计** - 清晰的架构分层，易于扩展
-- **现代化技术栈** - 采用主流前后端技术
+- **频道内容架构**：频道首页、文章详情、右侧社区信息栏
+- **管理员唯一角色**：默认仅 1 位管理员，可管理频道、发布文章、发表评论
+- **成员登录体系**：邮箱验证码、手机号验证码、微信/QQ 演示扫码登录
+- **游客静态访问**：游客优先命中构建好的静态 HTML，并提供 Gzip 压缩版本
+- **Markdown 内容流**：文章与评论都支持 Markdown 渲染
+- **Docker 一键部署**：应用、PostgreSQL、Redis、Mailpit 一起启动
+- **CDN 友好资源策略**：Vite 指纹资源 + `ASSET_URL` 预留 + Nginx 长缓存头
 
-## 快速开始
+## 技术栈
 
-### 环境要求
+| 层级 | 方案 |
+|------|------|
+| Web 应用 | Laravel 12 + Blade + Tailwind CSS |
+| 数据库 | PostgreSQL 17 |
+| 缓存 | Redis 7 |
+| Web 服务 | Nginx + PHP-FPM |
+| 前端构建 | Vite 7 |
+| 本地邮件 | Mailpit |
+| 部署 | Docker Compose |
 
-- Node.js >= 18.x
-- pnpm / npm / yarn
-- 数据库（根据技术选型确定）
-
-### 安装
-
-```bash
-# 克隆项目
-git clone https://github.com/bensz/bensz-channel.git
-cd bensz-channel
-
-# 安装依赖（根据实际包管理器选择）
-pnpm install
-```
-
-### 开发
+## 快速部署
 
 ```bash
-# 启动开发服务器
-pnpm dev
+docker compose up --build -d
 ```
+
+如果本机 `8080` 已被占用，可改用：
+
+```bash
+WEB_PORT=18080 docker compose up --build -d
+```
+
+启动后访问：
+
+- 站点首页：`http://localhost:8080`
+- Mailpit：`http://localhost:8025`
+
+默认管理员：
+
+- 邮箱：`admin@example.com`
+- 密码：`admin123456`
+
+示例成员：
+
+- 邮箱：`member@example.com`
+- 密码：`member123456`
+
+手机号登录：
+
+- 示例手机号：`13800138000`
+- 验证码会在开发/演示环境直接显示在页面提示中，同时写入日志
 
 ## 目录结构
 
-```
+```text
 bensz-channel/
-├── frontend/          # 前端代码
-├── backend/           # 后端代码
-├── docs/              # 项目文档
-├── AGENTS.md          # 跨平台 AI 项目指令
-├── CLAUDE.md          # Claude Code 项目指令
-└── README.md          # 项目说明
+├── app/                    # Laravel 应用源码
+├── docker/                 # Dockerfile、Nginx、Supervisor 配置
+├── docker-compose.yml      # 本地/审查部署入口
+├── config.yaml             # 项目版本单一事实来源
+├── AGENTS.md               # Codex 项目指令
+├── CLAUDE.md               # Claude Code 项目指令
+├── CHANGELOG.md            # 变更记录
+└── README.md               # 项目说明
 ```
 
-## AI 辅助开发
+## 认证说明
 
-本项目配置了 AI 辅助开发支持，可以使用以下工具进行智能开发：
+### 管理员
 
-### Claude Code
+- 仅 1 位，默认由 Seeder 创建
+- 能力：管理频道、发布文章、发布评论
 
-使用 `CLAUDE.md` 作为项目指令。
+### 登录成员
+
+- 邮箱验证码登录
+- 手机验证码登录
+- 微信 / QQ 扫码演示登录
+- 能力：发表评论
+
+### 游客
+
+- 仅可浏览压缩静态页面
+- 不可发文、不可评论
+
+## 静态 HTML 与 CDN
+
+- 游客 GET 请求优先命中 `public/static/` 内的构建结果
+- 每次管理员改文章/频道、成员发评论后，都会重新构建静态站点
+- 静态 HTML 会额外生成 `.gz` 文件，Nginx 开启 `gzip_static`
+- 资源文件采用 Vite 指纹命名，可通过 `ASSET_URL` 接入 CDN
+
+## 本地开发
+
+如果需要在宿主机直接运行：
 
 ```bash
-# 在项目目录启动 Claude Code
-claude
-
-# Claude Code 会自动读取 CLAUDE.md 理解项目上下文
+cd app
+cp .env.example .env
+npm install
+php artisan key:generate
+php artisan migrate --seed
+npm run build
+php artisan serve
 ```
 
-### OpenAI Codex CLI
+## 后续可扩展点
 
-使用 `AGENTS.md` 作为项目指令。
-
-```bash
-# 在项目目录启动 Codex CLI
-codex
-
-# Codex 会自动读取 AGENTS.md 理解项目上下文
-```
-
-### AI 开发最佳实践
-
-1. **新功能开发**：描述需求，AI 会按照项目工作流进行开发
-2. **代码审查**：请求 AI 审查代码，它会按照工程原则给出建议
-3. **文档更新**：AI 会自动同步更新相关文档
-4. **问题排查**：描述问题现象，AI 会分析并给出解决方案
-5. **变更记录**：**重要** - 凡是项目的更新，都要统一在 `CHANGELOG.md` 文件里记录
-
-## 技术选型（待定）
-
-| 层级 | 候选技术 |
-|-----|---------|
-| 前端框架 | React / Vue / Next.js / Nuxt |
-| 后端框架 | Node.js / Go / Rust |
-| 数据库 | PostgreSQL / MySQL / MongoDB |
-| 实时通信 | WebSocket / Server-Sent Events |
-| 缓存 | Redis |
-
-## 贡献
-
-欢迎提交 Issue 和 Pull Request。
-
-## 许可证
-
-MIT License
+- 接入真实微信 / QQ OAuth 扫码平台
+- 增加帖子列表分页、全文搜索、消息通知
+- 为频道补充更完整的权限模型与内容审核流程

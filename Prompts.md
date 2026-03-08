@@ -1,3 +1,11 @@
+# 日常
+
+---
+
+优化 AGENTS.md
+
+- 如果项目需要下载任何第3方的包（比如npm module），统一托管在 /Volumes/2T01/Test/bensz-channel 里
+
 # Init
 
 ## 基本需要
