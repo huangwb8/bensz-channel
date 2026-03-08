@@ -29,6 +29,7 @@ services:
       DB_PASSWORD: bensz_secret
       CACHE_STORE: redis
       SESSION_DRIVER: database
+      SESSION_COOKIE: bensz_channel_session
       QUEUE_CONNECTION: database
       REDIS_CLIENT: phpredis
       REDIS_HOST: redis

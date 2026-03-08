@@ -24,6 +24,7 @@ class LoginController extends Controller
         }
 
         return view('auth.login', [
+            'pageTitle' => '登录 / 注册',
             'providers' => config('community.auth.qr_providers'),
         ]);
     }
@@ -90,6 +91,7 @@ class LoginController extends Controller
     public function showQr(QrLoginRequest $qrLoginRequest): View
     {
         return view('auth.qr', [
+            'pageTitle' => $this->providerLabel($qrLoginRequest->provider).'扫码登录',
             'qrLoginRequest' => $qrLoginRequest,
             'providerLabel' => $this->providerLabel($qrLoginRequest->provider),
             'approvalUrl' => route('auth.qr.approve.show', [$qrLoginRequest->provider, $qrLoginRequest]),
@@ -124,6 +126,7 @@ class LoginController extends Controller
         abort_unless($provider === $qrLoginRequest->provider, 404);
 
         return view('auth.approve', [
+            'pageTitle' => $this->providerLabel($provider).'授权确认',
             'qrLoginRequest' => $qrLoginRequest,
             'providerLabel' => $this->providerLabel($provider),
         ]);
@@ -147,6 +150,7 @@ class LoginController extends Controller
         $user = $broker->approve($qrLoginRequest, $validated);
 
         return view('auth.approved', [
+            'pageTitle' => $this->providerLabel($provider).'扫码成功',
             'providerLabel' => $this->providerLabel($provider),
             'user' => $user,
         ]);

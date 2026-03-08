@@ -9,6 +9,21 @@ use App\Models\User;
 
 class CommunityViewData
 {
+    public function layout(?Channel $currentChannel = null, ?Article $currentArticle = null): array
+    {
+        return [
+            'siteName' => config('community.site.name'),
+            'siteTagline' => config('community.site.tagline'),
+            'channels' => Channel::query()
+                ->ordered()
+                ->withCount(['articles' => fn ($query) => $query->published()])
+                ->get(),
+            'pageTitle' => null,
+            'currentChannel' => $currentChannel,
+            'currentArticle' => $currentArticle,
+        ];
+    }
+
     public function home(): array
     {
         $featuredArticle = Article::query()
@@ -73,12 +88,7 @@ class CommunityViewData
     public function chrome(?Channel $currentChannel = null, ?Article $currentArticle = null): array
     {
         return [
-            'siteName' => config('community.site.name'),
-            'siteTagline' => config('community.site.tagline'),
-            'channels' => Channel::query()
-                ->ordered()
-                ->withCount(['articles' => fn ($query) => $query->published()])
-                ->get(),
+            ...$this->layout($currentChannel, $currentArticle),
             'recentComments' => Comment::query()
                 ->where('is_visible', true)
                 ->with(['article.channel', 'user'])
@@ -91,8 +101,6 @@ class CommunityViewData
                 'comments' => Comment::query()->where('is_visible', true)->count(),
                 'members' => User::query()->where('role', User::ROLE_MEMBER)->count(),
             ],
-            'currentChannel' => $currentChannel,
-            'currentArticle' => $currentArticle,
             'qrProviders' => config('community.auth.qr_providers'),
         ];
     }
