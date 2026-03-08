@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
@@ -27,6 +28,7 @@ class LoginController extends Controller
         return view('auth.login', [
             'pageTitle' => '登录 / 注册',
             'providers' => config('community.auth.qr_providers'),
+            'enabledAuthMethods' => $this->enabledAuthMethods(),
         ]);
     }
 
@@ -35,7 +37,12 @@ class LoginController extends Controller
         $validated = $request->validate([
             'channel' => ['required', Rule::in([LoginCode::CHANNEL_EMAIL, LoginCode::CHANNEL_PHONE])],
             'target' => ['required', 'string', 'max:120'],
+            'login_method' => ['nullable', 'string', 'max:32'],
         ]);
+
+        if ($validated['channel'] === LoginCode::CHANNEL_EMAIL) {
+            $this->ensureAuthMethodEnabled('email_code');
+        }
 
         $request->validate([
             'target' => $validated['channel'] === LoginCode::CHANNEL_EMAIL
@@ -50,7 +57,11 @@ class LoginController extends Controller
             : '验证码已发送到手机渠道，请查收后完成验证。';
 
         $redirect = back()
-            ->withInput(['otp_channel' => $validated['channel'], 'otp_target' => $validated['target']])
+            ->withInput([
+                'login_method' => $validated['login_method'] ?? 'email-code',
+                'otp_channel' => $validated['channel'],
+                'otp_target' => $validated['target'],
+            ])
             ->with('status', $message);
 
         if ($this->shouldPreviewCode() && filled($previewCode)) {
@@ -64,14 +75,17 @@ class LoginController extends Controller
         Request $request,
         OtpAuthGateway $gateway,
         LoginUserResolver $resolver,
-    ): RedirectResponse
-    {
+    ): RedirectResponse {
         $validated = $request->validate([
             'channel' => ['required', Rule::in([LoginCode::CHANNEL_EMAIL, LoginCode::CHANNEL_PHONE])],
             'target' => ['required', 'string', 'max:120'],
             'code' => ['required', 'string', 'size:'.config('community.auth.otp_length')],
             'name' => ['nullable', 'string', 'max:40'],
         ]);
+
+        if ($validated['channel'] === LoginCode::CHANNEL_EMAIL) {
+            $this->ensureAuthMethodEnabled('email_code');
+        }
 
         $identity = $gateway->consume(
             $validated['channel'],
@@ -83,6 +97,26 @@ class LoginController extends Controller
         $user = $resolver->resolve($identity);
 
         Auth::login($user, true);
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('home'))->with('status', '登录成功，欢迎回来。');
+    }
+
+    public function loginWithPassword(Request $request): RedirectResponse
+    {
+        $this->ensureAuthMethodEnabled('email_password');
+
+        $credentials = $request->validate([
+            'email' => ['required', 'email', 'max:120'],
+            'password' => ['required', 'string', 'max:255'],
+        ]);
+
+        if (! Auth::attempt($credentials, true)) {
+            throw ValidationException::withMessages([
+                'email' => '邮箱或密码不正确。',
+            ]);
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('home'))->with('status', '登录成功，欢迎回来。');
@@ -178,6 +212,22 @@ class LoginController extends Controller
             'wechat' => '微信',
             'qq' => 'QQ',
         ], $provider, strtoupper($provider));
+    }
+
+    private function enabledAuthMethods(): array
+    {
+        return array_values(array_filter((array) config('community.auth.enabled_methods', []), static fn (mixed $method): bool => is_string($method) && $method !== ''));
+    }
+
+    private function ensureAuthMethodEnabled(string $method): void
+    {
+        if (in_array($method, $this->enabledAuthMethods(), true)) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'login_method' => '当前未开放该登录方式，请联系管理员。',
+        ]);
     }
 
     private function shouldPreviewCode(): bool
