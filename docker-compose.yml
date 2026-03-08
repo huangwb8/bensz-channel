@@ -1,0 +1,76 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      mailpit:
+        condition: service_started
+    environment:
+      APP_NAME: Bensz Channel
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:${WEB_PORT:-8080}
+      SITE_NAME: Bensz Channel
+      SITE_TAGLINE: 类 QQ 频道的 Web 社区原型，支持静态游客访问与成员互动
+      LOG_CHANNEL: stack
+      LOG_STACK: stderr
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: bensz_channel
+      DB_USERNAME: bensz
+      DB_PASSWORD: bensz_secret
+      CACHE_STORE: redis
+      SESSION_DRIVER: database
+      QUEUE_CONNECTION: database
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MAIL_MAILER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      MAIL_FROM_ADDRESS: noreply@bensz-channel.local
+      MAIL_FROM_NAME: Bensz Channel
+      AUTH_PREVIEW_CODES: "true"
+      STATIC_SITE_ENABLED: "true"
+      ADMIN_NAME: 频道管理员
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: admin123456
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/up || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: bensz_channel
+      POSTGRES_USER: bensz
+      POSTGRES_PASSWORD: bensz_secret
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bensz -d bensz_channel"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+
+volumes:
+  postgres-data:

@@ -109,5 +109,10 @@ build/
 *.sqlite
 *.sqlite3
 
+app/vendor/
+app/node_modules/
+app/public/build/
+app/bootstrap/cache/*.php
+
 # 上传文件目录
 uploads/

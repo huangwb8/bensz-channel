@@ -1,0 +1,131 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer base {
+    body {
+        background-image:
+            radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 28%),
+            radial-gradient(circle at top right, rgba(139, 92, 246, 0.18), transparent 24%),
+            linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    }
+
+    a,
+    button {
+        transition: all 0.2s ease;
+    }
+}
+
+@layer components {
+    .panel {
+        @apply rounded-[2rem] border border-white/8 bg-slate-900/75 shadow-2xl shadow-slate-950/40 backdrop-blur;
+    }
+
+    .badge {
+        @apply inline-flex items-center rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200;
+    }
+
+    .channel-link {
+        @apply flex items-center gap-3 rounded-2xl border border-transparent px-3 py-3 text-slate-300 hover:border-cyan-400/30 hover:bg-cyan-400/7 hover:text-white;
+    }
+
+    .channel-link-active {
+        @apply border-cyan-400/30 bg-cyan-400/10 text-white;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-300;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-slate-100 hover:border-cyan-400/30 hover:bg-cyan-400/10;
+    }
+
+    .input-area {
+        @apply block w-full rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none ring-0 placeholder:text-slate-500 focus:border-cyan-400/40;
+    }
+
+    .stat-card {
+        @apply rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-center;
+    }
+
+    .stat-card span {
+        @apply block text-2xl font-semibold text-slate-100;
+    }
+
+    .stat-card small {
+        @apply mt-1 block text-xs uppercase tracking-[0.3em] text-slate-500;
+    }
+
+    .markdown-body {
+        @apply space-y-5 text-[15px] leading-7 text-slate-200;
+    }
+
+    .markdown-body h1,
+    .markdown-body h2,
+    .markdown-body h3,
+    .markdown-body h4 {
+        @apply font-semibold text-white;
+    }
+
+    .markdown-body h1 {
+        @apply text-3xl;
+    }
+
+    .markdown-body h2 {
+        @apply text-2xl;
+    }
+
+    .markdown-body h3 {
+        @apply text-xl;
+    }
+
+    .markdown-body p,
+    .markdown-body ul,
+    .markdown-body ol,
+    .markdown-body blockquote,
+    .markdown-body pre {
+        @apply mt-4;
+    }
+
+    .markdown-body ul,
+    .markdown-body ol {
+        @apply space-y-2 pl-6;
+    }
+
+    .markdown-body ul {
+        list-style: disc;
+    }
+
+    .markdown-body ol {
+        list-style: decimal;
+    }
+
+    .markdown-body a {
+        @apply text-cyan-300 underline-offset-4 hover:text-cyan-200 hover:underline;
+    }
+
+    .markdown-body blockquote {
+        @apply rounded-r-2xl border-l-4 border-cyan-400/60 bg-cyan-400/7 px-4 py-3 text-slate-300;
+    }
+
+    .markdown-body code {
+        @apply rounded-lg bg-white/8 px-2 py-1 text-sm text-cyan-100;
+    }
+
+    .markdown-body pre {
+        @apply overflow-x-auto rounded-2xl border border-white/8 bg-slate-950 px-4 py-4;
+    }
+
+    .markdown-body pre code {
+        @apply bg-transparent p-0;
+    }
+}
