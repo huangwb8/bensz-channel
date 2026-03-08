@@ -2,8 +2,9 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\LoginCode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class OtpLoginTest extends TestCase
@@ -12,20 +13,50 @@ class OtpLoginTest extends TestCase
 
     public function test_user_can_request_and_consume_email_login_code(): void
     {
-        $this->post(route('auth.code.send'), [
-            'channel' => LoginCode::CHANNEL_EMAIL,
-            'target' => 'member@example.com',
-        ])->assertRedirect();
+        Config::set('community.auth.driver', 'better_auth');
+        Config::set('community.auth.preview_codes', true);
+        Config::set('services.better_auth.base_url', 'http://auth:3001');
+        Config::set('services.better_auth.internal_secret', 'test-secret');
 
-        $code = LoginCode::query()->where('target', 'member@example.com')->firstOrFail();
+        Http::fake([
+            'http://auth:3001/internal/otp/send' => Http::response([
+                'status' => 'sent',
+                'previewCode' => '123456',
+            ]),
+            'http://auth:3001/internal/otp/verify' => Http::response([
+                'user' => [
+                    'id' => 'auth-user-1',
+                    'email' => 'member@example.com',
+                    'phone' => null,
+                    'name' => '测试成员',
+                    'image' => null,
+                    'emailVerified' => true,
+                    'phoneVerified' => false,
+                ],
+            ]),
+        ]);
+
+        $this->post(route('auth.code.send'), [
+            'channel' => 'email',
+            'target' => 'member@example.com',
+        ])->assertRedirect()
+            ->assertSessionHas('otp_preview', '123456');
 
         $this->post(route('auth.code.verify'), [
-            'channel' => LoginCode::CHANNEL_EMAIL,
+            'channel' => 'email',
             'target' => 'member@example.com',
-            'code' => $code->code,
+            'code' => '123456',
             'name' => '测试成员',
         ])->assertRedirect(route('home'));
 
         $this->assertAuthenticated();
+
+        Http::assertSentCount(2);
+        Http::assertSent(function ($request): bool {
+            return $request->url() === 'http://auth:3001/internal/otp/verify'
+                && $request['channel'] === 'email'
+                && $request['target'] === 'member@example.com'
+                && $request['code'] === '123456';
+        });
     }
 }

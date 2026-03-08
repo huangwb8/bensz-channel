@@ -16,6 +16,7 @@ class AuthPagesTest extends TestCase
             ->assertOk()
             ->assertSee('登录 / 注册')
             ->assertSee('欢迎回来')
+            ->assertSee('Better Auth')
             ->assertSee('邮箱或手机号登录')
             ->assertSee('扫码登录')
             ->assertDontSee('测试账号')
