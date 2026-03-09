@@ -75,14 +75,13 @@ class AdminChannelManagementTest extends TestCase
             ->get(route('admin.channels.index'));
 
         $response->assertOk();
-        $response->assertSee('精华与未分类为系统保留频道：精华默认展示且聚合全站精华文章，未分类默认隐藏但仍会自动接收迁移文章。');
+        $response->assertSee('系统频道：精华默认展示并聚合精华内容，未分类默认隐藏但仍会自动接收迁移文章。');
         $response->assertSee('value="'.$managed->slug.'"', false);
         $response->assertSee('value="'.$uncategorized->slug.'"', false);
         $response->assertSee(route('admin.channels.update', $uncategorized), false);
         $response->assertDontSee('aria-label="删除频道：'.$uncategorized->name.'"', false);
         $response->assertDontSee('delete-channel-'.$uncategorized->id, false);
         $response->assertSee('name="show_in_top_nav"', false);
-        $response->assertSee('系统保留频道', false);
     }
 
     public function test_admin_can_store_and_update_top_nav_visibility(): void
@@ -142,5 +141,41 @@ class AdminChannelManagementTest extends TestCase
             ->assertRedirect();
 
         $this->assertTrue($uncategorized->fresh()->show_in_top_nav);
+    }
+
+    public function test_admin_can_reorder_channels_via_drag_payload(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $first = Channel::query()->create([
+            'name' => '频道 A',
+            'slug' => 'channel-a',
+            'description' => '频道 A',
+            'icon' => '🅰️',
+            'accent_color' => '#3b82f6',
+            'sort_order' => 1,
+            'is_public' => true,
+            'show_in_top_nav' => true,
+        ]);
+
+        $second = Channel::query()->create([
+            'name' => '频道 B',
+            'slug' => 'channel-b',
+            'description' => '频道 B',
+            'icon' => '🅱️',
+            'accent_color' => '#10b981',
+            'sort_order' => 2,
+            'is_public' => true,
+            'show_in_top_nav' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.channels.reorder'), [
+                'ordered_ids' => [$second->id, $first->id],
+            ])
+            ->assertRedirect();
+
+        $this->assertSame(0, $second->fresh()->sort_order);
+        $this->assertSame(1, $first->fresh()->sort_order);
     }
 }

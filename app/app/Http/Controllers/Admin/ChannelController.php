@@ -74,6 +74,31 @@ class ChannelController extends Controller
         return back()->with('status', '频道已删除，原有文章已归入未分类。');
     }
 
+    public function reorder(Request $request, StaticPageBuilder $staticPageBuilder): RedirectResponse
+    {
+        $raw = $request->input('ordered_ids');
+        $orderedIds = is_array($raw)
+            ? $raw
+            : array_filter(explode(',', (string) $raw), fn ($value) => $value !== '');
+
+        $request->merge(['ordered_ids' => $orderedIds]);
+
+        $validated = $request->validate([
+            'ordered_ids' => ['required', 'array', 'min:1'],
+            'ordered_ids.*' => ['integer', 'exists:channels,id'],
+        ]);
+
+        foreach ($validated['ordered_ids'] as $index => $channelId) {
+            Channel::query()
+                ->whereKey($channelId)
+                ->update(['sort_order' => $index]);
+        }
+
+        $staticPageBuilder->buildAll();
+
+        return back()->with('status', '频道排序已更新。');
+    }
+
     private function validateChannel(Request $request, ?Channel $channel = null): array
     {
         if ($channel?->isReserved()) {

@@ -5,13 +5,23 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-semibold text-gray-900">频道管理</h2>
-                <p class="mt-1 text-sm text-gray-500">管理社区频道，并决定哪些频道出现在顶栏导航中；系统保留频道包括精华与未分类。</p>
+                <p class="mt-1 text-sm text-gray-500">拖拽卡片即可调整顺序；系统频道仅支持顶栏显示切换。</p>
             </div>
             <div class="icon-action-group">
                 <x-icon-button :href="route('admin.articles.index')" icon="document" label="文章管理" title="文章管理" />
                 <x-icon-button :href="route('admin.users.index')" icon="users" label="用户管理" title="用户管理" />
             </div>
         </div>
+
+        <form action="{{ route('admin.channels.reorder') }}" method="POST" class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+            @csrf
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-lg">↕️</span>
+                <span>拖拽频道卡片调整顺序</span>
+            </div>
+            <input type="hidden" name="ordered_ids" id="channel-order-input" value="">
+            <button type="submit" class="btn-secondary">保存排序</button>
+        </form>
 
         <form action="{{ route('admin.channels.store') }}" method="POST" class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-5">
             @csrf
@@ -33,14 +43,17 @@
         </form>
 
         <div class="mt-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-            精华与未分类为系统保留频道：精华默认展示且聚合全站精华文章，未分类默认隐藏但仍会自动接收迁移文章。
+            系统频道：精华默认展示并聚合精华内容，未分类默认隐藏但仍会自动接收迁移文章。
         </div>
     </section>
 
-    <section class="mt-6 space-y-3">
+    <section class="mt-6 space-y-3" id="channel-sort-list">
         @forelse($channels as $channel)
             @php($isReserved = $channel->isReserved())
-            <div class="article-card">
+            <div class="article-card group flex items-start gap-3" data-channel-id="{{ $channel->id }}" draggable="true">
+                <button type="button" class="mt-1 cursor-grab rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm text-gray-400 hover:text-gray-600" title="拖拽排序" aria-label="拖拽排序">
+                    ⠿
+                </button>
                 <form action="{{ route('admin.channels.update', $channel) }}" method="POST">
                     @csrf
                     @method('PUT')
@@ -51,19 +64,13 @@
                         <input type="text" name="icon" value="{{ $channel->icon }}" class="input-field h-10 text-center {{ $isReserved ? 'bg-gray-100 text-gray-500' : '' }}" @disabled($isReserved)>
                         <input type="text" name="accent_color" value="{{ $channel->accent_color }}" class="input-field h-10 {{ $isReserved ? 'bg-gray-100 text-gray-500' : '' }}" @disabled($isReserved)>
                         <input type="number" name="sort_order" value="{{ $channel->sort_order }}" class="input-field h-10 {{ $isReserved ? 'bg-gray-100 text-gray-500' : '' }}" @disabled($isReserved)>
-                        <div class="space-y-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
+                        <div class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
                             <input type="hidden" name="show_in_top_nav" value="0">
-                            <label class="inline-flex items-center gap-2 font-medium text-gray-700">
-                                <input type="checkbox" name="show_in_top_nav" value="1" @checked($channel->show_in_top_nav) class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                <span>顶栏显示</span>
+                            <span class="text-xs text-gray-500">顶栏</span>
+                            <label class="relative inline-flex cursor-pointer items-center">
+                                <input type="checkbox" name="show_in_top_nav" value="1" @checked($channel->show_in_top_nav) class="peer sr-only">
+                                <div class="peer h-5 w-9 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:bg-blue-600 peer-checked:after:translate-x-4"></div>
                             </label>
-                            <p class="text-xs text-gray-500">
-                                @if($isReserved)
-                                    系统保留频道，仅支持调整是否出现在顶栏。
-                                @else
-                                    关闭后频道仍可访问，只是不再出现在顶栏导航。
-                                @endif
-                            </p>
                         </div>
                         <div class="flex items-center justify-end gap-2">
                             <x-icon-button
@@ -101,4 +108,45 @@
             </section>
         @endforelse
     </section>
+
+    <script>
+        const list = document.getElementById('channel-sort-list');
+        const orderInput = document.getElementById('channel-order-input');
+        let dragging = null;
+
+        if (list && orderInput) {
+            const updateOrder = () => {
+                const ids = Array.from(list.querySelectorAll('[data-channel-id]'))
+                    .map((item) => item.getAttribute('data-channel-id'));
+                orderInput.value = ids.join(',');
+            };
+
+            updateOrder();
+
+            list.addEventListener('dragstart', (event) => {
+                const target = event.target.closest('[data-channel-id]');
+                if (!target) return;
+                dragging = target;
+                target.classList.add('ring-2', 'ring-blue-200');
+                event.dataTransfer.effectAllowed = 'move';
+            });
+
+            list.addEventListener('dragend', () => {
+                if (dragging) {
+                    dragging.classList.remove('ring-2', 'ring-blue-200');
+                }
+                dragging = null;
+                updateOrder();
+            });
+
+            list.addEventListener('dragover', (event) => {
+                event.preventDefault();
+                const target = event.target.closest('[data-channel-id]');
+                if (!target || !dragging || target === dragging) return;
+                const rect = target.getBoundingClientRect();
+                const before = event.clientY < rect.top + rect.height / 2;
+                list.insertBefore(dragging, before ? target : target.nextSibling);
+            });
+        }
+    </script>
 @endsection

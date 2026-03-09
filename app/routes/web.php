@@ -51,6 +51,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/channels', [AdminChannelController::class, 'index'])->name('channels.index');
     Route::post('/channels', [AdminChannelController::class, 'store'])->name('channels.store');
     Route::put('/channels/{channel}', [AdminChannelController::class, 'update'])->name('channels.update');
+    Route::post('/channels/reorder', [AdminChannelController::class, 'reorder'])->name('channels.reorder');
     Route::delete('/channels/{channel}', [AdminChannelController::class, 'destroy'])->name('channels.destroy');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
