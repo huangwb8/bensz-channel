@@ -1,0 +1,150 @@
+name: Check Version Sync
+
+on:
+  pull_request:
+    paths:
+      - 'config.yaml'
+      - 'CHANGELOG.md'
+  push:
+    branches:
+      - main
+    paths:
+      - 'config.yaml'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from config.yaml
+        id: config_version
+        run: |
+          VERSION=$(grep -A 2 'project_info:' config.yaml | grep 'version:' | awk '{print $2}')
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Config version: ${VERSION}"
+
+      - name: Get latest release version
+        id: latest_release
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              const { data } = await github.rest.repos.getLatestRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+
+              const version = data.tag_name.replace(/^v/, '');
+              core.setOutput('version', version);
+              core.setOutput('found', 'true');
+              core.info(`Latest release: ${data.tag_name}`);
+            } catch (error) {
+              if (error.status === 404) {
+                core.setOutput('found', 'false');
+                core.setOutput('version', '0.0.0');
+                core.info('No published release found');
+              } else {
+                throw error;
+              }
+            }
+
+      - name: Compare versions
+        id: compare
+        run: |
+          CONFIG_VERSION="${{ steps.config_version.outputs.version }}"
+          RELEASE_VERSION="${{ steps.latest_release.outputs.version }}"
+
+          echo "Config version: ${CONFIG_VERSION}"
+          echo "Latest release: ${RELEASE_VERSION}"
+
+          # 使用简单的版本比较
+          if [ "${{ steps.latest_release.outputs.found }}" == "false" ]; then
+            echo "status=no_release" >> "$GITHUB_OUTPUT"
+            echo "message=No release found. Config version: ${CONFIG_VERSION}" >> "$GITHUB_OUTPUT"
+          elif [ "${CONFIG_VERSION}" == "${RELEASE_VERSION}" ]; then
+            echo "status=synced" >> "$GITHUB_OUTPUT"
+            echo "message=✅ Versions are in sync: ${CONFIG_VERSION}" >> "$GITHUB_OUTPUT"
+          else
+            # 简单比较：如果 config 版本更新，说明需要创建新 release
+            echo "status=needs_release" >> "$GITHUB_OUTPUT"
+            echo "message=⚠️ Config version (${CONFIG_VERSION}) is ahead of latest release (${RELEASE_VERSION}). Consider creating a new release." >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check CHANGELOG.md
+        id: changelog
+        run: |
+          CONFIG_VERSION="${{ steps.config_version.outputs.version }}"
+
+          if [ -f "CHANGELOG.md" ]; then
+            if grep -q "\[${CONFIG_VERSION}\]" CHANGELOG.md; then
+              echo "found=true" >> "$GITHUB_OUTPUT"
+              echo "✅ CHANGELOG.md contains entry for version ${CONFIG_VERSION}"
+            else
+              echo "found=false" >> "$GITHUB_OUTPUT"
+              echo "⚠️ CHANGELOG.md does not contain entry for version ${CONFIG_VERSION}"
+            fi
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ CHANGELOG.md not found"
+          fi
+
+      - name: Post summary
+        run: |
+          {
+            echo "## Version Sync Check"
+            echo ""
+            echo "${{ steps.compare.outputs.message }}"
+            echo ""
+            echo "### Details"
+            echo "- Config version: \`${{ steps.config_version.outputs.version }}\`"
+            echo "- Latest release: \`${{ steps.latest_release.outputs.version }}\`"
+            echo "- CHANGELOG entry: ${{ steps.changelog.outputs.found == 'true' && '✅ Found' || '⚠️ Missing' }}"
+            echo ""
+
+            if [ "${{ steps.compare.outputs.status }}" == "needs_release" ]; then
+              echo "### 📝 Next Steps"
+              echo "1. Ensure CHANGELOG.md has an entry for version \`${{ steps.config_version.outputs.version }}\`"
+              echo "2. Run the 'Create Release from config.yaml' workflow to create a new release"
+              echo "3. The Docker images will be automatically built and pushed with the new version tag"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const status = '${{ steps.compare.outputs.status }}';
+            const message = '${{ steps.compare.outputs.message }}';
+            const changelogFound = '${{ steps.changelog.outputs.found }}' === 'true';
+
+            let body = `## 🔍 Version Sync Check\n\n${message}\n\n`;
+            body += `### Details\n`;
+            body += `- Config version: \`${{ steps.config_version.outputs.version }}\`\n`;
+            body += `- Latest release: \`${{ steps.latest_release.outputs.version }}\`\n`;
+            body += `- CHANGELOG entry: ${changelogFound ? '✅ Found' : '⚠️ Missing'}\n\n`;
+
+            if (status === 'needs_release') {
+              body += `### 📝 Recommended Actions\n`;
+              body += `1. Ensure CHANGELOG.md has an entry for version \`${{ steps.config_version.outputs.version }}\`\n`;
+              body += `2. After merging, run the 'Create Release from config.yaml' workflow\n`;
+              body += `3. Docker images will be automatically built with the new version tag\n`;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
