@@ -1,6 +1,84 @@
 import './bootstrap';
 import QRCode from 'qrcode';
 
+const mobileChannelTrigger = document.querySelector('[data-mobile-channel-trigger]');
+const mobileChannelDrawer = document.querySelector('[data-mobile-channel-drawer]');
+
+if (mobileChannelTrigger && mobileChannelDrawer) {
+    document.body.classList.add('has-mobile-channel-drawer');
+
+    const closeButtons = mobileChannelDrawer.querySelectorAll('[data-mobile-channel-close]');
+    const closeButton = mobileChannelDrawer.querySelector('[data-mobile-channel-close-primary]');
+    const channelLinks = mobileChannelDrawer.querySelectorAll('[data-mobile-channel-link]');
+    const desktopMediaQuery = window.matchMedia('(min-width: 768px)');
+    let lastFocusedElement = null;
+
+    const closeDrawer = () => {
+        if (mobileChannelDrawer.hidden) {
+            return;
+        }
+
+        mobileChannelDrawer.hidden = true;
+        mobileChannelTrigger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+
+        if (lastFocusedElement instanceof HTMLElement) {
+            lastFocusedElement.focus();
+        }
+    };
+
+    const openDrawer = () => {
+        lastFocusedElement = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : mobileChannelTrigger;
+
+        mobileChannelDrawer.hidden = false;
+        mobileChannelTrigger.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+
+        window.requestAnimationFrame(() => {
+            if (closeButton instanceof HTMLElement) {
+                closeButton.focus();
+            }
+        });
+    };
+
+    mobileChannelTrigger.addEventListener('click', () => {
+        if (mobileChannelDrawer.hidden) {
+            openDrawer();
+            return;
+        }
+
+        closeDrawer();
+    });
+
+    closeButtons.forEach((button) => {
+        button.addEventListener('click', closeDrawer);
+    });
+
+    channelLinks.forEach((link) => {
+        link.addEventListener('click', closeDrawer);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeDrawer();
+        }
+    });
+
+    const handleDesktopBreakpointChange = (event) => {
+        if (event.matches) {
+            closeDrawer();
+        }
+    };
+
+    if (typeof desktopMediaQuery.addEventListener === 'function') {
+        desktopMediaQuery.addEventListener('change', handleDesktopBreakpointChange);
+    } else if (typeof desktopMediaQuery.addListener === 'function') {
+        desktopMediaQuery.addListener(handleDesktopBreakpointChange);
+    }
+}
+
 // RSS 复制功能
 document.querySelectorAll('[data-copy-rss]').forEach((button) => {
     button.addEventListener('click', async () => {

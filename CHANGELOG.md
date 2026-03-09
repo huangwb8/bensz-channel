@@ -8,6 +8,7 @@
 
 ### Added（新增）
 
+- 新增了 `app/tests/Feature/Channels/TopNavChannelVisibilityTest.php` 的移动端频道切换回归断言：用于锁定左上角频道按钮、移动端抽屉入口与当前频道高亮状态
 - 新增了文章标题自动编号与 TOC 导航：文章页现在会基于 Markdown 正文标题自动生成层级编号，并同时提供桌面端侧栏目录与移动端折叠目录
 - 新增了 `app/tests/Unit/Support/ArticleBodyFormatterTest.php` 与 `app/tests/Feature/Articles/ArticleTocTest.php`：用于锁定文章目录生成、标题编号、中文标题锚点回退与文章页 / 静态页渲染行为
 
@@ -37,6 +38,7 @@
 
 ### Changed（变更）
 
+- 更新了社区顶栏导航的移动端交互：当频道数量增多时，小屏幕界面现在会在左上角显示当前频道按钮，并通过抽屉式频道列表完成切换，桌面端横向频道标签保持原有行为不变
 - 更新了 `config.yaml` 与 `README.md`：将项目版本推进到 `1.20.0`，并补充微信 / QQ 扫码登录支持“默认演示模式 + 可切换真实 OAuth”的运行方式
 - 更新了登录页与认证配置：微信 / QQ 登录卡片现在会明确展示当前处于演示模式、真实 OAuth 模式或平台参数未配置完整状态
 - 更新了扫码登录实现：微信 / QQ 不再只有本地演示授权壳子，切换到真实模式后会走官方 OAuth 回调并落库到 `social_accounts`

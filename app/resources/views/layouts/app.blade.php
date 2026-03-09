@@ -13,23 +13,52 @@
         @endif
     </head>
     <body class="min-h-screen bg-gray-50 antialiased flex flex-col">
+        @php
+            $mobileCurrentChannelIcon = $currentChannel?->icon ?? '🏠';
+            $mobileCurrentChannelName = $currentChannel?->name ?? '全部';
+        @endphp
+
         <!-- 顶部固定导航栏 -->
         <header class="top-nav">
-            <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
-                <!-- 左侧 Logo -->
-                <a href="{{ route('home') }}" class="logo flex items-center gap-2">
-                    <span class="text-2xl">💬</span>
-                    <span class="hidden sm:inline">{{ $siteName }}</span>
-                </a>
+            <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:gap-4">
+                <div class="flex min-w-0 items-center gap-2 sm:gap-3">
+                    <button
+                        type="button"
+                        class="mobile-channel-trigger"
+                        data-mobile-channel-trigger
+                        aria-expanded="false"
+                        aria-controls="mobile-channel-drawer"
+                        aria-label="打开频道列表"
+                    >
+                        <span class="text-base" aria-hidden="true">☰</span>
+                        <span class="flex min-w-0 items-center gap-2">
+                            <span aria-hidden="true">{{ $mobileCurrentChannelIcon }}</span>
+                            <span class="truncate">{{ $mobileCurrentChannelName }}</span>
+                        </span>
+                    </button>
+
+                    <a href="{{ route('home') }}" class="logo flex shrink-0 items-center gap-2">
+                        <span class="text-2xl">💬</span>
+                        <span class="hidden sm:inline">{{ $siteName }}</span>
+                    </a>
+                </div>
 
                 <!-- 中间版块标签 -->
-                <nav class="channel-tabs flex-1 justify-center">
-                    <a href="{{ route('home') }}" class="channel-tab {{ $currentChannel === null ? 'channel-tab-active' : '' }}">
+                <nav class="channel-tabs flex-1 justify-center" aria-label="顶部频道导航">
+                    <a
+                        href="{{ route('home') }}"
+                        class="channel-tab {{ $currentChannel === null ? 'channel-tab-active' : '' }}"
+                        @if($currentChannel === null) aria-current="page" @endif
+                    >
                         <span>🏠</span>
                         <span>全部</span>
                     </a>
                     @foreach($channels as $channel)
-                        <a href="{{ route('channels.show', $channel) }}" class="channel-tab {{ optional($currentChannel)->is($channel) ? 'channel-tab-active' : '' }}">
+                        <a
+                            href="{{ route('channels.show', $channel) }}"
+                            class="channel-tab {{ optional($currentChannel)->is($channel) ? 'channel-tab-active' : '' }}"
+                            @if(optional($currentChannel)->is($channel)) aria-current="page" @endif
+                        >
                             <span>{{ $channel->icon }}</span>
                             <span>{{ $channel->name }}</span>
                         </a>
@@ -93,6 +122,69 @@
                             登录 / 注册
                         </a>
                     @endauth
+                </div>
+            </div>
+
+            <div id="mobile-channel-drawer" class="mobile-channel-drawer-shell" data-mobile-channel-drawer hidden>
+                <button
+                    type="button"
+                    class="mobile-channel-backdrop"
+                    data-mobile-channel-close
+                    aria-label="关闭频道列表"
+                ></button>
+
+                <div class="mobile-channel-drawer" role="dialog" aria-modal="true" aria-label="频道列表">
+                    <div class="flex items-start justify-between gap-3 border-b border-gray-100 px-4 py-4">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900">切换频道</p>
+                            <p class="mt-1 text-xs text-gray-500">移动端频道较多时，可在这里快速选择。</p>
+                        </div>
+                        <button
+                            type="button"
+                            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:border-gray-300 hover:text-gray-700"
+                            data-mobile-channel-close
+                            data-mobile-channel-close-primary
+                            aria-label="关闭频道列表"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    <nav class="mobile-channel-list" aria-label="移动端频道列表">
+                        <a
+                            href="{{ route('home') }}"
+                            class="mobile-channel-link {{ $currentChannel === null ? 'mobile-channel-link-active' : '' }}"
+                            data-mobile-channel-link
+                            @if($currentChannel === null) aria-current="page" @endif
+                        >
+                            <span class="flex items-center gap-3">
+                                <span class="text-lg">🏠</span>
+                                <span>
+                                    <span class="block text-sm font-semibold">全部</span>
+                                    <span class="block text-xs text-gray-500">查看所有频道的最新内容</span>
+                                </span>
+                            </span>
+                            <span class="text-sm text-gray-400">›</span>
+                        </a>
+
+                        @foreach($channels as $channel)
+                            <a
+                                href="{{ route('channels.show', $channel) }}"
+                                class="mobile-channel-link {{ optional($currentChannel)->is($channel) ? 'mobile-channel-link-active' : '' }}"
+                                data-mobile-channel-link
+                                @if(optional($currentChannel)->is($channel)) aria-current="page" @endif
+                            >
+                                <span class="flex items-center gap-3">
+                                        <span class="text-lg">{{ $channel->icon }}</span>
+                                        <span>
+                                            <span class="block text-sm font-semibold">{{ $channel->name }}</span>
+                                            <span class="block text-xs text-gray-500">{{ $channel->description ?: '进入 '.$channel->name.' 频道' }}</span>
+                                        </span>
+                                    </span>
+                                    <span class="text-sm text-gray-400">›</span>
+                            </a>
+                        @endforeach
+                    </nav>
                 </div>
             </div>
         </header>

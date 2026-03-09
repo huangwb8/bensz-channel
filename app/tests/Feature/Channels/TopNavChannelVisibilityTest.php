@@ -48,9 +48,32 @@ class TopNavChannelVisibilityTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertOk();
+        $response->assertSee('data-mobile-channel-trigger', false);
+        $response->assertSee('id="mobile-channel-drawer"', false);
         $response->assertSee('显示频道');
         $response->assertDontSee('隐藏频道');
         $response->assertDontSee('未分类');
+    }
+
+    public function test_current_channel_is_marked_in_desktop_and_mobile_navigation(): void
+    {
+        $channel = Channel::query()->create([
+            'name' => '开发交流',
+            'slug' => 'engineering',
+            'description' => '开发讨论',
+            'icon' => '🛠️',
+            'accent_color' => '#06b6d4',
+            'sort_order' => 1,
+            'is_public' => true,
+            'show_in_top_nav' => true,
+        ]);
+
+        $response = $this->get(route('channels.show', $channel));
+
+        $response->assertOk();
+        $response->assertSee('aria-current="page"', false);
+        $response->assertSee('打开频道列表');
+        $response->assertSee('移动端频道较多时，可在这里快速选择。');
     }
 
     public function test_hidden_channel_remains_accessible_by_direct_route(): void
