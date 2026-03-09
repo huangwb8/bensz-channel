@@ -130,11 +130,19 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between gap-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-                        <p>建议先填 Mailpit 或测试 SMTP 完成验证，再切到正式 SMTP，避免生产前投递失败。</p>
-                        <button type="submit" class="rounded-lg bg-gray-900 px-4 py-2 font-medium text-white hover:bg-gray-800">
-                            保存 SMTP 配置
-                        </button>
+                    <div class="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                        <div class="space-y-1">
+                            <p>建议先填 Mailpit 或测试 SMTP 完成验证，再切到正式 SMTP，避免生产前投递失败。</p>
+                            <p class="text-xs text-gray-500">测试按钮不会保存当前配置；测试邮件默认发到你的管理员邮箱，若未设置则发到上方发件邮箱。</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button type="submit" formaction="{{ route('settings.subscriptions.mail.test') }}" class="rounded-lg border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 hover:bg-gray-100">
+                                测试 SMTP
+                            </button>
+                            <button type="submit" class="rounded-lg bg-gray-900 px-4 py-2 font-medium text-white hover:bg-gray-800">
+                                保存 SMTP 配置
+                            </button>
+                        </div>
                     </div>
                 </form>
             </section>

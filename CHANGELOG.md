@@ -8,6 +8,8 @@
 
 ### Added（新增）
 
+- 新增了管理员 SMTP“测试 SMTP”按钮与独立探测链路：管理员现在可直接验证当前表单里的服务器、端口、账号和发件人配置是否可正常投递，且测试不会误保存草稿配置
+
 - 新增了“精华频道 + 文章置顶/精华运营”实现计划 `docs/plans/2026-03-09-featured-channel-and-article-curation.md`：用于沉淀系统频道、文章状态、聚合频道页与 Docker 验收步骤
 - 新增了 `app/tests/Feature/Channels/FeaturedChannelTest.php`：用于锁定“精华”频道聚合展示跨频道精华文章的行为
 - 新增了频道顶栏显示实现计划 `docs/plans/2026-03-08-top-nav-channel-visibility.md`：用于沉淀“频道可隐藏但不删除”的实现路径、测试点与 Docker 验收步骤
@@ -21,6 +23,9 @@
 - 新增了 `app/tests/Feature/Channels/TopNavChannelVisibilityTest.php`：用于锁定“仅显示被允许出现在顶栏的频道”以及“隐藏频道仍可直达访问”的回归行为
 
 ### Changed（变更）
+
+- 更新了 `config.yaml` 与 `README.md`：将项目版本推进到 `1.18.0`，并补充管理员 SMTP 测试按钮、测试邮件投递目标与页面使用说明
+- 更新了后台 SMTP 配置兼容层：现在会把后台表单中的 `TLS / SSL` 选项安全映射到 Symfony SMTP 传输层，避免配置保存成功但真实发信失败
 
 - 更新了 `config.yaml`：将项目版本推进到 `1.17.0`，用于记录本次 DogeCloud CDN 兼容性加固与接入文档完善
 - 更新了 Laravel URL 生成策略：现在统一以 `APP_URL` 作为公开访问根地址，避免 CDN 回源 Host 与公网域名不一致时泄漏源站地址

@@ -43,6 +43,9 @@ Route::middleware('auth')->group(function (): void {
     Route::put('/settings/subscriptions/mail', [SubscriptionSettingsController::class, 'updateMailSettings'])
         ->middleware('admin')
         ->name('settings.subscriptions.mail.update');
+    Route::put('/settings/subscriptions/mail/test', [SubscriptionSettingsController::class, 'testMailSettings'])
+        ->middleware('admin')
+        ->name('settings.subscriptions.mail.test');
 });
 
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function (): void {
