@@ -198,79 +198,144 @@ bensz-channel/
 - 静态 HTML 会额外生成 `.gz` 文件，Nginx 开启 `gzip_static`
 - 资源文件采用 Vite 指纹命名，可通过 `ASSET_URL` 接入 CDN
 
-## DogeCloud CDN 接入
+## 静态资源 CDN 配置
 
-本项目现已针对 DogeCloud 融合 CDN 做了兼容性收口，重点解决了以下问题：
+本项目支持两种方式配置静态资源 CDN，用于加速 CSS、JS、图片等公开资源的加载：
 
-- Laravel 生成的绝对链接现在统一以 `APP_URL` 作为公开访问根地址，避免 DogeCloud 回源 Host 与公网访问域名不一致时，页面、表单、RSS、重定向泄漏源站域名
-- Vite 指纹资源继续走 `ASSET_URL` / 后台“静态资源 CDN”设置，适合将 CSS、JS、图片挂到独立 CDN 域名
-- Docker 重部署会自动重建静态页，因此 CDN 回源内容与应用当前状态保持一致
-- Nginx 继续为 `public/build/` 提供长缓存，为 `public/static/` 提供短缓存和 `.gz` 静态压缩文件，便于直接配合 DogeCloud 的缓存与压缩策略
+### 配置方式
 
-### 推荐配置
+**方式一：后台站点设置（推荐）**
 
-编辑 `config/.compose.env`，至少确认以下变量：
+1. 以管理员身份登录
+2. 进入"站点设置"页面
+3. 找到"静态资源 CDN"字段
+4. 填写 CDN 域名，例如：`https://cdn.example.com`
+5. 点击"保存站点设置"
+
+**方式二：环境变量**
+
+在 `config/.env` 中配置：
 
 ```env
-APP_URL=https://community.example.com
 ASSET_URL=https://cdn.example.com
-SESSION_SECURE_COOKIE=true
-BETTER_AUTH_TRUSTED_ORIGINS=https://community.example.com
 ```
 
-说明：
+### 配置优先级
 
-- `APP_URL`：站点公开访问域名；Laravel 生成页面链接、表单地址、RSS 链接时会以它为准
-- `ASSET_URL`：静态资源 CDN 域名；如果你更喜欢后台可配，也可以部署后在“站点设置”里填写“静态资源 CDN”
-- `SESSION_SECURE_COOKIE=true`：当公网通过 HTTPS 访问时建议开启，避免登录 Cookie 因为浏览器安全策略被拦截
-- `BETTER_AUTH_TRUSTED_ORIGINS`：如果未单独配置，项目会默认跟随 `APP_URL`；多域名场景请显式填写
+后台"站点设置"中的配置会覆盖环境变量 `ASSET_URL`。如果后台未配置，则使用环境变量的值。
 
-### DogeCloud 控制台建议
+### 配置效果
 
-参考 DogeCloud 文档：
+配置后，页面中的静态资源会自动使用 CDN 域名：
 
-- 文档首页：`https://docs.dogecloud.com/cdn/`
-- 快速入门：`https://docs.dogecloud.com/cdn/manual-quickstart-full`
-- 源站配置：`https://docs.dogecloud.com/cdn/manual-config-source`
-- 回源请求头：`https://docs.dogecloud.com/cdn/manual-config-request-header`
-- 缓存规则：`https://docs.dogecloud.com/cdn/manual-config-cache-rules`
-- 浏览器缓存：`https://docs.dogecloud.com/cdn/manual-config-clientcache-rules`
-- 智能压缩：`https://docs.dogecloud.com/cdn/manual-config-gzip`
+- **页面链接**：继续使用 `APP_URL`（如 `https://community.example.com`）
+- **静态资源**：使用 CDN 域名（如 `https://cdn.example.com/build/assets/app.js`）
 
-建议按下面方式配置：
+### 使用场景
 
-- **加速域名**：填写你的公网访问域名，例如 `community.example.com`
-- **业务类型**：选择“网页小文件”
-- **源站类型**：选择“源站域名”或“源站 IP”
-- **回源协议**：如果你的源站已配 TLS，优先选 HTTPS；否则选 HTTP
-- **回源 Host**：填源站真实 Host；如果公网域名与源站域名不同，这是 DogeCloud 正常推荐用法，本项目已兼容这种场景
-- **回源请求头**：DogeCloud 默认会带 `X-Forwarded-For` 和 `X-Forwarded-Proto`，无需额外添加
-- **缓存规则**：
-  - `/build/*` 建议长缓存，因为资源文件带内容哈希
-  - `/static/*` 建议 5–10 分钟缓存，适合游客静态页
-  - 动态接口、登录相关路径不要在 CDN 上做激进缓存
-- **浏览器缓存**：优先跟随源站，或按上面的路径策略分别设置
-- **智能压缩**：保持开启；项目已生成 `.gz` 静态文件，DogeCloud 也可继续做 GZip / Brotli 分发
+- **DogeCloud 等 CDN 服务**：将静态资源分发到 CDN 节点，加速全球访问
+- **独立静态资源域名**：将静态资源与主站分离，优化浏览器并发加载
+- **开发环境**：留空即可，使用本地资源
 
-### 部署与重部署
+### 注意事项
 
-修改配置后，执行：
+- CDN 域名应配置回源到你的应用服务器
+- 建议为 `/build/*` 路径配置长缓存（资源文件带内容哈希）
+- 修改配置后会立即生效，无需重启服务
+
+## DogeCloud CDN 接入
+
+本项目支持两种 DogeCloud 接入方式，按需选择：
+
+| 方式 | 适用场景 | CDN 域名数量 |
+|------|----------|-------------|
+| **全站加速**（主域名挂 CDN） | 希望游客静态页也走 CDN 节点 | 1 个，与 `APP_URL` 相同 |
+| **仅静态资源加速**（独立 CDN 域名） | 主站直连，只把 CSS/JS/图片挂 CDN | 2 个，主站 + CDN 子域名 |
+
+### 方式一：全站加速
+
+适合把整个站点（包括游客静态页）都挂到 DogeCloud 加速的场景。
+
+**第一步：配置应用**
+
+编辑 `config/.compose.env`：
+
+```env
+APP_URL=https://community.example.com   # 公网访问域名（即 CDN 加速域名）
+SESSION_SECURE_COOKIE=true
+```
+
+`ASSET_URL` 留空，静态资源跟随主域名。
+
+**第二步：DogeCloud 控制台**
+
+1. 新建加速域名，填写 `community.example.com`，业务类型选”网页小文件”
+2. 源站填写你的服务器 IP 或内网域名，回源协议按实际选 HTTP/HTTPS
+3. 回源 Host 填 `community.example.com`（与加速域名一致）
+4. 配置缓存规则（见下方缓存规则说明）
+5. 将域名 DNS 解析 CNAME 到 DogeCloud 提供的加速域名
+
+**第三步：重启应用**
 
 ```bash
-docker compose up -d --build
+./scripts/compose.sh up --build -d
 ```
 
-容器启动时会自动执行迁移、系统初始化、静态页重建，因此适合直接作为 DogeCloud 回源。
+### 方式二：仅静态资源加速
 
-### 审查清单
+适合主站直连、只把 CSS/JS/图片挂到独立 CDN 域名的场景，登录、评论等动态请求不经过 CDN。
 
-完成部署后，建议至少检查：
+**第一步：配置应用**
 
-- 首页 HTML 中站内链接是否指向 `APP_URL`
-- `build` 资源是否指向 `ASSET_URL` / 后台填写的 CDN 域名
-- 登录后 Cookie 是否带 `Secure` 标记（HTTPS 场景）
-- DogeCloud 回源命中后，`/build/*` 是否稳定命中缓存
-- 新发文章、改频道后，`/static/` 对应页面是否已重建
+编辑 `config/.compose.env`：
+
+```env
+APP_URL=https://community.example.com   # 主站域名，直连服务器
+ASSET_URL=https://cdn.example.com       # 静态资源 CDN 域名
+SESSION_SECURE_COOKIE=true
+```
+
+也可以不改 `config/.compose.env`，部署后在后台”站点设置 → 静态资源 CDN”填写 CDN 域名，效果相同。
+
+**第二步：DogeCloud 控制台**
+
+1. 新建加速域名，填写 `cdn.example.com`，业务类型选”网页小文件”
+2. 源站填写你的服务器 IP 或内网域名，回源协议按实际选 HTTP/HTTPS
+3. 回源 Host 填 `community.example.com`（主站域名，让 Nginx 能正确响应）
+4. 配置缓存规则（见下方缓存规则说明）
+5. 将 `cdn.example.com` DNS 解析 CNAME 到 DogeCloud 提供的加速域名
+
+**第三步：重启应用**
+
+```bash
+./scripts/compose.sh up --build -d
+```
+
+### 缓存规则说明
+
+Nginx 已为不同路径设置了对应的缓存头，DogeCloud 建议跟随源站：
+
+| 路径 | Nginx 缓存头 | DogeCloud 建议 | 说明 |
+|------|-------------|----------------|------|
+| `/build/*` | `Cache-Control: public, immutable`，30 天 | 跟随源站或设长缓存 | Vite 指纹资源，内容变则文件名变，可永久缓存 |
+| `/static/*` | `Cache-Control: public, max-age=600`，10 分钟 | 跟随源站 | 游客静态页，文章更新后会重建 |
+| 其他路径 | 无缓存头 | 不缓存 | 动态页面、登录、API 等 |
+
+其他建议：
+- **智能压缩**：保持开启，项目已生成 `.gz` 静态文件，DogeCloud 可继续做 Brotli 分发
+- **回源请求头**：DogeCloud 默认带 `X-Forwarded-For` 和 `X-Forwarded-Proto`，无需额外配置
+
+### 验证
+
+部署完成后检查：
+
+```bash
+# 检查首页资源链接是否指向正确域名
+curl -s https://community.example.com | grep -o 'src=”[^”]*build[^”]*”' | head -3
+```
+
+- 全站加速：资源链接应包含 `community.example.com/build/`
+- 仅静态资源加速：资源链接应包含 `cdn.example.com/build/`
 
 ## 本地开发
 
