@@ -20,6 +20,8 @@ class AuthPagesTest extends TestCase
             ->assertSee('Better Auth')
             ->assertSee('选择登录方式')
             ->assertSeeInOrder(['邮箱 + 验证码', '邮箱 + 密码', '微信扫码', 'QQ扫码'])
+            ->assertSee('生成微信演示二维码')
+            ->assertSee('生成 QQ 演示二维码')
             ->assertDontSee('测试账号')
             ->assertDontSee(config('community.admin.email'))
             ->assertDontSee(config('community.admin.password'))
@@ -55,5 +57,17 @@ class AuthPagesTest extends TestCase
         $this->get(route('auth.qr.approve.show', ['wechat', $request]))
             ->assertOk()
             ->assertSee('微信授权确认');
+    }
+
+    public function test_social_redirect_route_uses_demo_flow_by_default(): void
+    {
+        $response = $this->get(route('auth.social.redirect', 'wechat'));
+
+        $response->assertRedirect();
+
+        $request = QrLoginRequest::query()->firstOrFail();
+
+        $this->assertSame('wechat', $request->provider);
+        $response->assertRedirect(route('auth.qr.show', $request));
     }
 }

@@ -6,7 +6,7 @@
 
 - **频道内容架构**：频道首页、文章详情、右侧社区信息栏，内置不可删除的“精华”与“未分类”系统频道
 - **管理员后台**：默认预置 1 位管理员，可新增、编辑、删除文章，管理频道、用户资料/角色，并可在后台维护站点设置、用户登录/注册方式、频道顶栏显示、文章置顶/精华状态与全站 SMTP 配置；用户管理现已支持稳定用户 ID 检索
-- **成员登录体系**：支持邮箱验证码、邮箱密码，以及微信/QQ 演示扫码登录；手机号验证码链路继续保留为后端兼容能力
+- **成员登录体系**：支持邮箱验证码、邮箱密码，以及微信/QQ 扫码登录（默认内置演示模式，配置开放平台后可切换为真实 OAuth）；手机号验证码链路继续保留为后端兼容能力
 - **账户自助维护**：登录用户现在可在“账户设置”页面自助修改昵称、邮箱、手机号、头像链接、个人简介与登录密码，并查看不会随资料变更而变化的稳定用户 ID
 - **订阅能力**：支持注册用户通过 SMTP 订阅全部/指定版块新文章、接收评论 @ 提醒，并提供公开 RSS 链接
 - **游客静态访问**：未登录用户优先命中预构建静态 HTML，并自动使用 Gzip 压缩版本；登录后回退到 PHP 动态界面
@@ -155,16 +155,33 @@ bensz-channel/
 
 - 邮箱 + 验证码登录
 - 邮箱 + 密码登录
-- 微信扫码演示登录
-- QQ 扫码演示登录
+- 微信扫码登录（默认演示模式，可切换真实微信开放平台 OAuth）
+- QQ 扫码登录（默认演示模式，可切换真实 QQ 互联 OAuth）
 - Better Auth 手机验证码链路（后端兼容保留）
 - 能力：发表评论
+
+## 微信 / QQ 扫码登录
+
+- 项目现在已经同时支持两种运行形态：
+  - **演示模式**：默认开启，无需任何外部平台账号，适合 Docker 重部署后直接审查
+  - **真实 OAuth 模式**：在微信开放平台 / QQ 互联完成网站应用创建、审核和回调配置后即可启用
+- 默认配置下，`config/config.toml` 里的 `WECHAT_QR_MODE` 与 `QQ_QR_MODE` 都是 `demo`，因此 `./scripts/compose.sh up --build -d` 后登录页可直接使用演示二维码流程
+- 切换到真实模式时：
+  - 在 `config/config.toml` 设置 `WECHAT_QR_MODE="oauth"`、`QQ_QR_MODE="oauth"`
+  - 填写 `WECHAT_CLIENT_ID`、`QQ_CLIENT_ID`
+  - 在 `config/.env` 填写 `WECHAT_CLIENT_SECRET`、`QQ_CLIENT_SECRET`
+  - 如需自定义回调地址，再补 `WECHAT_REDIRECT_URI`、`QQ_REDIRECT_URI`
+- 若不显式设置回调地址，项目默认使用：
+  - 微信：`{APP_URL}/auth/social/wechat/callback`
+  - QQ：`{APP_URL}/auth/social/qq/callback`
+- 更详细的新手教程见 `docs/如何让本项目支持微信和QQ扫码登陆.md`
 
 ## Better Auth 架构
 
 - Laravel 继续负责页面渲染、业务权限与本地 Session
 - `auth-service/` 负责 OTP 发送与验证，底层由 Better Auth 自托管管理
 - 邮箱验证码通过 Mailpit/SMTP 投递；手机号验证码保留演示模式回调
+- 微信 / QQ 扫码登录由 Laravel 直接对接各自官方 OAuth，避免把第三方网页登录协议强塞进 Better Auth OTP 服务
 - Better Auth 独立使用 PostgreSQL `auth` schema，避免与 Laravel 的 `public` schema 冲突
 - Laravel 通过内部共享密钥调用 `auth-service` 的 `/internal/otp/send` 与 `/internal/otp/verify`
 - `app/` 与 `auth-service/` 都会在启动早期自动加载根目录 `config/config.toml` 与 `config/.env`

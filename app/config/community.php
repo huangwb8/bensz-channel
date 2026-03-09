@@ -33,6 +33,14 @@ return [
         'preview_codes' => filter_var(env('AUTH_PREVIEW_CODES', true), FILTER_VALIDATE_BOOL),
         'enabled_methods' => $enabledAuthMethods,
         'qr_providers' => $qrProviders,
+        'social_providers' => [
+            'wechat' => [
+                'mode' => env('WECHAT_QR_MODE', 'demo'),
+            ],
+            'qq' => [
+                'mode' => env('QQ_QR_MODE', 'demo'),
+            ],
+        ],
     ],
 
     'admin' => [

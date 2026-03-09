@@ -39,6 +39,10 @@
             'wechat' => in_array('wechat', $providers ?? [], true),
             'qq' => in_array('qq', $providers ?? [], true),
         ];
+        $providerMeta = [
+            'wechat' => $socialProviders['wechat'] ?? ['mode' => 'demo', 'action_label' => '生成微信演示二维码', 'helper_text' => '当前为内置演示模式。', 'available' => true],
+            'qq' => $socialProviders['qq'] ?? ['mode' => 'demo', 'action_label' => '生成 QQ 演示二维码', 'helper_text' => '当前为内置演示模式。', 'available' => true],
+        ];
     @endphp
 
     <div class="auth-wrap">
@@ -266,9 +270,9 @@
                             <div>
                                 <p class="panel-eyebrow">微信扫码</p>
                                 <h2 class="panel-title">使用微信扫码确认登录</h2>
-                                <p class="panel-desc">点击后将生成专属二维码，使用微信扫码并在手机端确认即可完成登录。</p>
+                                <p class="panel-desc">支持真实微信开放平台扫码登录；未配置时自动回退到内置演示二维码流程。</p>
                             </div>
-                            <div class="panel-note panel-note-wechat">手机确认更直观</div>
+                            <div class="panel-note panel-note-wechat">{{ $providerMeta['wechat']['mode'] === 'oauth' ? '官方 OAuth' : '演示模式' }}</div>
                         </div>
 
                         <div class="qr-panel">
@@ -279,13 +283,12 @@
                                 <span>微信安全扫码登录</span>
                             </div>
 
-                            @if ($providerEnabled['wechat'])
-                                <form action="{{ route('auth.qr.start', 'wechat') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn-social btn-social-wechat">生成微信登录二维码</button>
-                                </form>
+                            <p class="text-sm text-emerald-100/90">{{ $providerMeta['wechat']['helper_text'] }}</p>
+
+                            @if ($providerEnabled['wechat'] && $providerMeta['wechat']['available'])
+                                <a href="{{ route('auth.social.redirect', 'wechat') }}" class="btn-social btn-social-wechat">{{ $providerMeta['wechat']['action_label'] }}</a>
                             @else
-                                <button type="button" class="btn-social btn-social-disabled" disabled>微信扫码暂未开启</button>
+                                <button type="button" class="btn-social btn-social-disabled" disabled>{{ $providerEnabled['wechat'] ? $providerMeta['wechat']['action_label'] : '微信扫码暂未开启' }}</button>
                             @endif
                         </div>
                     </section>
@@ -297,9 +300,9 @@
                             <div>
                                 <p class="panel-eyebrow">QQ 扫码</p>
                                 <h2 class="panel-title">使用 QQ 扫码确认登录</h2>
-                                <p class="panel-desc">点击后将生成专属二维码，使用 QQ 客户端扫码并确认授权即可登录。</p>
+                                <p class="panel-desc">支持真实 QQ 互联扫码登录；未配置时自动回退到内置演示二维码流程。</p>
                             </div>
-                            <div class="panel-note panel-note-qq">适合 QQ 社群成员</div>
+                            <div class="panel-note panel-note-qq">{{ $providerMeta['qq']['mode'] === 'oauth' ? '官方 OAuth' : '演示模式' }}</div>
                         </div>
 
                         <div class="qr-panel">
@@ -310,13 +313,12 @@
                                 <span>QQ 客户端扫码登录</span>
                             </div>
 
-                            @if ($providerEnabled['qq'])
-                                <form action="{{ route('auth.qr.start', 'qq') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn-social btn-social-qq">生成 QQ 登录二维码</button>
-                                </form>
+                            <p class="text-sm text-sky-100/90">{{ $providerMeta['qq']['helper_text'] }}</p>
+
+                            @if ($providerEnabled['qq'] && $providerMeta['qq']['available'])
+                                <a href="{{ route('auth.social.redirect', 'qq') }}" class="btn-social btn-social-qq">{{ $providerMeta['qq']['action_label'] }}</a>
                             @else
-                                <button type="button" class="btn-social btn-social-disabled" disabled>QQ 扫码暂未开启</button>
+                                <button type="button" class="btn-social btn-social-disabled" disabled>{{ $providerEnabled['qq'] ? $providerMeta['qq']['action_label'] : 'QQ 扫码暂未开启' }}</button>
                             @endif
                         </div>
                     </section>

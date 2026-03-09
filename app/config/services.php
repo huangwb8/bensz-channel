@@ -41,4 +41,18 @@ return [
         'timeout' => (int) env('BETTER_AUTH_TIMEOUT', 5),
     ],
 
+    'wechat' => [
+        'client_id' => env('WECHAT_CLIENT_ID'),
+        'client_secret' => env('WECHAT_CLIENT_SECRET'),
+        'redirect' => env('WECHAT_REDIRECT_URI', rtrim((string) env('APP_URL', 'http://localhost:6542'), '/').'/auth/social/wechat/callback'),
+        'timeout' => (int) env('WECHAT_TIMEOUT', 8),
+    ],
+
+    'qq' => [
+        'client_id' => env('QQ_CLIENT_ID'),
+        'client_secret' => env('QQ_CLIENT_SECRET'),
+        'redirect' => env('QQ_REDIRECT_URI', rtrim((string) env('APP_URL', 'http://localhost:6542'), '/').'/auth/social/qq/callback'),
+        'timeout' => (int) env('QQ_TIMEOUT', 8),
+    ],
+
 ];

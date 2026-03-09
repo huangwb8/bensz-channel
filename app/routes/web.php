@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\SiteSettingsController as AdminSiteSettingsContro
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\HomeController;
@@ -21,6 +22,8 @@ Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/auth/code', [LoginController::class, 'sendCode'])->name('auth.code.send');
 Route::post('/auth/verify', [LoginController::class, 'verifyCode'])->name('auth.code.verify');
 Route::post('/auth/password', [LoginController::class, 'loginWithPassword'])->name('auth.password.login');
+Route::get('/auth/social/{provider}', [SocialLoginController::class, 'redirect'])->name('auth.social.redirect');
+Route::get('/auth/social/{provider}/callback', [SocialLoginController::class, 'callback'])->name('auth.social.callback');
 Route::post('/auth/qr/{provider}', [LoginController::class, 'startQr'])->name('auth.qr.start');
 Route::get('/auth/qr/{qrLoginRequest}', [LoginController::class, 'showQr'])->name('auth.qr.show');
 Route::get('/auth/qr/{qrLoginRequest}/status', [LoginController::class, 'status'])->name('auth.qr.status');

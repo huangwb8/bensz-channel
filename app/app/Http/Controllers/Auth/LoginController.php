@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LoginCode;
 use App\Models\QrLoginRequest;
 use App\Services\Auth\LoginUserResolver;
+use App\Services\Auth\SocialOAuthManager;
 use App\Support\QrLoginBroker;
 use App\Support\SiteSettingsManager;
 use Illuminate\Contracts\View\View;
@@ -32,6 +33,10 @@ class LoginController extends Controller
             'pageTitle' => '登录 / 注册',
             'providers' => $siteSettingsManager->enabledQrProviders(),
             'enabledAuthMethods' => $this->enabledAuthMethods(),
+            'socialProviders' => [
+                'wechat' => app(SocialOAuthManager::class)->presentation('wechat'),
+                'qq' => app(SocialOAuthManager::class)->presentation('qq'),
+            ],
         ]);
     }
 
@@ -128,6 +133,7 @@ class LoginController extends Controller
     public function startQr(string $provider, QrLoginBroker $broker): RedirectResponse
     {
         abort_unless(in_array($provider, app(SiteSettingsManager::class)->enabledQrProviders(), true), 404);
+        abort_unless(app(SocialOAuthManager::class)->mode($provider) === 'demo', 404);
 
         return to_route('auth.qr.show', $broker->create($provider));
     }
