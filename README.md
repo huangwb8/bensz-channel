@@ -5,7 +5,7 @@
 ## 已实现能力
 
 - **频道内容架构**：频道首页、文章详情、右侧社区信息栏，内置不可删除的“精华”与“未分类”系统频道；其中“精华”仅作为跨频道聚合入口，文章仍保留自己的实际归属频道并可同时被设为精华
-- **管理员后台**：默认预置 1 位管理员，可新增、编辑、删除文章，管理频道，并可完整托管普通用户资料/角色（含头像链接）与安全删除普通用户；后台还支持维护站点设置、用户登录/注册方式、频道顶栏显示、文章置顶/精华状态与全站 SMTP 配置；后台 SMTP 现已同时覆盖订阅通知与邮箱验证码登录链路；用户管理现已支持稳定用户 ID 检索
+- **管理员后台**：默认预置 1 位管理员，可新增、编辑、删除文章，管理频道，并可完整托管普通用户资料/角色（含头像链接）与安全删除普通用户；后台用户管理页现已支持最近 7 天登录 / 评论 / 发文仪表盘、用户卡片折叠展开、当前页多选批量删除与图标化快捷操作；后台还支持维护站点设置、用户登录/注册方式、频道顶栏显示、文章置顶/精华状态与全站 SMTP 配置；后台 SMTP 现已同时覆盖订阅通知与邮箱验证码登录链路；用户管理现已支持稳定用户 ID 检索
 - **成员登录体系**：支持邮箱验证码、邮箱密码，以及微信/QQ 扫码登录（默认内置演示模式，配置开放平台后可切换为真实 OAuth）；手机号验证码链路继续保留为后端兼容能力
 - **账户自助维护**：登录用户现在可在“账户设置”页面自助修改昵称、邮箱、手机号、头像链接、个人简介与登录密码，并查看不会随资料变更而变化的稳定用户 ID
 - **订阅能力**：支持注册用户通过 SMTP 订阅全部/指定版块新文章、接收评论 @ 提醒，并提供公开 RSS 链接
@@ -30,26 +30,7 @@
 
 ## 快速部署
 
-```bash
-cp config/.env.example config/.env
-./scripts/compose.sh up --build -d
-```
-
-`./scripts/compose.sh` 现在会自动创建 `./data/` 下的持久化目录，并在首次升级到当前版本时，自动把旧的 Docker 命名卷 / 容器内运行时数据迁移到 `./data/`，这样后续用户直接 `git pull` 后重新构建即可，不会因为仓库更新覆盖现有业务数据。
-
-当前 Docker 启动流程只会自动完成**数据库迁移**与**系统基础初始化**（默认管理员账号等必需记录），**不会自动灌入示例频道 / 文章 / 评论 / 示例成员**。如果你确实需要演示数据，请在容器启动后手动执行 `docker compose exec web php artisan db:seed`。
-
-配置职责约定：
-
-- `config/config.toml`：托管关键**非密钥**参数，例如端口、站点名、数据库主机、邮件主机、OTP TTL
-- `config/.env`：托管密码、密钥等**敏感**参数，例如 `APP_KEY`、数据库密码、Better Auth secrets
-- `data/`：托管 PostgreSQL、Redis、Mailpit 以及 Web 运行时持久化数据；该目录默认不纳入 Git
-
-如果 `config/.env` 里的 `APP_KEY` 还是空值，可先生成一个：
-
-```bash
-php -r 'echo "APP_KEY=base64:".base64_encode(random_bytes(32)), PHP_EOL;'
-```
+> 之后会出教程。
 
 启动后访问：
 
@@ -57,27 +38,57 @@ php -r 'echo "APP_KEY=base64:".base64_encode(random_bytes(32)), PHP_EOL;'
 - 登录页：`http://localhost:6542/login`
 - Mailpit：`http://localhost:8025`
 
-## 自动发布 Docker 镜像
+## 版本管理与自动发布
 
-项目现已包含 GitHub Actions 工作流 `publish-release-images`，会按 `0 */12 * * *`（UTC 每天 `00:00` 与 `12:00`）自动检查一次当前仓库最新的 **已发布 GitHub Release**。
+### 版本号管理
 
-当 Docker Hub 中还不存在该 Release 对应的镜像标签时，工作流会自动构建并推送以下两个镜像：
+项目版本号统一在 [config.yaml](config.yaml) 中管理（Single Source of Truth）：
+
+```yaml
+project_info:
+  version: 1.24.0  # 当前开发版本
+```
+
+### 创建新版本
+
+1. **更新版本号**：修改 [config.yaml](config.yaml) 中的 `version` 字段
+2. **更新变更日志**：在 [CHANGELOG.md](CHANGELOG.md) 中添加新版本的变更内容
+3. **创建 Release**：在 GitHub Actions 页面手动触发 `Create Release from config.yaml` 工作流
+   - 工作流会自动从 config.yaml 读取版本号
+   - 自动创建 Git tag（格式：`v{version}`）
+   - 自动从 CHANGELOG.md 提取 Release Notes
+   - 创建 GitHub Release
+
+### 自动发布 Docker 镜像
+
+项目包含 GitHub Actions 工作流 `publish-release-images`，会按 `0 */12 * * *`（UTC 每天 `00:00` 与 `12:00`）自动检查最新的 **已发布 GitHub Release**。
+
+当 Docker Hub 中还不存在该 Release 对应的镜像标签时，工作流会自动构建并推送：
 
 - `DOCKERHUB_NAMESPACE/<仓库名>-web:<release-tag>` 与 `:latest`
 - `DOCKERHUB_NAMESPACE/<仓库名>-auth:<release-tag>` 与 `:latest`
 
-如需自定义仓库名，可在 GitHub 仓库中配置以下 **Repository Variables**：
+**配置要求**：
 
+Repository Variables：
 - `DOCKERHUB_NAMESPACE`：Docker Hub 命名空间，必填（若未单独指定镜像仓库）
-- `DOCKERHUB_WEB_REPOSITORY`：可选，覆盖默认的 Web 镜像仓库名，例如 `yourname/bensz-channel-web`
-- `DOCKERHUB_AUTH_REPOSITORY`：可选，覆盖默认的 Auth 镜像仓库名，例如 `yourname/bensz-channel-auth`
+- `DOCKERHUB_WEB_REPOSITORY`：可选，覆盖默认的 Web 镜像仓库名
+- `DOCKERHUB_AUTH_REPOSITORY`：可选，覆盖默认的 Auth 镜像仓库名
 
-同时需要配置以下 **Repository Secrets**：
-
+Repository Secrets：
 - `DOCKERHUB_USERNAME`：Docker Hub 用户名
 - `DOCKERHUB_TOKEN`：Docker Hub Access Token
 
-工作流也支持在 GitHub Actions 页面手动触发，便于首次发布或调试发布链路。
+### 版本同步检查
+
+项目包含自动版本同步检查工作流，会在以下情况触发：
+- 修改 config.yaml 或 CHANGELOG.md 时
+- 创建 Pull Request 时
+
+检查内容：
+- config.yaml 版本号与最新 GitHub Release 是否同步
+- CHANGELOG.md 是否包含当前版本的变更记录
+- 自动在 PR 中添加版本状态评论
 
 默认管理员：
 
@@ -98,7 +109,8 @@ php -r 'echo "APP_KEY=base64:".base64_encode(random_bytes(32)), PHP_EOL;'
 - 管理员还可进入“站点设置”页面，覆盖 `config/config.toml` 中 `APP_NAME`、`SITE_NAME`、`SITE_TAGLINE` 的默认值
 - 管理员可在“站点设置”页面填写静态资源 CDN 地址，加速前台 CSS、JS、图片等公开资源加载
 - 管理员也可在“站点设置”页面控制是否开放邮箱验证码、邮箱密码、微信扫码、QQ 扫码四种登录/注册入口
-- 管理员可在“用户管理”页维护普通用户的昵称、邮箱、手机号、头像链接、简介与角色，并可删除普通用户；删除时会一并清理该用户登录会话、密码重置令牌以及关联内容
+- 管理员可在“用户管理”页维护普通用户的昵称、邮箱、手机号、头像链接、简介与角色；用户卡片支持折叠 / 展开，右上角统一提供保存、删除、展开 / 收起图标按钮
+- 管理员可在“用户管理”页查看最近 7 天登录 / 活跃、评论与发文仪表盘，并支持当前页多选批量删除普通用户；删除时会一并清理被删账号的登录会话、密码重置令牌以及关联内容
 - 管理员可在“频道管理”页决定哪些频道出现在顶栏导航中；频道被隐藏后仍保留访问地址与内容，`未分类` 默认隐藏但可按需显示，`精华` 为内置系统频道且默认展示
 - 管理员可在“文章管理”页一键将文章设为“置顶”或“精华”，也可随时取消；首页会优先展示置顶文章，“精华”频道会聚合所有精华文章
 - 管理后台的大部分高频操作已改为紧凑图标按钮，鼠标悬停会显示用途提示，便于节省空间并提升审查体验

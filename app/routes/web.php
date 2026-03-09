@@ -61,6 +61,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::delete('/channels/{channel}', [AdminChannelController::class, 'destroy'])->name('channels.destroy');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::delete('/users', [AdminUserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
