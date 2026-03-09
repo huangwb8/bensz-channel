@@ -31,6 +31,7 @@ class AdminChannelManagementTest extends TestCase
             'accent_color' => '#3b82f6',
             'sort_order' => 1,
             'is_public' => true,
+            'show_in_top_nav' => true,
         ]);
 
         $response = $this->actingAs($admin)
@@ -44,7 +45,7 @@ class AdminChannelManagementTest extends TestCase
         $response->assertSee('form="delete-channel-'.$channel->id.'"', false);
     }
 
-    public function test_admin_channel_management_hides_uncategorized_channel_card(): void
+    public function test_admin_channel_management_shows_uncategorized_nav_toggle_without_delete_action(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
@@ -56,6 +57,7 @@ class AdminChannelManagementTest extends TestCase
             'accent_color' => '#64748b',
             'sort_order' => 999,
             'is_public' => true,
+            'show_in_top_nav' => false,
         ]);
 
         $managed = Channel::query()->create([
@@ -66,15 +68,79 @@ class AdminChannelManagementTest extends TestCase
             'accent_color' => '#10b981',
             'sort_order' => 2,
             'is_public' => true,
+            'show_in_top_nav' => true,
         ]);
 
         $response = $this->actingAs($admin)
             ->get(route('admin.channels.index'));
 
         $response->assertOk();
-        $response->assertSee('未分类频道仍会自动接收迁移文章，无需单独维护。');
+        $response->assertSee('精华与未分类为系统保留频道：精华默认展示且聚合全站精华文章，未分类默认隐藏但仍会自动接收迁移文章。');
         $response->assertSee('value="'.$managed->slug.'"', false);
-        $response->assertDontSee('value="'.$uncategorized->slug.'"', false);
-        $response->assertDontSee(route('admin.channels.update', $uncategorized), false);
+        $response->assertSee('value="'.$uncategorized->slug.'"', false);
+        $response->assertSee(route('admin.channels.update', $uncategorized), false);
+        $response->assertDontSee('aria-label="删除频道：'.$uncategorized->name.'"', false);
+        $response->assertDontSee('delete-channel-'.$uncategorized->id, false);
+        $response->assertSee('name="show_in_top_nav"', false);
+        $response->assertSee('系统保留频道', false);
+    }
+
+    public function test_admin_can_store_and_update_top_nav_visibility(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.channels.store'), [
+                'name' => '隐藏频道',
+                'slug' => 'hidden-channel',
+                'description' => '只在直达页展示',
+                'icon' => '🙈',
+                'accent_color' => '#334155',
+                'sort_order' => 3,
+                'show_in_top_nav' => '0',
+            ])
+            ->assertRedirect();
+
+        $channel = Channel::query()->where('slug', 'hidden-channel')->firstOrFail();
+
+        $this->assertFalse($channel->show_in_top_nav);
+
+        $this->actingAs($admin)
+            ->put(route('admin.channels.update', $channel), [
+                'name' => '隐藏频道',
+                'slug' => 'hidden-channel',
+                'description' => '只在直达页展示',
+                'icon' => '🙈',
+                'accent_color' => '#334155',
+                'sort_order' => 3,
+                'show_in_top_nav' => '1',
+            ])
+            ->assertRedirect();
+
+        $this->assertTrue($channel->fresh()->show_in_top_nav);
+    }
+
+    public function test_admin_can_toggle_uncategorized_channel_top_nav_visibility(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $uncategorized = Channel::query()->create([
+            'name' => '未分类',
+            'slug' => 'uncategorized',
+            'description' => '系统自动归类的文章将汇总在此。',
+            'icon' => '📦',
+            'accent_color' => '#64748b',
+            'sort_order' => 999,
+            'is_public' => true,
+            'show_in_top_nav' => false,
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('admin.channels.update', $uncategorized), [
+                'show_in_top_nav' => '1',
+            ])
+            ->assertRedirect();
+
+        $this->assertTrue($uncategorized->fresh()->show_in_top_nav);
     }
 }

@@ -16,22 +16,13 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
+        $this->call(SystemBootstrapSeeder::class);
+
         $markdown = app(MarkdownRenderer::class);
 
-        $admin = User::query()->updateOrCreate([
-            'email' => config('community.admin.email'),
-        ], [
-            'name' => config('community.admin.name'),
-            'role' => User::ROLE_ADMIN,
-            'password' => Hash::make(config('community.admin.password')),
-            'email_verified_at' => now(),
-            'last_seen_at' => now(),
-        ]);
+        $admin = User::query()->where('email', config('community.admin.email'))->firstOrFail();
 
         $member = User::query()->updateOrCreate([
             'email' => 'member@example.com',
@@ -49,7 +40,10 @@ class DatabaseSeeder extends Seeder
             ['name' => '开发交流', 'slug' => 'engineering', 'description' => '围绕产品、架构、Docker 部署与开发实践进行讨论。', 'accent_color' => '#06b6d4', 'icon' => '🛠️', 'sort_order' => 2],
             ['name' => '资源分享', 'slug' => 'resources', 'description' => '沉淀教程、脚本、模板与精选内容。', 'accent_color' => '#10b981', 'icon' => '📚', 'sort_order' => 3],
             ['name' => '反馈建议', 'slug' => 'feedback', 'description' => '收集体验反馈、需求建议与问题报告。', 'accent_color' => '#f59e0b', 'icon' => '💬', 'sort_order' => 4],
-        ])->map(fn (array $payload) => Channel::query()->updateOrCreate(['slug' => $payload['slug']], $payload));
+        ])->map(fn (array $payload) => Channel::query()->updateOrCreate(['slug' => $payload['slug']], $payload + [
+            'is_public' => true,
+            'show_in_top_nav' => true,
+        ]));
 
         $articles = [
             [
@@ -73,6 +67,8 @@ class DatabaseSeeder extends Seeder
 欢迎继续体验并提出建议。
 MD,
                 'gradient' => 'from-violet-500 via-fuchsia-500 to-sky-500',
+                'is_pinned' => true,
+                'is_featured' => true,
             ],
             [
                 'channel' => 'engineering',
@@ -93,6 +89,8 @@ MD,
 游客优先命中构建后的静态页面，登录用户则回退到 Laravel 动态响应。
 MD,
                 'gradient' => 'from-cyan-500 via-sky-500 to-indigo-500',
+                'is_pinned' => false,
+                'is_featured' => false,
             ],
         ];
 
@@ -109,6 +107,8 @@ MD,
                 'markdown_body' => $payload['body'],
                 'html_body' => $markdown->toHtml($payload['body']),
                 'is_published' => true,
+                'is_pinned' => $payload['is_pinned'],
+                'is_featured' => $payload['is_featured'],
                 'published_at' => now()->subMinutes(20),
                 'cover_gradient' => $payload['gradient'],
             ]);

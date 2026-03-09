@@ -37,6 +37,53 @@ class RssFeedTest extends TestCase
         $response->assertDontSee('公告文章', false);
     }
 
+    public function test_featured_channel_rss_feed_aggregates_featured_articles(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $featuredChannel = Channel::factory()->create([
+            'name' => '精华',
+            'slug' => 'featured',
+            'description' => '站内精选内容。',
+        ]);
+        $engineering = Channel::factory()->create(['name' => '开发交流', 'slug' => 'engineering']);
+        $feedback = Channel::factory()->create(['name' => '反馈建议', 'slug' => 'feedback']);
+
+        $featuredArticle = Article::query()->create([
+            'channel_id' => $engineering->id,
+            'author_id' => $admin->id,
+            'title' => '精华开发文章',
+            'slug' => 'featured-engineering-article',
+            'excerpt' => '摘要',
+            'markdown_body' => '正文',
+            'html_body' => '<p>正文</p>',
+            'is_published' => true,
+            'is_featured' => true,
+            'published_at' => now(),
+            'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
+        ]);
+
+        Article::query()->create([
+            'channel_id' => $feedback->id,
+            'author_id' => $admin->id,
+            'title' => '普通反馈文章',
+            'slug' => 'normal-feedback-article',
+            'excerpt' => '摘要',
+            'markdown_body' => '正文',
+            'html_body' => '<p>正文</p>',
+            'is_published' => true,
+            'is_featured' => false,
+            'published_at' => now(),
+            'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
+        ]);
+
+        $response = $this->get(route('feeds.channels.show', $featuredChannel));
+
+        $response->assertOk();
+        $response->assertSee('精华开发文章', false);
+        $response->assertSee(route('articles.show', [$featuredArticle->channel, $featuredArticle]), false);
+        $response->assertDontSee('普通反馈文章', false);
+    }
+
     private function createArticleFixture(
         string $title,
         string $slug,

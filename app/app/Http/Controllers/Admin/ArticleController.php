@@ -19,7 +19,12 @@ class ArticleController extends Controller
     public function index(): View
     {
         return view('admin.articles.index', [
-            'articles' => Article::query()->with(['channel', 'author'])->latest()->get(),
+            'articles' => Article::query()
+                ->with(['channel', 'author'])
+                ->orderByDesc('is_pinned')
+                ->orderByDesc('is_featured')
+                ->latest()
+                ->get(),
         ]);
     }
 
@@ -29,6 +34,8 @@ class ArticleController extends Controller
             'article' => new Article([
                 'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
                 'is_published' => true,
+                'is_pinned' => false,
+                'is_featured' => false,
                 'published_at' => now(),
             ]),
             'channels' => Channel::query()->ordered()->get(),
@@ -96,6 +103,28 @@ class ArticleController extends Controller
         return to_route('admin.articles.index')->with('status', '文章已更新。');
     }
 
+    public function togglePin(Article $article, StaticPageBuilder $staticPageBuilder): RedirectResponse
+    {
+        $article->update([
+            'is_pinned' => ! $article->is_pinned,
+        ]);
+
+        $staticPageBuilder->buildAll();
+
+        return to_route('admin.articles.index')->with('status', $article->fresh()->is_pinned ? '文章已置顶。' : '文章已取消置顶。');
+    }
+
+    public function toggleFeature(Article $article, StaticPageBuilder $staticPageBuilder): RedirectResponse
+    {
+        $article->update([
+            'is_featured' => ! $article->is_featured,
+        ]);
+
+        $staticPageBuilder->buildAll();
+
+        return to_route('admin.articles.index')->with('status', $article->fresh()->is_featured ? '文章已设为精华。' : '文章已取消精华。');
+    }
+
     public function destroy(Article $article, StaticPageBuilder $staticPageBuilder): RedirectResponse
     {
         $article->delete();
@@ -116,10 +145,14 @@ class ArticleController extends Controller
             'cover_gradient' => ['required', 'string', 'max:128'],
             'published_at' => ['nullable', 'date'],
             'is_published' => ['nullable', 'boolean'],
+            'is_pinned' => ['nullable', 'boolean'],
+            'is_featured' => ['nullable', 'boolean'],
         ]);
 
         $validated['slug'] = Str::slug($validated['slug'] ?: $validated['title']);
         $validated['is_published'] = (bool) ($validated['is_published'] ?? false);
+        $validated['is_pinned'] = (bool) ($validated['is_pinned'] ?? false);
+        $validated['is_featured'] = (bool) ($validated['is_featured'] ?? false);
         $validated['published_at'] = $validated['published_at'] ?? now();
 
         return $validated;

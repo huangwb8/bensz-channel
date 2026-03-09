@@ -5,7 +5,7 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-semibold text-gray-900">{{ $article->exists ? '编辑文章' : '发布文章' }}</h2>
-                <p class="mt-1 text-sm text-gray-500">{{ $article->exists ? '修改现有文章内容' : '创建新的文章' }}</p>
+                <p class="mt-1 text-sm text-gray-500">{{ $article->exists ? '修改现有文章内容与状态' : '创建新的文章' }}</p>
             </div>
             <div class="icon-action-group">
                 <x-icon-button :href="route('admin.articles.index')" icon="arrow-left" label="返回列表" title="返回列表" />
@@ -61,11 +61,21 @@
                     <label class="mb-2 block text-sm font-medium text-gray-700">封面渐变类</label>
                     <input type="text" name="cover_gradient" class="input-field h-11" value="{{ old('cover_gradient', $article->cover_gradient) }}" placeholder="from-blue-500 to-purple-600">
                 </div>
-                <div class="flex items-end">
+                <div class="grid gap-3 sm:grid-cols-3">
                     <label class="inline-flex items-center gap-3 text-sm text-gray-700">
                         <input type="hidden" name="is_published" value="0">
                         <input type="checkbox" name="is_published" value="1" class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" @checked((bool) old('is_published', $article->is_published))>
                         立即公开发布
+                    </label>
+                    <label class="inline-flex items-center gap-3 text-sm text-gray-700">
+                        <input type="hidden" name="is_pinned" value="0">
+                        <input type="checkbox" name="is_pinned" value="1" class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" @checked((bool) old('is_pinned', $article->is_pinned))>
+                        置顶文章
+                    </label>
+                    <label class="inline-flex items-center gap-3 text-sm text-gray-700">
+                        <input type="hidden" name="is_featured" value="0">
+                        <input type="checkbox" name="is_featured" value="1" class="h-5 w-5 rounded border-gray-300 text-amber-500 focus:ring-amber-500" @checked((bool) old('is_featured', $article->is_featured))>
+                        精华文章
                     </label>
                 </div>
             </div>

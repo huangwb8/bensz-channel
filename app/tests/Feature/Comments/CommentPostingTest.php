@@ -38,6 +38,18 @@ class CommentPostingTest extends TestCase
         ]);
     }
 
+    public function test_article_page_does_not_render_channel_subscription_buttons(): void
+    {
+        [$article] = $this->createArticleFixture();
+        $member = User::factory()->create(['role' => User::ROLE_MEMBER]);
+
+        $this->actingAs($member)
+            ->get(route('articles.show', [$article->channel, $article]))
+            ->assertOk()
+            ->assertDontSee('RSS 订阅本版块')
+            ->assertDontSee('管理 SMTP 订阅');
+    }
+
     private function createArticleFixture(): array
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);

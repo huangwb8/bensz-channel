@@ -20,23 +20,17 @@
                     <span>{{ $article->channel->icon }}</span>
                     <span>{{ $article->channel->name }}</span>
                 </span>
+                @if($article->is_pinned)
+                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 font-medium text-blue-700">置顶</span>
+                @endif
+                @if($article->is_featured)
+                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700">精华</span>
+                @endif
                 <span>•</span>
                 <span>{{ optional($article->published_at)->format('Y-m-d H:i') }}</span>
             </div>
             <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ $article->title }}</h1>
             <p class="mt-3 text-gray-600">{{ $article->excerpt }}</p>
-
-            <div class="mt-4 flex flex-wrap gap-2 text-sm">
-                <a href="{{ route('feeds.channels.show', $article->channel) }}" class="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-orange-700 hover:bg-orange-100">
-                    RSS 订阅本版块
-                </a>
-                @auth
-                    <a href="{{ route('settings.subscriptions.edit') }}" class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-blue-700 hover:bg-blue-100">
-                        管理 SMTP 订阅
-                    </a>
-                @endauth
-            </div>
-
             <!-- 作者信息 -->
             <div class="mt-4 flex items-center gap-3">
                 <span class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-sm font-semibold text-blue-700">

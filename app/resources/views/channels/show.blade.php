@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-    <!-- 频道信息 -->
     <section class="mb-6 rounded-xl border border-gray-200 bg-white p-5">
         <div class="flex items-center gap-3">
             <span class="text-3xl">{{ $currentChannel->icon }}</span>
@@ -27,12 +26,25 @@
         </div>
     </section>
 
-    <!-- 帖子列表 -->
     <section class="space-y-3">
         @forelse($channelArticles as $article)
             <article class="article-card">
                 <div class="flex gap-4">
                     <div class="flex-1 min-w-0">
+                        <div class="mb-2 flex flex-wrap items-center gap-2">
+                            @if($currentChannel->isFeaturedChannel())
+                                <div class="channel-badge">
+                                    <span>{{ $article->channel->icon }}</span>
+                                    <span>{{ $article->channel->name }}</span>
+                                </div>
+                            @endif
+                            @if($article->is_pinned)
+                                <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">置顶</span>
+                            @endif
+                            @if($article->is_featured)
+                                <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">精华</span>
+                            @endif
+                        </div>
                         <h3 class="text-base font-semibold text-gray-900 mb-1">
                             <a href="{{ route('articles.show', [$article->channel, $article]) }}" class="hover:text-blue-600 line-clamp-2">
                                 {{ $article->title }}

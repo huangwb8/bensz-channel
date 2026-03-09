@@ -61,6 +61,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('/articles', [AdminArticleController::class, 'store'])->name('articles.store');
     Route::get('/articles/{article}/edit', [AdminArticleController::class, 'edit'])->name('articles.edit');
     Route::put('/articles/{article}', [AdminArticleController::class, 'update'])->name('articles.update');
+    Route::patch('/articles/{article}/pin', [AdminArticleController::class, 'togglePin'])->name('articles.pin');
+    Route::patch('/articles/{article}/feature', [AdminArticleController::class, 'toggleFeature'])->name('articles.feature');
     Route::delete('/articles/{article}', [AdminArticleController::class, 'destroy'])->name('articles.destroy');
 
     // DevTools — Vibe Coding remote management

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\Vibe;
 
 use App\Http\Controllers\Controller;
 use App\Models\Article;
-use App\Models\Channel;
 use App\Support\ArticleSubscriptionNotifier;
 use App\Support\MarkdownRenderer;
 use App\Support\StaticPageBuilder;
@@ -25,6 +24,14 @@ class ArticleController extends Controller
 
         if ($request->has('published')) {
             $query->where('is_published', $request->boolean('published'));
+        }
+
+        if ($request->has('pinned')) {
+            $query->where('is_pinned', $request->boolean('pinned'));
+        }
+
+        if ($request->has('featured')) {
+            $query->where('is_featured', $request->boolean('featured'));
         }
 
         $articles = $query->latest()->paginate(20);
@@ -121,6 +128,8 @@ class ArticleController extends Controller
             'cover_gradient' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'string', 'max:128'],
             'published_at' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'date'],
             'is_published' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'boolean'],
+            'is_pinned' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'boolean'],
+            'is_featured' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'boolean'],
         ]);
 
         if (array_key_exists('slug', $validated) || array_key_exists('title', $validated) || ! $isUpdate) {
@@ -130,10 +139,12 @@ class ArticleController extends Controller
             );
         }
 
-        if (array_key_exists('is_published', $validated)) {
-            $validated['is_published'] = (bool) $validated['is_published'];
-        } elseif (! $isUpdate) {
-            $validated['is_published'] = false;
+        foreach (['is_published', 'is_pinned', 'is_featured'] as $field) {
+            if (array_key_exists($field, $validated)) {
+                $validated[$field] = (bool) $validated[$field];
+            } elseif (! $isUpdate) {
+                $validated[$field] = false;
+            }
         }
 
         if (! array_key_exists('published_at', $validated)) {

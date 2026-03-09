@@ -15,6 +15,7 @@ class CommunityViewData
             'siteName' => config('community.site.name'),
             'siteTagline' => config('community.site.tagline'),
             'channels' => Channel::query()
+                ->visibleInTopNav()
                 ->ordered()
                 ->withCount(['articles' => fn ($query) => $query->published()])
                 ->get(),
@@ -26,8 +27,9 @@ class CommunityViewData
 
     public function home(): array
     {
-        $featuredArticle = Article::query()
+        $pinnedArticle = Article::query()
             ->published()
+            ->pinned()
             ->with(['channel', 'author'])
             ->latestPublished()
             ->first();
@@ -35,9 +37,10 @@ class CommunityViewData
         return [
             ...$this->chrome(),
             'pageTitle' => null,
-            'featuredArticle' => $featuredArticle,
+            'pinnedArticle' => $pinnedArticle,
             'latestArticles' => Article::query()
                 ->published()
+                ->when($pinnedArticle instanceof Article, fn ($query) => $query->whereKeyNot($pinnedArticle->id))
                 ->with(['channel', 'author'])
                 ->latestPublished()
                 ->limit(12)
@@ -47,15 +50,22 @@ class CommunityViewData
 
     public function channel(Channel $channel): array
     {
+        $articleQuery = Article::query()
+            ->published()
+            ->with(['channel', 'author'])
+            ->latestPublished();
+
+        if ($channel->isFeaturedChannel()) {
+            $articleQuery->featured();
+        } else {
+            $articleQuery->whereBelongsTo($channel);
+        }
+
         return [
             ...$this->chrome($channel),
             'pageTitle' => $channel->name,
             'currentChannel' => $channel,
-            'channelArticles' => Article::query()
-                ->published()
-                ->whereBelongsTo($channel)
-                ->with(['channel', 'author'])
-                ->latestPublished()
+            'channelArticles' => $articleQuery
                 ->limit(20)
                 ->get(),
         ];

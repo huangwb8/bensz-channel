@@ -22,6 +22,8 @@ class Article extends Model
         'markdown_body',
         'html_body',
         'is_published',
+        'is_pinned',
+        'is_featured',
         'published_at',
         'cover_gradient',
         'comment_count',
@@ -31,6 +33,8 @@ class Article extends Model
     {
         return [
             'is_published' => 'bool',
+            'is_pinned' => 'bool',
+            'is_featured' => 'bool',
             'published_at' => 'datetime',
         ];
     }
@@ -66,6 +70,16 @@ class Article extends Model
             ->where('is_published', true)
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now());
+    }
+
+    public function scopePinned(Builder $query): Builder
+    {
+        return $query->where('is_pinned', true);
+    }
+
+    public function scopeFeatured(Builder $query): Builder
+    {
+        return $query->where('is_featured', true);
     }
 
     public function scopeLatestPublished(Builder $query): Builder

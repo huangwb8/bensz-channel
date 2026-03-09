@@ -71,6 +71,18 @@
         </svg>
         @break
 
+    @case('pin')
+        <svg {{ $attributes->merge(['viewBox' => '0 0 24 24', 'fill' => 'none', 'stroke' => 'currentColor']) }}>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M14.25 4.5v3.188l3.058 3.057a1.5 1.5 0 0 1-1.06 2.56h-2.123v4.195l-2.625 1.875v-6.07H9.377a1.5 1.5 0 0 1-1.06-2.56l3.058-3.057V4.5h2.875Z" />
+        </svg>
+        @break
+
+    @case('star')
+        <svg {{ $attributes->merge(['viewBox' => '0 0 24 24', 'fill' => 'none', 'stroke' => 'currentColor']) }}>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m11.48 3.499 2.151 4.36 4.812.7-3.481 3.393.822 4.793L11.48 14.48 7.176 16.745l.823-4.793-3.482-3.393 4.813-.7 2.15-4.36Z" />
+        </svg>
+        @break
+
     @default
         <svg {{ $attributes->merge(['viewBox' => '0 0 24 24', 'fill' => 'none', 'stroke' => 'currentColor']) }}>
             <circle cx="12" cy="12" r="8" stroke-width="1.8" />

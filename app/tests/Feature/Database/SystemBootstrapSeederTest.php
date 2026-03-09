@@ -23,7 +23,17 @@ class SystemBootstrapSeederTest extends TestCase
         $this->assertTrue(Hash::check(config('community.admin.password'), (string) $admin->password));
 
         $this->assertDatabaseCount('users', 1);
-        $this->assertDatabaseCount('channels', 0);
+        $this->assertDatabaseCount('channels', 2);
+        $this->assertDatabaseHas('channels', [
+            'slug' => 'featured',
+            'name' => '精华',
+            'is_public' => true,
+        ]);
+        $this->assertDatabaseHas('channels', [
+            'slug' => 'uncategorized',
+            'name' => '未分类',
+            'is_public' => true,
+        ]);
         $this->assertDatabaseCount('articles', 0);
         $this->assertDatabaseCount('comments', 0);
     }
@@ -34,6 +44,7 @@ class SystemBootstrapSeederTest extends TestCase
         $this->seed(SystemBootstrapSeeder::class);
 
         $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('channels', 2);
         $this->assertDatabaseHas('users', [
             'email' => config('community.admin.email'),
             'role' => User::ROLE_ADMIN,

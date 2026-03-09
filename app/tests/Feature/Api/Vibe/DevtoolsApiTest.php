@@ -58,20 +58,24 @@ class DevtoolsApiTest extends TestCase
             'accent_color' => '#123abc',
             'icon' => '🧪',
             'sort_order' => 12,
+            'show_in_top_nav' => false,
         ]);
 
         $create->assertCreated();
 
         $this->assertNotSame('', (string) $create->json('channel.slug'));
+        $create->assertJsonPath('channel.show_in_top_nav', false);
 
         $channelId = $create->json('channel.id');
 
         $this->withHeaders($this->headers())
             ->putJson("/api/vibe/channels/{$channelId}", [
                 'name' => 'Codex 更新频道',
+                'show_in_top_nav' => true,
             ])
             ->assertOk()
-            ->assertJsonPath('channel.name', 'Codex 更新频道');
+            ->assertJsonPath('channel.name', 'Codex 更新频道')
+            ->assertJsonPath('channel.show_in_top_nav', true);
 
         $this->withHeaders($this->headers())
             ->deleteJson("/api/vibe/channels/{$channelId}")
@@ -215,6 +219,7 @@ class DevtoolsApiTest extends TestCase
             'icon' => '📢',
             'sort_order' => 1,
             'is_public' => true,
+            'show_in_top_nav' => true,
         ], $overrides));
     }
 

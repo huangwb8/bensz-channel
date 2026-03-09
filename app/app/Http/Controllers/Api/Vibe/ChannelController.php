@@ -16,7 +16,19 @@ class ChannelController extends Controller
 {
     public function index(): JsonResponse
     {
-        $channels = Channel::query()->ordered()->get(['id', 'name', 'slug', 'description', 'icon', 'accent_color', 'sort_order', 'is_public', 'created_at', 'updated_at']);
+        $channels = Channel::query()->ordered()->get([
+            'id',
+            'name',
+            'slug',
+            'description',
+            'icon',
+            'accent_color',
+            'sort_order',
+            'is_public',
+            'show_in_top_nav',
+            'created_at',
+            'updated_at',
+        ]);
 
         return response()->json(['channels' => $channels]);
     }
@@ -35,13 +47,6 @@ class ChannelController extends Controller
     public function update(Request $request, string $channel, StaticPageBuilder $staticPageBuilder): JsonResponse
     {
         $channel = $this->resolveChannel($channel);
-
-        if ($this->isReservedChannel($channel)) {
-            return response()->json([
-                'message' => '系统保留频道不可编辑。',
-            ], 422);
-        }
-
         $validated = $this->validateChannel($request, $channel);
 
         $channel->update($validated);
@@ -55,7 +60,7 @@ class ChannelController extends Controller
     {
         $channel = $this->resolveChannel($channel);
 
-        if ($this->isReservedChannel($channel)) {
+        if ($channel->isReserved()) {
             return response()->json([
                 'message' => '系统保留频道不可删除。',
             ], 422);
@@ -82,6 +87,14 @@ class ChannelController extends Controller
     {
         $isUpdate = $channel !== null;
 
+        if ($channel?->isReserved()) {
+            return [
+                'show_in_top_nav' => $request->has('show_in_top_nav')
+                    ? $request->boolean('show_in_top_nav')
+                    : (bool) $channel->show_in_top_nav,
+            ];
+        }
+
         $validated = $request->validate([
             'name' => [$isUpdate ? 'sometimes' : 'required', 'string', 'max:40'],
             'slug' => ['nullable', 'string', 'max:60', Rule::unique('channels', 'slug')->ignore($channel?->id)],
@@ -89,6 +102,7 @@ class ChannelController extends Controller
             'accent_color' => [$isUpdate ? 'sometimes' : 'required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'icon' => [$isUpdate ? 'sometimes' : 'required', 'string', 'max:8'],
             'sort_order' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'integer', 'min:0', 'max:999'],
+            'show_in_top_nav' => [$isUpdate ? 'sometimes' : 'nullable', 'boolean'],
         ]);
 
         if (array_key_exists('slug', $validated) || array_key_exists('name', $validated) || ! $isUpdate) {
@@ -106,6 +120,12 @@ class ChannelController extends Controller
 
         if (! $isUpdate) {
             $validated['is_public'] = true;
+        }
+
+        if (array_key_exists('show_in_top_nav', $validated)) {
+            $validated['show_in_top_nav'] = (bool) $validated['show_in_top_nav'];
+        } elseif (! $isUpdate) {
+            $validated['show_in_top_nav'] = true;
         }
 
         return $validated;
@@ -144,6 +164,10 @@ class ChannelController extends Controller
         $channel = Channel::query()->where('slug', 'uncategorized')->first();
 
         if ($channel instanceof Channel) {
+            if ($channel->show_in_top_nav === null) {
+                $channel->forceFill(['show_in_top_nav' => false])->save();
+            }
+
             return $channel;
         }
 
@@ -155,12 +179,7 @@ class ChannelController extends Controller
             'icon' => '📦',
             'sort_order' => 999,
             'is_public' => true,
+            'show_in_top_nav' => false,
         ]);
-    }
-
-    private function isReservedChannel(Channel $channel): bool
-    {
-        return in_array($channel->slug, ['all', 'uncategorized'], true)
-            || in_array($channel->name, ['全部', '未分类'], true);
     }
 }

@@ -12,6 +12,9 @@ class Channel extends Model
     /** @use HasFactory<\Database\Factories\ChannelFactory> */
     use HasFactory;
 
+    public const SLUG_UNCATEGORIZED = 'uncategorized';
+    public const SLUG_FEATURED = 'featured';
+
     protected $fillable = [
         'name',
         'slug',
@@ -20,13 +23,31 @@ class Channel extends Model
         'icon',
         'sort_order',
         'is_public',
+        'show_in_top_nav',
     ];
 
     protected function casts(): array
     {
         return [
             'is_public' => 'bool',
+            'show_in_top_nav' => 'bool',
         ];
+    }
+
+    public function isReserved(): bool
+    {
+        return in_array($this->slug, [self::SLUG_UNCATEGORIZED, self::SLUG_FEATURED, 'all'], true)
+            || in_array($this->name, ['未分类', '精华', '全部'], true);
+    }
+
+    public function isFeaturedChannel(): bool
+    {
+        return $this->slug === self::SLUG_FEATURED || $this->name === '精华';
+    }
+
+    public function isUncategorizedChannel(): bool
+    {
+        return $this->slug === self::SLUG_UNCATEGORIZED || $this->name === '未分类';
     }
 
     public function getRouteKeyName(): string
@@ -42,5 +63,10 @@ class Channel extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('sort_order')->orderBy('name');
+    }
+
+    public function scopeVisibleInTopNav(Builder $query): Builder
+    {
+        return $query->where('show_in_top_nav', true);
     }
 }

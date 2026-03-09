@@ -36,12 +36,16 @@ class AdminArticleManagementTest extends TestCase
                 'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
                 'published_at' => now()->format('Y-m-d H:i:s'),
                 'is_published' => 1,
+                'is_pinned' => 1,
+                'is_featured' => 1,
             ])
             ->assertRedirect(route('admin.articles.index'));
 
         $this->assertDatabaseHas('articles', [
             'slug' => 'admin-post-test',
             'title' => '后台发文测试',
+            'is_pinned' => true,
+            'is_featured' => true,
         ]);
     }
 
@@ -64,6 +68,8 @@ class AdminArticleManagementTest extends TestCase
                 'cover_gradient' => 'from-sky-500 via-blue-500 to-indigo-500',
                 'published_at' => now()->format('Y-m-d H:i:s'),
                 'is_published' => 1,
+                'is_pinned' => 1,
+                'is_featured' => 1,
             ])
             ->assertRedirect(route('admin.articles.index'));
 
@@ -72,6 +78,8 @@ class AdminArticleManagementTest extends TestCase
             'slug' => 'new-title',
             'title' => '新标题',
             'excerpt' => '新的摘要',
+            'is_pinned' => true,
+            'is_featured' => true,
         ]);
     }
 
@@ -109,6 +117,61 @@ class AdminArticleManagementTest extends TestCase
             ->assertSee('aria-label="编辑文章：'.$article->title.'"', false);
     }
 
+    public function test_admin_can_toggle_article_pinned_and_featured_flags_from_index(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $channel = $this->createChannel();
+        $article = $this->createArticle($admin, $channel, [
+            'is_pinned' => false,
+            'is_featured' => false,
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.articles.pin', $article))
+            ->assertRedirect(route('admin.articles.index'));
+
+        $this->assertTrue($article->fresh()->is_pinned);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.articles.feature', $article))
+            ->assertRedirect(route('admin.articles.index'));
+
+        $this->assertTrue($article->fresh()->is_featured);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.articles.pin', $article->fresh()))
+            ->assertRedirect(route('admin.articles.index'));
+
+        $this->actingAs($admin)
+            ->patch(route('admin.articles.feature', $article->fresh()))
+            ->assertRedirect(route('admin.articles.index'));
+
+        $article->refresh();
+
+        $this->assertFalse($article->is_pinned);
+        $this->assertFalse($article->is_featured);
+    }
+
+    public function test_admin_article_index_renders_pinned_and_featured_toggle_actions(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $channel = $this->createChannel();
+        $article = $this->createArticle($admin, $channel, [
+            'title' => '状态切换文章',
+            'slug' => 'status-toggle-article',
+            'is_pinned' => true,
+            'is_featured' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.articles.index'))
+            ->assertOk()
+            ->assertSee('title="取消置顶"', false)
+            ->assertSee('title="取消精华"', false)
+            ->assertSee('aria-label="切换置顶：'.$article->title.'"', false)
+            ->assertSee('aria-label="切换精华：'.$article->title.'"', false);
+    }
+
     private function createChannel(): Channel
     {
         return Channel::query()->create([
@@ -135,6 +198,8 @@ class AdminArticleManagementTest extends TestCase
             'is_published' => true,
             'published_at' => now(),
             'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
+            'is_pinned' => false,
+            'is_featured' => false,
         ], $overrides));
     }
 }

@@ -29,7 +29,11 @@ class RssFeedController extends Controller
 
         $articles = Article::query()
             ->published()
-            ->whereBelongsTo($channel)
+            ->when(
+                $channel->isFeaturedChannel(),
+                fn ($query) => $query->featured(),
+                fn ($query) => $query->whereBelongsTo($channel),
+            )
             ->with(['channel', 'author'])
             ->latestPublished()
             ->limit(30)

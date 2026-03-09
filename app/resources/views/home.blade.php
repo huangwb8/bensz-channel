@@ -37,25 +37,25 @@
         </div>
     </section>
 
-    @if($featuredArticle)
-        <!-- 置顶公告 -->
+    @if($pinnedArticle)
         <section class="mb-6 rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="inline-flex items-center rounded-full bg-blue-600 px-2.5 py-0.5 text-xs font-semibold text-white">
-                            置顶
-                        </span>
-                        <span class="text-xs text-gray-500">{{ $featuredArticle->channel->icon }} {{ $featuredArticle->channel->name }}</span>
+                    <div class="mb-2 flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center rounded-full bg-blue-600 px-2.5 py-0.5 text-xs font-semibold text-white">置顶</span>
+                        @if($pinnedArticle->is_featured)
+                            <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">精华</span>
+                        @endif
+                        <span class="text-xs text-gray-500">{{ $pinnedArticle->channel->icon }} {{ $pinnedArticle->channel->name }}</span>
                     </div>
                     <h2 class="text-lg font-semibold text-gray-900 truncate">
-                        <a href="{{ route('articles.show', [$featuredArticle->channel, $featuredArticle]) }}" class="hover:text-blue-600">
-                            {{ $featuredArticle->title }}
+                        <a href="{{ route('articles.show', [$pinnedArticle->channel, $pinnedArticle]) }}" class="hover:text-blue-600">
+                            {{ $pinnedArticle->title }}
                         </a>
                     </h2>
-                    <p class="mt-1 text-sm text-gray-600 line-clamp-2">{{ $featuredArticle->excerpt }}</p>
+                    <p class="mt-1 text-sm text-gray-600 line-clamp-2">{{ $pinnedArticle->excerpt }}</p>
                 </div>
-                <a href="{{ route('articles.show', [$featuredArticle->channel, $featuredArticle]) }}" class="shrink-0 inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                <a href="{{ route('articles.show', [$pinnedArticle->channel, $pinnedArticle]) }}" class="shrink-0 inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
                     查看详情
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -65,7 +65,6 @@
         </section>
     @endif
 
-    <!-- 帖子列表 -->
     <section>
         <div class="mb-4 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900">
@@ -84,27 +83,27 @@
             @forelse($latestArticles as $article)
                 <article class="article-card">
                     <div class="flex gap-4">
-                        <!-- 左侧内容 -->
                         <div class="flex-1 min-w-0">
-                            <!-- 频道标签 -->
-                            <div class="channel-badge mb-2">
-                                <span>{{ $article->channel->icon }}</span>
-                                <span>{{ $article->channel->name }}</span>
+                            <div class="mb-2 flex flex-wrap items-center gap-2">
+                                <div class="channel-badge">
+                                    <span>{{ $article->channel->icon }}</span>
+                                    <span>{{ $article->channel->name }}</span>
+                                </div>
+                                @if($article->is_pinned)
+                                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">置顶</span>
+                                @endif
+                                @if($article->is_featured)
+                                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">精华</span>
+                                @endif
                             </div>
-
-                            <!-- 标题 -->
                             <h3 class="text-base font-semibold text-gray-900 mb-1">
                                 <a href="{{ route('articles.show', [$article->channel, $article]) }}" class="hover:text-blue-600 line-clamp-2">
                                     {{ $article->title }}
                                 </a>
                             </h3>
-
-                            <!-- 摘要 -->
                             <p class="text-sm text-gray-600 line-clamp-2 mb-3">
                                 {{ $article->excerpt }}
                             </p>
-
-                            <!-- 底部信息 -->
                             <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
                                 <span class="flex items-center gap-1">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

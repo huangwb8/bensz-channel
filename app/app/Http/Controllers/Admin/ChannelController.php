@@ -18,12 +18,11 @@ class ChannelController extends Controller
 {
     public function index(): View
     {
-        $this->ensureUncategorizedChannel();
+        $this->ensureSystemChannels();
 
         return view('admin.channels.index', [
             'channels' => Channel::query()
                 ->ordered()
-                ->whereNotIn('slug', ['all', 'uncategorized'])
                 ->get(),
         ]);
     }
@@ -47,12 +46,12 @@ class ChannelController extends Controller
 
         $staticPageBuilder->buildAll();
 
-        return back()->with('status', '频道已更新。');
+        return back()->with('status', $channel->isReserved() ? '系统频道设置已更新。' : '频道已更新。');
     }
 
     public function destroy(Channel $channel, StaticPageBuilder $staticPageBuilder): RedirectResponse
     {
-        if ($this->isReservedChannel($channel)) {
+        if ($channel->isReserved()) {
             throw ValidationException::withMessages([
                 'channel' => '系统保留频道不可删除。',
             ]);
@@ -77,6 +76,12 @@ class ChannelController extends Controller
 
     private function validateChannel(Request $request, ?Channel $channel = null): array
     {
+        if ($channel?->isReserved()) {
+            return [
+                'show_in_top_nav' => $request->boolean('show_in_top_nav'),
+            ];
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:40'],
             'slug' => ['nullable', 'string', 'max:60', Rule::unique('channels', 'slug')->ignore($channel?->id)],
@@ -84,43 +89,68 @@ class ChannelController extends Controller
             'accent_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'icon' => ['required', 'string', 'max:8'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:999'],
+            'show_in_top_nav' => ['nullable', 'boolean'],
         ]);
-
-        if ($channel && $this->isReservedChannel($channel)) {
-            throw ValidationException::withMessages([
-                'channel' => '系统保留频道不可编辑。',
-            ]);
-        }
 
         $validated['slug'] = Str::slug($validated['slug'] ?: $validated['name']);
         $validated['sort_order'] = (int) ($validated['sort_order'] ?? 0);
         $validated['is_public'] = true;
+        $validated['show_in_top_nav'] = $request->boolean('show_in_top_nav');
 
         return $validated;
     }
 
-    private function ensureUncategorizedChannel(): Channel
+    private function ensureSystemChannels(): void
     {
-        $channel = Channel::query()->where('slug', 'uncategorized')->first();
+        $this->ensureFeaturedChannel();
+        $this->ensureUncategorizedChannel();
+    }
+
+    private function ensureFeaturedChannel(): Channel
+    {
+        $channel = Channel::query()->where('slug', Channel::SLUG_FEATURED)->first();
 
         if ($channel instanceof Channel) {
+            if ($channel->show_in_top_nav === null) {
+                $channel->forceFill(['show_in_top_nav' => true])->save();
+            }
+
+            return $channel;
+        }
+
+        return Channel::query()->create([
+            'name' => '精华',
+            'slug' => Channel::SLUG_FEATURED,
+            'description' => '站内精选内容与重点沉淀。',
+            'accent_color' => '#f59e0b',
+            'icon' => '⭐',
+            'sort_order' => 0,
+            'is_public' => true,
+            'show_in_top_nav' => true,
+        ]);
+    }
+
+    private function ensureUncategorizedChannel(): Channel
+    {
+        $channel = Channel::query()->where('slug', Channel::SLUG_UNCATEGORIZED)->first();
+
+        if ($channel instanceof Channel) {
+            if ($channel->show_in_top_nav === null) {
+                $channel->forceFill(['show_in_top_nav' => false])->save();
+            }
+
             return $channel;
         }
 
         return Channel::query()->create([
             'name' => '未分类',
-            'slug' => 'uncategorized',
+            'slug' => Channel::SLUG_UNCATEGORIZED,
             'description' => '系统自动归类的文章将汇总在此。',
             'accent_color' => '#64748b',
             'icon' => '📦',
             'sort_order' => 999,
             'is_public' => true,
+            'show_in_top_nav' => false,
         ]);
-    }
-
-    private function isReservedChannel(Channel $channel): bool
-    {
-        return in_array($channel->slug, ['all', 'uncategorized'], true)
-            || in_array($channel->name, ['全部', '未分类'], true);
     }
 }
