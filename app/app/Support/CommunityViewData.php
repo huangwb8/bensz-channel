@@ -9,6 +9,11 @@ use App\Models\User;
 
 class CommunityViewData
 {
+    public function __construct(
+        private readonly ArticleBodyFormatter $articleBodyFormatter,
+    ) {
+    }
+
     public function layout(?Channel $currentChannel = null, ?Article $currentArticle = null): array
     {
         return [
@@ -79,11 +84,14 @@ class CommunityViewData
             'comments.user',
         ]);
 
+        $articleBody = $this->articleBodyFormatter->format($article->html_body);
+
         return [
             ...$this->chrome($article->channel, $article),
             'pageTitle' => $article->title,
             'currentChannel' => $article->channel,
             'article' => $article,
+            'articleBody' => $articleBody,
             'relatedArticles' => Article::query()
                 ->published()
                 ->where('channel_id', $article->channel_id)

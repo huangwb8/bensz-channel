@@ -43,9 +43,54 @@
             </div>
         </div>
 
+        @if(!empty($articleBody['toc']))
+            <div class="border-b border-gray-100 px-6 py-4 lg:hidden">
+                <details class="article-toc-mobile group rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                    <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-gray-900">
+                        <span>文章目录</span>
+                        <span class="text-xs text-gray-500 transition group-open:rotate-180">⌄</span>
+                    </summary>
+                    <nav class="mt-3 space-y-1">
+                        @foreach($articleBody['toc'] as $item)
+                            <a
+                                href="#{{ $item['id'] }}"
+                                class="article-toc-link block rounded-xl px-3 py-2 text-sm text-gray-600 hover:bg-white hover:text-gray-900"
+                                style="--toc-level: {{ max(0, $item['level'] - 1) }}"
+                            >
+                                <span class="font-medium text-gray-900">{{ $item['number'] }}</span>
+                                <span>{{ $item['text'] }}</span>
+                            </a>
+                        @endforeach
+                    </nav>
+                </details>
+            </div>
+        @endif
+
         <!-- 文章正文 -->
-        <div class="px-6 py-8">
-            <div class="markdown-body">{!! $article->html_body !!}</div>
+        <div class="px-6 py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-8">
+            <div class="min-w-0">
+                <div class="markdown-body">{!! $articleBody['html'] !!}</div>
+            </div>
+
+            @if(!empty($articleBody['toc']))
+                <aside class="article-toc-desktop hidden lg:block">
+                    <div class="article-toc-panel sticky top-24 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                        <h2 class="text-sm font-semibold text-gray-900">文章目录</h2>
+                        <nav class="mt-3 space-y-1">
+                            @foreach($articleBody['toc'] as $item)
+                                <a
+                                    href="#{{ $item['id'] }}"
+                                    class="article-toc-link block rounded-xl px-3 py-2 text-sm text-gray-600 hover:bg-white hover:text-gray-900"
+                                    style="--toc-level: {{ max(0, $item['level'] - 1) }}"
+                                >
+                                    <span class="font-medium text-gray-900">{{ $item['number'] }}</span>
+                                    <span>{{ $item['text'] }}</span>
+                                </a>
+                            @endforeach
+                        </nav>
+                    </div>
+                </aside>
+            @endif
         </div>
     </article>
 
