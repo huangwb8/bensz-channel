@@ -10,13 +10,13 @@ from _flat_yaml import load_flat_yaml
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="检查 BENSZ_CHANNEL_URL + BENSZ_CHANNEL_KEY 配置（不泄露密钥）。")
-    parser.add_argument("--env-file", type=str, default=None, help="可选 .env 文件路径。")
+    parser.add_argument("--env", type=str, default=None, help="指定 .env 配置文件路径。")
     parser.add_argument("--verbose", "-v", action="store_true", help="显示详细的搜索路径信息。")
     args = parser.parse_args()
 
     skill_root = Path(__file__).resolve().parents[1]
     config = load_flat_yaml(skill_root / "config.yaml")
-    env_file = Path(args.env_file).expanduser() if args.env_file else None
+    env_file = Path(args.env).expanduser() if args.env else None
     env = resolve_bdc_env(skill_root=skill_root, env_file=env_file)
 
     problems: list[str] = []

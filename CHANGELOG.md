@@ -8,9 +8,13 @@
 
 ### Added（新增）
 
+- 新增了文章标题自动编号与 TOC 导航：文章页现在会基于 Markdown 正文标题自动生成层级编号，并同时提供桌面端侧栏目录与移动端折叠目录
+- 新增了 `app/tests/Unit/Support/ArticleBodyFormatterTest.php` 与 `app/tests/Feature/Articles/ArticleTocTest.php`：用于锁定文章目录生成、标题编号、中文标题锚点回退与文章页 / 静态页渲染行为
+
 - 新增了真实微信 / QQ 扫码登录能力：项目现在可在默认演示二维码模式与官方 OAuth 模式之间切换，且两条链路共用统一的社交账号绑定逻辑
 - 新增了 `app/tests/Feature/Auth/SocialOAuthLoginTest.php`：用于覆盖微信授权跳转、微信回调登录、QQ 授权跳转、QQ 回调登录与 state 校验失败等关键回归点
 - 新增了 `docs/如何让本项目支持微信和QQ扫码登陆.md`：用于手把手说明微信开放平台 / QQ 互联的站外申请、审核、回调配置、项目参数填写与 Docker 重部署步骤
+- 新增了 `auth-service/tests/email-otp.test.js`、`auth-service/tests/mail-config.test.js` 与 `auth-service/tests/otp-email.test.js`：用于锁定 Better Auth 邮件链路会读取后台 SMTP 配置、能解密 Laravel 加密密码，并在真实投递失败时向上返回错误
 
 - 新增了稳定用户 ID 体系：系统管理员固定为 `0`，新注册或首次登录创建的用户从 `101` 开始递增，且账号修改昵称、邮箱、手机号后 ID 仍保持不变
 - 新增了稳定用户 ID 回归测试覆盖：用于锁定系统管理员、验证码登录、账户设置、后台用户管理与 DevTools 用户更新链路的稳定标识行为
@@ -123,6 +127,9 @@
 ### Fixed（修复）
 
 - 新增了管理员导航与频道管理回归测试：锁定后台菜单顺序、`/admin` 默认跳转以及“未分类”频道隐藏展示的行为，避免后续优化回归
+- 修复了邮箱验证码注册/登录邮件未跟随后台 SMTP 配置的问题：Better Auth 认证服务现在会优先读取 `mail_settings` 中已启用的 SMTP 覆盖配置，并兼容 Laravel 加密保存的 SMTP 密码
+- 修复了认证服务邮件发送失败仍向前端返回“已发送”的问题：邮箱验证码投递改为等待 SMTP 实际结果，连接失败或认证失败时会直接返回错误，避免用户空等邮件
+- 修复了文章 Markdown 标题只能裸展示、缺少结构导航的问题：现已自动生成标题编号与可点击 TOC，并对移动端阅读场景做了单独适配
 
 ## [1.10.0] - 2026-03-08
 

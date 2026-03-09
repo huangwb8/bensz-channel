@@ -120,6 +120,13 @@ python3 scripts/env_init.py --path /path/to/.env
    ```
 
 4. **执行操作**（按需选择子命令）
+   ```bash
+   # 使用默认配置（自动搜索 .env 文件）
+   python3 scripts/client.py channels list
+
+   # 指定特定的 .env 文件
+   python3 scripts/client.py --env /path/to/.env channels list
+   ```
 
 ## 常见任务映射
 

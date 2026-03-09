@@ -342,9 +342,7 @@ def main(argv: list[str]) -> int:
         prog="client.py",
         description="bensz-channel DevTools 客户端。通过 API 密钥管理频道/文章/评论/用户。"
     )
-    parser.add_argument("--env-file", type=str, default=None, help="可选 .env 文件路径。")
-    parser.add_argument("--url", type=str, default=None, help="覆盖 base URL（如 http://localhost:6542）。")
-    parser.add_argument("--key", type=str, default=None, help="覆盖 API 密钥（WARNING: 可能出现在 shell 历史记录中）。")
+    parser.add_argument("--env", type=str, default=None, help="指定 .env 配置文件路径。")
     parser.add_argument("--timeout", type=int, default=None, help="请求超时秒数。")
     parser.add_argument("--dry-run", action="store_true", help="只打印将发出的请求，不实际发送。")
 
@@ -431,15 +429,7 @@ def main(argv: list[str]) -> int:
     DRY_RUN = bool(getattr(args, "dry_run", False))
 
     env = resolve_bdc_env(skill_root=_skill_root(),
-                          env_file=Path(args.env_file).expanduser() if args.env_file else None)
-    if getattr(args, "url", None):
-        from _bdc_env import BdcEnv
-        env = BdcEnv(url=normalize_base_url(args.url), key=env.key, url_source=env.url_source,
-                     key_source=env.key_source, env_file_path=env.env_file_path)
-    if getattr(args, "key", None):
-        from _bdc_env import BdcEnv
-        env = BdcEnv(url=env.url, key=args.key.strip(), url_source=env.url_source,
-                     key_source=env.key_source, env_file_path=env.env_file_path)
+                          env_file=Path(args.env).expanduser() if args.env else None)
 
     if args.cmd != "ping":
         _ensure_key(env)

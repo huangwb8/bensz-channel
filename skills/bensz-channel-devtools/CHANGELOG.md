@@ -6,6 +6,10 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+### Changed（变更）
+- **简化命令行参数**：将 `--env-file` 改为 `--env`，移除 `--url` 和 `--key` 参数，强制使用配置文件管理环境变量，避免在命令行中暴露敏感信息。
+- 更新文档（SKILL.md、README.md）以反映新的参数使用方式。
+
 ### Added（新增）
 - 在 `BdcEnv` 数据类中新增 `env_file_path` 字段，记录实际使用的 .env 文件路径，确保工作函数能够明确知道配置来源。
 - 在 `env_check.py` 输出中显示实际使用的 .env 文件路径，便于调试和验证配置来源。

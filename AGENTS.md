@@ -23,6 +23,7 @@
 - 理解用户的真实需求和意图
 - 确认任务范围和预期输出
 - 识别可能的依赖和约束
+- 使用 bensz-channel-devtools skill工作时， 参数之一是： `--env ./self/remote.env`
 
 ### 执行流程
 

@@ -101,6 +101,9 @@ python3 scripts/client.py users list
 python3 scripts/client.py users list --q alice --role member
 python3 scripts/client.py users update --id 5 --role admin
 python3 scripts/client.py users update --id 5 --name "新昵称" --bio "简介"
+
+# 使用特定的 .env 文件
+python3 scripts/client.py --env /path/to/.env channels list
 ```
 
 ## 安全边界

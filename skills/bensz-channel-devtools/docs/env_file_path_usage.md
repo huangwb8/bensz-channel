@@ -67,7 +67,7 @@ def cmd_channels_delete(env: BdcEnv, timeout_seconds: int, channel_id: str) -> i
 | 优先级 | 配置来源 | env_file_path 值 |
 |--------|---------|------------------|
 | 1 | OS 环境变量 | `None` |
-| 2 | 用户指定的 --env-file | 指定的文件路径 |
+| 2 | 用户指定的 --env | 指定的文件路径 |
 | 3 | 当前目录及父目录的 .env | 找到的第一个 .env 文件路径 |
 | 4 | 用户主目录配置文件 | fallback 配置文件路径 |
 
@@ -111,7 +111,7 @@ def resolve_bdc_env(*, skill_root: Path, env_file: Path | None = None) -> BdcEnv
 
 1. **调试时优先检查 env_file_path**：当配置出现问题时，首先检查 `env_file_path` 确认配置来源
 2. **日志中记录配置来源**：在关键操作的日志中记录 `env_file_path`，便于追踪问题
-3. **测试时使用 --env-file**：在测试环境中使用 `--env-file` 参数指定测试配置文件
+3. **测试时使用 --env**：在测试环境中使用 `--env` 参数指定测试配置文件
 4. **生产环境使用环境变量**：在生产环境中优先使用 OS 环境变量，避免配置文件泄露
 
 ## 相关命令
@@ -144,5 +144,5 @@ bensz-channel-devtools 环境配置检查
 $ python3 scripts/client.py channels list
 
 # 使用指定的 .env 文件
-$ python3 scripts/client.py --env-file /path/to/test.env channels list
+$ python3 scripts/client.py --env /path/to/test.env channels list
 ```
