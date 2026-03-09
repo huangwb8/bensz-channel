@@ -79,6 +79,18 @@ Repository Secrets：
 - `DOCKERHUB_USERNAME`：Docker Hub 用户名
 - `DOCKERHUB_TOKEN`：Docker Hub Access Token
 
+**构建使用的项目资源**：
+
+Web 镜像（[docker/web/Dockerfile](docker/web/Dockerfile)）：
+- [app/](app/) - Laravel 应用主目录（PHP 后端 + 前端资源）
+- [config/](config/) - 项目配置文件
+- [docker/web/](docker/web/) - Web 容器配置（entrypoint、supervisord）
+- [docker/nginx/](docker/nginx/) - Nginx 服务器配置
+
+Auth 镜像（[auth-service/Dockerfile](auth-service/Dockerfile)）：
+- [auth-service/](auth-service/) - 认证服务（Node.js）
+- [config/](config/) - 项目配置文件（与 Web 共享）
+
 ### 版本同步检查
 
 项目包含自动版本同步检查工作流，会在以下情况触发：
@@ -392,6 +404,30 @@ npm run start
 - `npm install` 会读取 `app/.npmrc`，将缓存统一写入 `/Volumes/2T01/Test/bensz-channel/npm-cache`
 - `npm install` 完成后会自动执行 `app/scripts/ensure-managed-node-modules.sh`，把可能被 npm 重建到项目内的依赖目录重新迁回托管路径
 - `auth-service/.npmrc` 也复用同一 npm 缓存目录，`auth-service/scripts/ensure-managed-node-modules.sh` 会将依赖迁回统一托管路径
+
+## 统一测试入口
+
+为了让 AI 或人工在改动后快速判断“系统是否仍然正常、稳定、高效工作”，仓库现在提供统一测试入口 `scripts/test/`：
+
+```bash
+# 完整回归 + Docker 重部署 + 冒烟 + 稳定性 + 性能
+./scripts/test/all.sh
+
+# 按需执行单项验证
+./scripts/test/auth-regression.sh
+./scripts/test/app-regression.sh
+./scripts/test/docker-redeploy.sh
+./scripts/test/docker-smoke.sh
+./scripts/test/stability.sh
+./scripts/test/performance.sh
+```
+
+判定口径统一如下：
+
+- `NORMAL`：现有单元/功能回归、前端构建与 Docker 冒烟均通过
+- `STABLE`：关键健康检查与管理员登录链路连续多轮通过
+- `EFFICIENT`：首页、登录页、RSS 在默认性能预算内
+- `SAFE_CHANGE`：以上三项全部通过，可作为“本次改动暂无回归迹象”的自动化证据
 
 ## 后续可扩展点
 

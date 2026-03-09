@@ -8,6 +8,14 @@
 
 ### Added（新增）
 
+- 新增了 `AGENTS.md` 的"测试规范"章节：明确 `scripts/test/` 目录用途、测试覆盖要求、执行时机和脚本规范，确保所有功能在交付前通过自动化测试验证
+- 新增了集中测试目录 `scripts/test/`：统一托管环境检查、Laravel 回归、auth-service 回归、Docker 重部署、冒烟、稳定性与性能验证脚本，供 AI 与人工复用
+
+### Changed（变更）
+
+- 更新了 `README.md`：补充统一测试入口与 `NORMAL / STABLE / EFFICIENT / SAFE_CHANGE` 判定口径，方便改动后快速确认系统是否仍然可靠
+- 更新了 `config.yaml`：将项目版本推进到 `1.25.0`，用于记录本次自动化测试基础设施补齐
+
 - 新增了 GitHub Actions 工作流 `.github/workflows/create-release.yml`：支持从 config.yaml 自动读取版本号并创建 GitHub Release，自动从 CHANGELOG.md 提取 Release Notes
 - 新增了 GitHub Actions 工作流 `.github/workflows/check-version-sync.yml`：自动检查 config.yaml 版本号与最新 GitHub Release 是否同步，并在 PR 中添加版本状态评论
 
