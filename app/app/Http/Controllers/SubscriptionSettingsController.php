@@ -33,6 +33,7 @@ class SubscriptionSettingsController extends Controller
                 'mailSettingForm' => $mailSettingsManager->formData(),
                 'mailSettingUsingCustomConfig' => $mailSettingsManager->usingCustomSettings(),
                 'mailSettingHasPassword' => $mailSettingsManager->hasStoredPassword(),
+                'mailSettingTestRecipient' => $this->defaultTestRecipient($user->email, $mailSettingsManager->formData()['from_address'] ?? null),
             ]);
         }
 
@@ -94,7 +95,11 @@ class SubscriptionSettingsController extends Controller
 
         $validated = $this->validateMailSettings($request, true);
         $runtimeConfig = $mailSettingsManager->runtimeConfigFor($validated);
-        $recipient = $this->resolveTestRecipient($user->email, $runtimeConfig['from_address']);
+        $recipient = $this->resolveTestRecipient(
+            $validated['test_recipient'] ?? null,
+            $user->email,
+            $runtimeConfig['from_address'],
+        );
 
         try {
             $smtpConnectivityTester->sendTestMessage($runtimeConfig, $recipient);
@@ -125,16 +130,32 @@ class SubscriptionSettingsController extends Controller
             'smtp_password' => ['nullable', 'string', 'max:255'],
             'from_address' => [Rule::requiredIf($requireFields), 'nullable', 'email', 'max:255'],
             'from_name' => [Rule::requiredIf($requireFields), 'nullable', 'string', 'max:255'],
+            'test_recipient' => ['nullable', 'email', 'max:255'],
         ]);
     }
 
-    private function resolveTestRecipient(?string $preferredEmail, ?string $fallbackEmail): string
+    private function resolveTestRecipient(?string $preferredEmail, ?string $secondaryEmail, ?string $fallbackEmail): string
     {
-        $recipient = filter_var((string) $preferredEmail, FILTER_VALIDATE_EMAIL)
-            ? (string) $preferredEmail
-            : (string) $fallbackEmail;
+        $recipient = $this->defaultTestRecipient($preferredEmail, $secondaryEmail);
 
-        return Str::lower(trim($recipient));
+        if ($recipient === null) {
+            $recipient = $this->defaultTestRecipient($fallbackEmail, null);
+        }
+
+        return Str::lower(trim((string) $recipient));
+    }
+
+    private function defaultTestRecipient(?string $preferredEmail, ?string $fallbackEmail): ?string
+    {
+        if (filter_var((string) $preferredEmail, FILTER_VALIDATE_EMAIL)) {
+            return (string) $preferredEmail;
+        }
+
+        if (filter_var((string) $fallbackEmail, FILTER_VALIDATE_EMAIL)) {
+            return (string) $fallbackEmail;
+        }
+
+        return null;
     }
 
     private function formatSmtpTestError(Throwable $exception): string

@@ -23,6 +23,7 @@ class AdminMailSettingsTest extends TestCase
             ->assertSee('管理员 SMTP 配置')
             ->assertSee('SMTP 服务器')
             ->assertSee('发件邮箱')
+            ->assertSee('测试收件邮箱')
             ->assertSee('测试 SMTP');
     }
 
@@ -40,6 +41,7 @@ class AdminMailSettingsTest extends TestCase
                 'smtp_password' => 'smtp-secret',
                 'from_address' => 'noreply@example.com',
                 'from_name' => 'Bensz Channel Mailer',
+                'test_recipient' => 'verify@example.com',
             ])
             ->assertRedirect(route('settings.subscriptions.edit'));
 
@@ -89,7 +91,7 @@ class AdminMailSettingsTest extends TestCase
                         && $config['password'] === 'smtp-secret'
                         && $config['from_address'] === 'noreply@example.com'
                         && $config['from_name'] === 'Bensz Channel Mailer'
-                        && $recipient === 'admin@example.com';
+                        && $recipient === 'verify@example.com';
                 });
         });
 
@@ -103,11 +105,12 @@ class AdminMailSettingsTest extends TestCase
                 'smtp_password' => 'smtp-secret',
                 'from_address' => 'noreply@example.com',
                 'from_name' => 'Bensz Channel Mailer',
+                'test_recipient' => 'verify@example.com',
             ]);
 
         $response
             ->assertRedirect(route('settings.subscriptions.edit'))
-            ->assertSessionHas('status');
+            ->assertSessionHas('status', 'SMTP 测试成功，已向 verify@example.com 发送测试邮件。请检查收件箱或 Mailpit。');
 
         $this->assertDatabaseCount('mail_settings', 0);
     }
@@ -149,6 +152,7 @@ class AdminMailSettingsTest extends TestCase
                 'smtp_password' => '',
                 'from_address' => 'noreply@example.com',
                 'from_name' => 'Bensz Channel Mailer',
+                'test_recipient' => '',
             ])
             ->assertRedirect(route('settings.subscriptions.edit'));
     }
@@ -176,6 +180,7 @@ class AdminMailSettingsTest extends TestCase
                 'smtp_password' => 'smtp-secret',
                 'from_address' => 'noreply@example.com',
                 'from_name' => 'Bensz Channel Mailer',
+                'test_recipient' => 'verify@example.com',
             ])
             ->assertRedirect(route('settings.subscriptions.edit'))
             ->assertSessionHasErrors(['smtp_test']);
