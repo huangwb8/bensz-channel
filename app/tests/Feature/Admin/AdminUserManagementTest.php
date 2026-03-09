@@ -14,6 +14,67 @@ class AdminUserManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_admin_user_management_index_shows_dashboard_batch_actions_and_icon_controls(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'last_seen_at' => now(),
+        ]);
+        $member = User::factory()->create([
+            'name' => '可运营成员',
+            'role' => User::ROLE_MEMBER,
+            'last_seen_at' => now()->subDay(),
+        ]);
+
+        $channel = Channel::query()->create([
+            'name' => '仪表盘测试频道',
+            'slug' => 'dashboard-test-channel',
+            'description' => '用于后台用户仪表盘测试。',
+            'accent_color' => '#2563eb',
+            'icon' => '📊',
+            'sort_order' => 1,
+            'is_public' => true,
+            'show_in_top_nav' => true,
+        ]);
+
+        Article::query()->create([
+            'channel_id' => $channel->id,
+            'author_id' => $member->id,
+            'title' => '成员已发布文章',
+            'slug' => 'member-published-article',
+            'excerpt' => '文章摘要',
+            'markdown_body' => '文章正文',
+            'html_body' => '<p>文章正文</p>',
+            'is_published' => true,
+            'is_pinned' => false,
+            'is_featured' => false,
+            'published_at' => now()->subHours(2),
+            'cover_gradient' => 'from-sky-500 via-cyan-500 to-emerald-500',
+            'comment_count' => 0,
+        ]);
+
+        $article = Article::query()->firstOrFail();
+
+        Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $member->id,
+            'markdown_body' => '成员评论',
+            'html_body' => '<p>成员评论</p>',
+            'is_visible' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('用户运营仪表盘')
+            ->assertSee('最近 7 天登录 / 活跃分布')
+            ->assertSee('批量删除')
+            ->assertSee('data-bulk-selected-count', false)
+            ->assertSee('aria-label="保存用户：'.$member->name.'"', false)
+            ->assertSee('title="删除用户"', false)
+            ->assertSee('aria-label="展开用户：'.$member->name.'"', false);
+    }
+
     public function test_non_admin_cannot_access_user_management_routes(): void
     {
         $member = User::factory()->create(['role' => User::ROLE_MEMBER]);
@@ -151,6 +212,106 @@ class AdminUserManagementTest extends TestCase
         $this->assertDatabaseMissing('sessions', ['user_id' => $member->id]);
         $this->assertDatabaseMissing('password_reset_tokens', ['email' => $member->email]);
         $this->assertSame(1, $sharedArticle->fresh()->comment_count);
+    }
+
+    public function test_admin_can_bulk_delete_selected_members_and_skip_admin_accounts(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $managedAdmin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $memberA = User::factory()->create([
+            'name' => '批量删除成员 A',
+            'email' => 'bulk-a@example.com',
+            'role' => User::ROLE_MEMBER,
+        ]);
+        $memberB = User::factory()->create([
+            'name' => '批量删除成员 B',
+            'email' => 'bulk-b@example.com',
+            'role' => User::ROLE_MEMBER,
+        ]);
+        $channel = Channel::query()->create([
+            'name' => '批量删除频道',
+            'slug' => 'bulk-delete-channel',
+            'description' => '用于批量删除测试。',
+            'accent_color' => '#14b8a6',
+            'icon' => '📦',
+            'sort_order' => 1,
+            'is_public' => true,
+            'show_in_top_nav' => true,
+        ]);
+
+        $sharedArticle = Article::query()->create([
+            'channel_id' => $channel->id,
+            'author_id' => $admin->id,
+            'title' => '批量删除公共文章',
+            'slug' => 'bulk-shared-article',
+            'excerpt' => '公共文章摘要',
+            'markdown_body' => '公共文章正文',
+            'html_body' => '<p>公共文章正文</p>',
+            'is_published' => true,
+            'is_pinned' => false,
+            'is_featured' => false,
+            'published_at' => now(),
+            'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
+            'comment_count' => 2,
+        ]);
+
+        foreach ([$memberA, $memberB] as $index => $member) {
+            Article::query()->create([
+                'channel_id' => $channel->id,
+                'author_id' => $member->id,
+                'title' => '成员文章 '.$index,
+                'slug' => 'bulk-member-article-'.$index,
+                'excerpt' => '成员文章摘要',
+                'markdown_body' => '成员文章正文',
+                'html_body' => '<p>成员文章正文</p>',
+                'is_published' => true,
+                'is_pinned' => false,
+                'is_featured' => false,
+                'published_at' => now(),
+                'cover_gradient' => 'from-sky-500 via-cyan-500 to-emerald-500',
+                'comment_count' => 0,
+            ]);
+
+            Comment::query()->create([
+                'article_id' => $sharedArticle->id,
+                'user_id' => $member->id,
+                'markdown_body' => '待删除成员评论 '.$index,
+                'html_body' => '<p>待删除成员评论 '.$index.'</p>',
+                'is_visible' => true,
+            ]);
+
+            DB::table('password_reset_tokens')->insert([
+                'email' => $member->email,
+                'token' => 'reset-token-'.$index,
+                'created_at' => now(),
+            ]);
+
+            DB::table('sessions')->insert([
+                'id' => 'bulk-session-'.$index,
+                'user_id' => $member->id,
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'phpunit',
+                'payload' => 'payload',
+                'last_activity' => now()->timestamp,
+            ]);
+        }
+
+        $this->actingAs($admin)
+            ->from(route('admin.users.index'))
+            ->delete(route('admin.users.bulk-destroy'), [
+                'selected_user_ids' => [$memberA->id, $memberB->id, $managedAdmin->id],
+            ])
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHas('status', '已删除 2 位普通用户。已自动跳过 1 位管理员账号。');
+
+        $this->assertDatabaseMissing('users', ['id' => $memberA->id]);
+        $this->assertDatabaseMissing('users', ['id' => $memberB->id]);
+        $this->assertDatabaseHas('users', ['id' => $managedAdmin->id, 'role' => User::ROLE_ADMIN]);
+        $this->assertDatabaseMissing('sessions', ['user_id' => $memberA->id]);
+        $this->assertDatabaseMissing('sessions', ['user_id' => $memberB->id]);
+        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $memberA->email]);
+        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $memberB->email]);
+        $this->assertSame(0, $sharedArticle->fresh()->comment_count);
     }
 
     public function test_admin_cannot_delete_admin_account_from_user_management(): void

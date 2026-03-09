@@ -202,3 +202,176 @@ if (statusNode) {
         }
     }, 2000);
 }
+
+const themeRoot = document.body;
+const normalizeTimeValue = (value, fallback) => {
+    if (! value) {
+        return fallback;
+    }
+
+    const trimmed = value.trim();
+    if (! /^([01]\d|2[0-3]):[0-5]\d$/.test(trimmed)) {
+        return fallback;
+    }
+
+    return trimmed;
+};
+
+const toMinutes = (timeValue) => {
+    const [hours, minutes] = timeValue.split(':').map(Number);
+    return (hours * 60) + minutes;
+};
+
+const resolveTheme = (mode, dayStart, nightStart, now) => {
+    if (mode === 'light' || mode === 'dark') {
+        return mode;
+    }
+
+    const dayMinutes = toMinutes(dayStart);
+    const nightMinutes = toMinutes(nightStart);
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    if (dayMinutes === nightMinutes) {
+        return 'light';
+    }
+
+    if (dayMinutes < nightMinutes) {
+        return currentMinutes >= dayMinutes && currentMinutes < nightMinutes ? 'light' : 'dark';
+    }
+
+    return currentMinutes >= dayMinutes || currentMinutes < nightMinutes ? 'light' : 'dark';
+};
+
+const applyThemeSchedule = () => {
+    if (! themeRoot) {
+        return;
+    }
+
+    const mode = (themeRoot.dataset.themeMode || 'auto').toLowerCase();
+    const dayStart = normalizeTimeValue(themeRoot.dataset.themeDayStart, '07:00');
+    const nightStart = normalizeTimeValue(themeRoot.dataset.themeNightStart, '19:00');
+    const resolvedTheme = resolveTheme(mode, dayStart, nightStart, new Date());
+
+    if (resolvedTheme !== themeRoot.dataset.themeApplied) {
+        themeRoot.dataset.themeApplied = resolvedTheme;
+        themeRoot.setAttribute('data-theme', resolvedTheme);
+    }
+};
+
+applyThemeSchedule();
+window.setInterval(applyThemeSchedule, 60 * 1000);
+
+const adminUsersPage = document.querySelector('[data-admin-users-page]');
+
+if (adminUsersPage) {
+    const userCards = Array.from(adminUsersPage.querySelectorAll('[data-user-card]'));
+    const selectableCheckboxes = Array.from(adminUsersPage.querySelectorAll('[data-bulk-select-item]'));
+    const selectAllCheckbox = adminUsersPage.querySelector('[data-bulk-select-all]');
+    const selectedCount = adminUsersPage.querySelector('[data-bulk-selected-count]');
+    const bulkDeleteButton = adminUsersPage.querySelector('[data-bulk-delete-submit]');
+    const clearSelectionButton = adminUsersPage.querySelector('[data-bulk-clear-selection]');
+
+    const syncCardExpansion = (card, expanded) => {
+        const panel = card.querySelector('[data-user-card-panel]');
+        const toggle = card.querySelector('[data-user-card-toggle]');
+        const expandIcon = toggle?.querySelector('[data-toggle-icon-expand]');
+        const collapseIcon = toggle?.querySelector('[data-toggle-icon-collapse]');
+        const toggleText = toggle?.querySelector('[data-toggle-text]');
+
+        if (! panel || ! toggle) {
+            return;
+        }
+
+        card.dataset.expanded = expanded ? 'true' : 'false';
+        panel.hidden = ! expanded;
+        card.classList.toggle('user-management-card-collapsed', ! expanded);
+        toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+
+        const accessibleLabel = expanded
+            ? toggle.getAttribute('data-label-collapse')
+            : toggle.getAttribute('data-label-expand');
+
+        if (accessibleLabel) {
+            toggle.setAttribute('aria-label', accessibleLabel);
+            toggle.setAttribute('title', accessibleLabel.replace(/：.+$/, ''));
+        }
+
+        expandIcon?.classList.toggle('hidden', expanded);
+        collapseIcon?.classList.toggle('hidden', ! expanded);
+
+        if (toggleText) {
+            toggleText.textContent = expanded ? '收起用户' : '展开用户';
+        }
+    };
+
+    const syncSelectionState = () => {
+        const checkedItems = selectableCheckboxes.filter((checkbox) => checkbox.checked);
+        const selectableItems = selectableCheckboxes.filter((checkbox) => ! checkbox.disabled);
+        const checkedCount = checkedItems.length;
+
+        if (selectedCount) {
+            selectedCount.textContent = String(checkedCount);
+        }
+
+        if (selectAllCheckbox instanceof HTMLInputElement) {
+            selectAllCheckbox.checked = selectableItems.length > 0 && checkedCount === selectableItems.length;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < selectableItems.length;
+        }
+
+        if (bulkDeleteButton instanceof HTMLButtonElement) {
+            bulkDeleteButton.disabled = checkedCount === 0;
+        }
+
+        userCards.forEach((card) => {
+            const checkbox = card.querySelector('[data-bulk-select-item]');
+            card.classList.toggle('user-management-card-selected', checkbox instanceof HTMLInputElement && checkbox.checked);
+        });
+    };
+
+    userCards.forEach((card) => {
+        syncCardExpansion(card, card.getAttribute('data-initial-expanded') === 'true');
+    });
+
+    adminUsersPage.querySelectorAll('[data-user-card-toggle]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const card = button.closest('[data-user-card]');
+
+            if (! card) {
+                return;
+            }
+
+            syncCardExpansion(card, card.dataset.expanded !== 'true');
+        });
+    });
+
+    selectableCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener('change', syncSelectionState);
+    });
+
+    if (selectAllCheckbox instanceof HTMLInputElement) {
+        selectAllCheckbox.addEventListener('change', () => {
+            selectableCheckboxes
+                .filter((checkbox) => ! checkbox.disabled)
+                .forEach((checkbox) => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+
+            syncSelectionState();
+        });
+    }
+
+    clearSelectionButton?.addEventListener('click', () => {
+        selectableCheckboxes.forEach((checkbox) => {
+            checkbox.checked = false;
+        });
+
+        if (selectAllCheckbox instanceof HTMLInputElement) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+
+        syncSelectionState();
+    });
+
+    syncSelectionState();
+}

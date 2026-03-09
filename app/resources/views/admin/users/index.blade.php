@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+    <div data-admin-users-page>
     <section class="rounded-xl border border-gray-200 bg-white p-6">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -13,24 +14,94 @@
             </div>
         </div>
 
-        <div class="mt-6 grid gap-4 md:grid-cols-4">
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <p class="text-sm text-gray-500">总用户数</p>
-                <p class="mt-2 text-2xl font-semibold text-gray-900">{{ $stats['total'] }}</p>
+        <section class="user-ops-dashboard mt-6 rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200/80">Dashboard</p>
+                    <h3 class="mt-2 text-lg font-semibold">用户运营仪表盘</h3>
+                    <p class="mt-1 text-sm text-slate-300">聚合最近 7 天用户登录 / 活跃、评论与发文趋势，帮助管理员快速判断社区热度。</p>
+                </div>
+                <div class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
+                    登录按最后活跃时间统计
+                </div>
             </div>
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <p class="text-sm text-gray-500">管理员</p>
-                <p class="mt-2 text-2xl font-semibold text-gray-900">{{ $stats['admins'] }}</p>
+
+            <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                @foreach($dashboard['cards'] as $card)
+                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+                        <p class="text-sm text-slate-300">{{ $card['label'] }}</p>
+                        <p class="mt-2 text-3xl font-semibold text-white">{{ $card['value'] }}</p>
+                        <p class="mt-2 text-xs text-slate-400">{{ $card['helper'] }}</p>
+                    </div>
+                @endforeach
             </div>
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <p class="text-sm text-gray-500">成员</p>
-                <p class="mt-2 text-2xl font-semibold text-gray-900">{{ $stats['members'] }}</p>
+
+            <div class="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.8fr)]">
+                <div class="rounded-2xl border border-white/10 bg-slate-900/70 p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h4 class="text-sm font-semibold text-white">最近 7 天登录 / 活跃分布</h4>
+                            <p class="mt-1 text-xs text-slate-400">同图对比登录 / 活跃、评论与已发布文章走势。</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 text-xs text-slate-300">
+                            <span class="inline-flex items-center gap-2"><span class="dashboard-legend dashboard-legend-login"></span>登录 / 活跃</span>
+                            <span class="inline-flex items-center gap-2"><span class="dashboard-legend dashboard-legend-comments"></span>评论</span>
+                            <span class="inline-flex items-center gap-2"><span class="dashboard-legend dashboard-legend-articles"></span>发文</span>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-chart mt-6" role="img" aria-label="最近 7 天登录、评论与发文情况图表">
+                        @foreach($dashboard['series'] as $point)
+                            <div class="dashboard-chart-column">
+                                <div class="dashboard-chart-bars">
+                                    @foreach([
+                                        'login' => ['label' => '登录 / 活跃', 'class' => 'dashboard-bar-login'],
+                                        'comments' => ['label' => '评论', 'class' => 'dashboard-bar-comments'],
+                                        'articles' => ['label' => '发文', 'class' => 'dashboard-bar-articles'],
+                                    ] as $key => $meta)
+                                        @php
+                                            $value = (int) $point[$key];
+                                            $height = $value > 0
+                                                ? max(12, (int) round(($value / $dashboard['chart_max']) * 100))
+                                                : 0;
+                                        @endphp
+                                        <div class="dashboard-chart-bar-slot">
+                                            <div
+                                                class="dashboard-chart-bar {{ $meta['class'] }}"
+                                                style="height: {{ $height }}%;"
+                                                title="{{ $point['full_label'] }} {{ $meta['label'] }}：{{ $value }}"
+                                            ></div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="mt-3 text-center text-xs text-slate-400">{{ $point['label'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-sm text-slate-300">总用户数</p>
+                        <p class="mt-2 text-2xl font-semibold text-white">{{ $stats['total'] }}</p>
+                    </div>
+                    <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                            <p class="text-sm text-slate-300">管理员</p>
+                            <p class="mt-2 text-2xl font-semibold text-white">{{ $stats['admins'] }}</p>
+                        </div>
+                        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                            <p class="text-sm text-slate-300">成员</p>
+                            <p class="mt-2 text-2xl font-semibold text-white">{{ $stats['members'] }}</p>
+                        </div>
+                        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                            <p class="text-sm text-slate-300">7 日活跃用户</p>
+                            <p class="mt-2 text-2xl font-semibold text-white">{{ $stats['recent'] }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <p class="text-sm text-gray-500">7 日活跃</p>
-                <p class="mt-2 text-2xl font-semibold text-gray-900">{{ $stats['recent'] }}</p>
-            </div>
-        </div>
+        </section>
 
         <form action="{{ route('admin.users.index') }}" method="GET" class="mt-6 grid gap-4 rounded-lg border border-gray-200 bg-gray-50 p-5 lg:grid-cols-[minmax(0,2fr)_180px_auto]">
             <input
@@ -50,6 +121,40 @@
                 <a href="{{ route('admin.users.index') }}" class="btn-secondary">重置</a>
             </div>
         </form>
+
+        <form
+            id="bulk-delete-form"
+            action="{{ route('admin.users.bulk-destroy') }}"
+            method="POST"
+            class="mt-4 flex flex-col gap-3 rounded-2xl border border-red-100 bg-red-50/80 p-4 lg:flex-row lg:items-center lg:justify-between"
+            onsubmit="return confirm('确认批量删除当前选中的普通用户吗？这些用户的文章、评论、会话和密码重置记录都会一并清理。');"
+        >
+            @csrf
+            @method('DELETE')
+            <input type="hidden" name="q" value="{{ $filters['q'] }}">
+            <input type="hidden" name="role_filter" value="{{ $filters['role'] }}">
+
+            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-700">
+                <label class="inline-flex items-center gap-3 font-medium text-gray-800">
+                    <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900" data-bulk-select-all>
+                    <span>全选当前页可删用户</span>
+                </label>
+                <span class="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-600 shadow-sm">
+                    已选 <span class="mx-1 font-semibold text-gray-900" data-bulk-selected-count>0</span> 人
+                </span>
+                <button type="button" class="text-sm font-medium text-gray-500 transition hover:text-gray-800" data-bulk-clear-selection>
+                    清空选择
+                </button>
+            </div>
+
+            <button
+                type="submit"
+                class="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-200 disabled:text-red-50"
+                data-bulk-delete-submit
+            >
+                批量删除
+            </button>
+        </form>
     </section>
 
     <section class="mt-6 space-y-3">
@@ -62,27 +167,41 @@
                 $formPhone = $isEditingRow ? old('phone', $managedUser->phone) : $managedUser->phone;
                 $formAvatarUrl = $isEditingRow ? old('avatar_url', $managedUser->avatar_url) : $managedUser->avatar_url;
                 $formBio = $isEditingRow ? old('bio', $managedUser->bio) : $managedUser->bio;
+                $updateFormId = 'user-update-'.$managedUser->id;
+                $deleteFormId = 'user-delete-'.$managedUser->id;
+                $panelId = 'user-panel-'.$managedUser->id;
+                $canDelete = ! $managedUser->isAdmin();
             @endphp
-            <section class="article-card">
-                <form action="{{ route('admin.users.update', $managedUser) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" name="editing_user_id" value="{{ $managedUser->id }}">
-                    <input type="hidden" name="q" value="{{ $filters['q'] }}">
-                    <input type="hidden" name="role_filter" value="{{ $filters['role'] }}">
 
-                    @if($isEditingRow && $errors->any())
-                        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                            当前用户保存失败，请检查输入后重试。
+            <section class="article-card user-management-card" data-user-card data-user-id="{{ $managedUser->id }}" data-initial-expanded="{{ $isEditingRow ? 'true' : 'false' }}">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="flex min-w-0 flex-1 items-start gap-3">
+                        <div class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-sm">
+                            @if($canDelete)
+                                <input
+                                    type="checkbox"
+                                    name="selected_user_ids[]"
+                                    value="{{ $managedUser->id }}"
+                                    form="bulk-delete-form"
+                                    class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                                    data-bulk-select-item
+                                    aria-label="选择用户：{{ $managedUser->name }}"
+                                >
+                            @else
+                                <span class="text-xs font-semibold text-gray-400">Admin</span>
+                            @endif
                         </div>
-                    @endif
 
-                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
-                        <div class="flex min-w-0 items-center gap-3">
-                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
-                                {{ mb_substr($managedUser->name, 0, 1) }}
+                        <div class="flex min-w-0 flex-1 items-start gap-3">
+                            <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+                                @if($managedUser->avatar_url)
+                                    <img src="{{ $managedUser->avatar_url }}" alt="{{ $managedUser->name }} 的头像" class="h-full w-full object-cover">
+                                @else
+                                    {{ mb_substr($managedUser->name, 0, 1) }}
+                                @endif
                             </div>
-                            <div class="min-w-0">
+
+                            <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <h3 class="truncate text-base font-semibold text-gray-900">{{ $managedUser->name }}</h3>
                                     <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
@@ -95,6 +214,7 @@
                                         <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">当前登录</span>
                                     @endif
                                 </div>
+
                                 <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
                                     <span>{{ $managedUser->email ?: '未填写邮箱' }}</span>
                                     <span>{{ $managedUser->phone ?: '未填写手机号' }}</span>
@@ -102,96 +222,143 @@
                                     <span>评论 {{ $managedUser->comments_count }}</span>
                                     <span>最近活跃 {{ optional($managedUser->last_seen_at)->format('Y-m-d H:i') ?? '暂无记录' }}</span>
                                 </div>
+
+                                <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                                    <span>邮箱{{ $managedUser->email_verified_at ? '已验证' : '未验证' }}</span>
+                                    <span>手机{{ $managedUser->phone_verified_at ? '已验证' : '未验证' }}</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex flex-wrap items-center justify-end gap-2 text-xs text-gray-400">
-                            <span>邮箱{{ $managedUser->email_verified_at ? '已验证' : '未验证' }}</span>
-                            <span>手机{{ $managedUser->phone_verified_at ? '已验证' : '未验证' }}</span>
-                        </div>
                     </div>
 
-                    <div class="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_160px_minmax(0,1.25fr)_180px]">
-                        <input
-                            type="text"
-                            name="name"
-                            value="{{ $formName }}"
-                            class="input-field h-10"
-                            placeholder="昵称"
-                            aria-label="昵称"
-                            required
-                        >
-                        <select name="role" class="input-field h-10" aria-label="角色">
-                            <option value="{{ \App\Models\User::ROLE_ADMIN }}" @selected($formRole === \App\Models\User::ROLE_ADMIN)>管理员</option>
-                            <option value="{{ \App\Models\User::ROLE_MEMBER }}" @selected($formRole === \App\Models\User::ROLE_MEMBER)>成员</option>
-                        </select>
-                        <input
-                            type="email"
-                            name="email"
-                            value="{{ $formEmail }}"
-                            class="input-field h-10"
-                            placeholder="邮箱"
-                            aria-label="邮箱"
-                        >
-                        <input
-                            type="text"
-                            name="phone"
-                            value="{{ $formPhone }}"
-                            class="input-field h-10"
-                            placeholder="手机号"
-                            aria-label="手机号"
-                        >
-                    </div>
-                    <div class="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1.4fr)_auto]">
-                        <input
-                            type="url"
-                            name="avatar_url"
-                            value="{{ $formAvatarUrl }}"
-                            class="input-field h-10"
-                            placeholder="头像链接"
-                            aria-label="头像链接"
-                        >
-                        <input
-                            type="text"
-                            name="bio"
-                            value="{{ $formBio }}"
-                            class="input-field h-10"
-                            placeholder="简介 / 职责"
-                            aria-label="简介"
-                        >
-                        <div class="flex items-center justify-end gap-2">
-                            <x-icon-button
-                                icon="save"
-                                label="保存用户"
-                                title="保存用户"
-                                :aria-label="'保存用户：'.$managedUser->name"
-                                variant="primary"
-                                type="submit"
-                            />
-                        </div>
-                    </div>
-                </form>
+                    <div class="icon-action-group shrink-0">
+                        <x-icon-button
+                            :form="$updateFormId"
+                            icon="save"
+                            label="保存用户"
+                            title="保存用户"
+                            :aria-label="'保存用户：'.$managedUser->name"
+                            variant="primary"
+                            type="submit"
+                        />
 
-                @unless($managedUser->isAdmin())
+                        <button
+                            type="submit"
+                            class="icon-action icon-action-danger"
+                            title="{{ $canDelete ? '删除用户' : '管理员不可删除' }}"
+                            aria-label="{{ $canDelete ? '删除用户：'.$managedUser->name : '管理员不可删除：'.$managedUser->name }}"
+                            @if($canDelete)
+                                form="{{ $deleteFormId }}"
+                            @endif
+                            @disabled(! $canDelete)
+                        >
+                            <x-icon name="trash" class="h-5 w-5" />
+                            <span class="sr-only">删除用户</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="icon-action"
+                            title="{{ $isEditingRow ? '收起用户' : '展开用户' }}"
+                            aria-label="{{ $isEditingRow ? '收起用户：'.$managedUser->name : '展开用户：'.$managedUser->name }}"
+                            aria-controls="{{ $panelId }}"
+                            aria-expanded="{{ $isEditingRow ? 'true' : 'false' }}"
+                            data-user-card-toggle
+                            data-label-expand="展开用户：{{ $managedUser->name }}"
+                            data-label-collapse="收起用户：{{ $managedUser->name }}"
+                        >
+                            <span @class(['hidden' => $isEditingRow]) data-toggle-icon-expand>
+                                <x-icon name="chevron-down" class="h-5 w-5" />
+                            </span>
+                            <span @class(['hidden' => ! $isEditingRow]) data-toggle-icon-collapse>
+                                <x-icon name="chevron-up" class="h-5 w-5" />
+                            </span>
+                            <span class="sr-only" data-toggle-text>{{ $isEditingRow ? '收起用户' : '展开用户' }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="{{ $panelId }}" class="user-management-card-panel mt-4" data-user-card-panel>
+                    <form id="{{ $updateFormId }}" action="{{ route('admin.users.update', $managedUser) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="editing_user_id" value="{{ $managedUser->id }}">
+                        <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                        <input type="hidden" name="role_filter" value="{{ $filters['role'] }}">
+
+                        @if($isEditingRow && $errors->any())
+                            <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                当前用户保存失败，请检查输入后重试。
+                            </div>
+                        @endif
+
+                        <div class="grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_160px_minmax(0,1.25fr)_180px]">
+                            <input
+                                type="text"
+                                name="name"
+                                value="{{ $formName }}"
+                                class="input-field h-10"
+                                placeholder="昵称"
+                                aria-label="昵称"
+                                required
+                            >
+                            <select name="role" class="input-field h-10" aria-label="角色">
+                                <option value="{{ \App\Models\User::ROLE_ADMIN }}" @selected($formRole === \App\Models\User::ROLE_ADMIN)>管理员</option>
+                                <option value="{{ \App\Models\User::ROLE_MEMBER }}" @selected($formRole === \App\Models\User::ROLE_MEMBER)>成员</option>
+                            </select>
+                            <input
+                                type="email"
+                                name="email"
+                                value="{{ $formEmail }}"
+                                class="input-field h-10"
+                                placeholder="邮箱"
+                                aria-label="邮箱"
+                            >
+                            <input
+                                type="text"
+                                name="phone"
+                                value="{{ $formPhone }}"
+                                class="input-field h-10"
+                                placeholder="手机号"
+                                aria-label="手机号"
+                            >
+                        </div>
+
+                        <div class="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1.4fr)]">
+                            <input
+                                type="url"
+                                name="avatar_url"
+                                value="{{ $formAvatarUrl }}"
+                                class="input-field h-10"
+                                placeholder="头像链接"
+                                aria-label="头像链接"
+                            >
+                            <input
+                                type="text"
+                                name="bio"
+                                value="{{ $formBio }}"
+                                class="input-field h-10"
+                                placeholder="简介 / 职责"
+                                aria-label="简介"
+                            >
+                        </div>
+                    </form>
+                </div>
+
+                @if($canDelete)
                     <form
+                        id="{{ $deleteFormId }}"
                         action="{{ route('admin.users.destroy', $managedUser) }}"
                         method="POST"
-                        class="mt-3 flex justify-end"
+                        class="hidden"
                         onsubmit="return confirm('确认删除普通用户“{{ $managedUser->name }}”吗？该用户的文章、评论和登录状态都会一并清理。');"
                     >
                         @csrf
                         @method('DELETE')
                         <input type="hidden" name="q" value="{{ $filters['q'] }}">
                         <input type="hidden" name="role_filter" value="{{ $filters['role'] }}">
-                        <x-icon-button
-                            icon="trash"
-                            label="删除用户"
-                            title="删除用户"
-                            :aria-label="'删除用户：'.$managedUser->name"
-                            variant="danger"
-                            type="submit"
-                        />
                     </form>
-                @endunless
+                @endif
             </section>
         @empty
             <section class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center text-sm text-gray-500">
@@ -205,4 +372,5 @@
             </div>
         @endif
     </section>
+    </div>
 @endsection

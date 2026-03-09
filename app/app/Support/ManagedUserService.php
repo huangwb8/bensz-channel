@@ -13,17 +13,40 @@ class ManagedUserService
 {
     public function delete(User $user): void
     {
-        $this->guardDeletable($user);
+        $this->deleteMany(collect([$user]));
+    }
 
-        $affectedArticleIds = $this->affectedArticleIdsForCommentRecount($user);
+    /**
+     * @param  Collection<int, User>  $users
+     */
+    public function deleteMany(Collection $users): int
+    {
+        $managedUsers = $users
+            ->filter(fn ($user): bool => $user instanceof User)
+            ->unique('id')
+            ->values();
 
-        DB::transaction(function () use ($user, $affectedArticleIds): void {
-            $this->deleteRuntimeArtifacts($user);
+        if ($managedUsers->isEmpty()) {
+            return 0;
+        }
 
-            $user->delete();
+        $this->guardDeletableUsers($managedUsers);
+
+        $userIds = $managedUsers->pluck('id')->values();
+        $userEmails = $managedUsers->pluck('email')->filter()->values();
+        $affectedArticleIds = $this->affectedArticleIdsForCommentRecount($userIds);
+
+        DB::transaction(function () use ($userIds, $userEmails, $affectedArticleIds): void {
+            $this->deleteRuntimeArtifacts($userIds, $userEmails);
+
+            User::query()
+                ->whereIn('id', $userIds->all())
+                ->delete();
 
             $this->refreshCommentCounts($affectedArticleIds);
         });
+
+        return $userIds->count();
     }
 
     public function guardDeletable(User $user): void
@@ -38,31 +61,44 @@ class ManagedUserService
     }
 
     /**
+     * @param  Collection<int, User>  $users
+     */
+    private function guardDeletableUsers(Collection $users): void
+    {
+        $users->each(fn (User $user) => $this->guardDeletable($user));
+    }
+
+    /**
+     * @param  Collection<int, int>  $userIds
      * @return Collection<int, int>
      */
-    private function affectedArticleIdsForCommentRecount(User $user): Collection
+    private function affectedArticleIdsForCommentRecount(Collection $userIds): Collection
     {
         return Comment::query()
-            ->where('user_id', $user->id)
-            ->whereHas('article', function ($query) use ($user): void {
-                $query->where('author_id', '!=', $user->id);
+            ->whereIn('user_id', $userIds->all())
+            ->whereHas('article', function ($query) use ($userIds): void {
+                $query->whereNotIn('author_id', $userIds->all());
             })
             ->distinct()
             ->pluck('article_id');
     }
 
-    private function deleteRuntimeArtifacts(User $user): void
+    /**
+     * @param  Collection<int, int>  $userIds
+     * @param  Collection<int, string>  $userEmails
+     */
+    private function deleteRuntimeArtifacts(Collection $userIds, Collection $userEmails): void
     {
         DB::table('sessions')
-            ->where('user_id', $user->id)
+            ->whereIn('user_id', $userIds->all())
             ->delete();
 
-        if (blank($user->email)) {
+        if ($userEmails->isEmpty()) {
             return;
         }
 
         DB::table('password_reset_tokens')
-            ->where('email', $user->email)
+            ->whereIn('email', $userEmails->all())
             ->delete();
     }
 
