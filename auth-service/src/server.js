@@ -3,8 +3,9 @@ import crypto from 'node:crypto';
 import express from 'express';
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
 
-import { auth, pool } from './auth.js';
+import { auth, pool, sendLoginEmail } from './auth.js';
 import { config, isPreviewEnabled, normalizeEmail, normalizePhone, previewKey } from './config.js';
+import { issueEmailOtp } from './email-otp.js';
 import { logger } from './logger.js';
 import { takePreviewCode } from './preview-store.js';
 
@@ -99,12 +100,11 @@ app.post('/internal/otp/send', requireInternalSecret, async (req, res) => {
 
     try {
         if (channel === 'email') {
-            await auth.api.sendVerificationOTP({
-                body: {
-                    email: normalizedTarget,
-                    type: 'sign-in',
-                },
+            await issueEmailOtp({
+                authApi: auth.api,
+                email: normalizedTarget,
                 headers: getHeaders(req),
+                sendEmail: ({ email, otp, type }) => sendLoginEmail({ email, otp, type }),
             });
         } else {
             await auth.api.sendPhoneNumberOTP({

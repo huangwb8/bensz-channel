@@ -1,4 +1,5 @@
 import { loadRootConfig } from './load-root-config.js';
+import { buildBaseMailConfig } from './mail-config.js';
 
 loadRootConfig();
 
@@ -42,15 +43,7 @@ export const config = {
         .split(',')
         .map((origin) => origin.trim())
         .filter(Boolean),
-    mail: {
-        host: process.env.SMTP_HOST ?? process.env.MAIL_HOST ?? 'mailpit',
-        port: parseNumber(process.env.SMTP_PORT ?? process.env.MAIL_PORT, 1025),
-        secure: parseBoolean(process.env.SMTP_SECURE, false),
-        user: process.env.SMTP_USER ?? process.env.MAIL_USERNAME ?? undefined,
-        pass: process.env.SMTP_PASS ?? process.env.MAIL_PASSWORD ?? undefined,
-        fromAddress: process.env.MAIL_FROM_ADDRESS ?? 'noreply@bensz-channel.local',
-        fromName: process.env.MAIL_FROM_NAME ?? 'Bensz Channel',
-    },
+    mail: buildBaseMailConfig(process.env),
 };
 
 export const isPreviewEnabled = () => config.previewCodes && config.nodeEnv !== 'production';
