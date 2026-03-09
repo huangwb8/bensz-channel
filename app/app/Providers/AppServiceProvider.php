@@ -6,6 +6,7 @@ use App\Contracts\Auth\OtpAuthGateway;
 use App\Models\User;
 use App\Services\Auth\BetterAuthGateway;
 use App\Services\Auth\LegacyOtpGateway;
+use App\Support\CanonicalUrlManager;
 use App\Support\CommunityViewData;
 use App\Support\MailSettingsManager;
 use App\Support\SiteSettingsManager;
@@ -34,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
     {
         app(SiteSettingsManager::class)->applyConfiguredSettings();
         app(MailSettingsManager::class)->applyConfiguredSettings();
+        app(CanonicalUrlManager::class)->apply();
 
         User::created(function (User $user): void {
             $user->notificationPreference()->firstOrCreate();
