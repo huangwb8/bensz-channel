@@ -1,4 +1,5 @@
 [env]
+# 服务器配置
 WEB_HOST = "localhost"
 WEB_PORT = 6542
 MAILPIT_PORT = 8025
@@ -6,6 +7,7 @@ AUTH_HOST = "auth"
 AUTH_PORT = 3001
 AUTH_DB_SCHEMA = "auth"
 
+# 应用基础配置
 APP_NAME = "Bensz Channel"
 APP_ENV = "production"
 APP_DEBUG = false
@@ -13,20 +15,27 @@ APP_LOCALE = "zh_CN"
 APP_FALLBACK_LOCALE = "zh_CN"
 APP_FAKER_LOCALE = "zh_CN"
 APP_MAINTENANCE_DRIVER = "file"
+APP_URL = "http://localhost:6542"
 
+# 站点信息
 SITE_NAME = "Bensz Channel"
 SITE_TAGLINE = "类 QQ 频道的 Web 社区原型，支持静态游客访问与成员互动"
 
+# 日志配置
 LOG_CHANNEL = "stack"
 LOG_STACK = "stderr"
 LOG_LEVEL = "info"
 
+# 数据库配置
 DB_CONNECTION = "pgsql"
 DB_HOST = "postgres"
 DB_PORT = 5432
 DB_DATABASE = "bensz_channel"
 DB_USERNAME = "bensz"
+POSTGRES_DB = "bensz_channel"
+POSTGRES_USER = "bensz"
 
+# 会话配置
 SESSION_DRIVER = "database"
 SESSION_COOKIE = "bensz_channel_session"
 SESSION_LIFETIME = 120
@@ -34,36 +43,47 @@ SESSION_ENCRYPT = false
 SESSION_PATH = "/"
 SESSION_DOMAIN = "null"
 
+# 队列配置
 QUEUE_CONNECTION = "database"
 
+# 缓存配置
 CACHE_STORE = "redis"
 REDIS_CLIENT = "phpredis"
 REDIS_HOST = "redis"
 REDIS_PORT = 6379
 
+# 邮件配置
 MAIL_MAILER = "smtp"
 MAIL_HOST = "mailpit"
 MAIL_PORT = 1025
 MAIL_SCHEME = "null"
 MAIL_FROM_ADDRESS = "noreply@bensz-channel.local"
+MAIL_FROM_NAME = "Bensz Channel"
 
+# 认证配置
 AUTH_DRIVER = "better_auth"
 AUTH_OTP_TTL = 10
 AUTH_OTP_LENGTH = 6
 AUTH_QR_TTL = 10
 AUTH_PREVIEW_CODES = false
 BETTER_AUTH_TIMEOUT = 5
+BETTER_AUTH_URL = "http://auth:3001"
+BETTER_AUTH_BASE_URL = "http://auth:3001"
+BETTER_AUTH_TRUSTED_ORIGINS = "http://localhost:6542"
+PORT = 3001
 
+# 微信登录配置
 WECHAT_QR_MODE = "demo"
-WECHAT_CLIENT_ID = ""
 WECHAT_TIMEOUT = 8
 
+# QQ 登录配置
 QQ_QR_MODE = "demo"
-QQ_CLIENT_ID = ""
 QQ_TIMEOUT = 8
 
+# 静态站点配置
 STATIC_SITE_ENABLED = true
 STATIC_SITE_OUTPUT_DIR = "static"
 
+# 管理员配置
 ADMIN_NAME = "频道管理员"
 ADMIN_EMAIL = "admin@example.com"

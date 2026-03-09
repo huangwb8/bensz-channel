@@ -9,7 +9,7 @@ services:
     ports:
       - "${WEB_PORT:-6542}:80"
     env_file:
-      - config/.compose.env
+      - config/.env
     depends_on:
       auth:
         condition: service_healthy
@@ -37,7 +37,7 @@ services:
       context: .
       dockerfile: auth-service/Dockerfile
     env_file:
-      - config/.compose.env
+      - config/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,7 +52,7 @@ services:
   postgres:
     image: postgres:17-alpine
     env_file:
-      - config/.compose.env
+      - config/.env
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
