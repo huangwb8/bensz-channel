@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\ManagedUserService;
 use App\Support\StaticPageBuilder;
 use App\Support\UserAccountManager;
 use Illuminate\Contracts\View\View;
@@ -90,6 +91,19 @@ class UserController extends Controller
         }
 
         return to_route('admin.users.index', $request->only(['q', 'role_filter']))->with('status', '用户信息已更新。');
+    }
+
+    public function destroy(
+        Request $request,
+        User $user,
+        ManagedUserService $managedUserService,
+        StaticPageBuilder $staticPageBuilder,
+    ): RedirectResponse {
+        $managedUserService->delete($user);
+
+        $staticPageBuilder->buildAll();
+
+        return to_route('admin.users.index', $request->only(['q', 'role_filter']))->with('status', '普通用户已删除。');
     }
 
     private function guardAdminInvariant(User $user, string $nextRole): void

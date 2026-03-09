@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Api\Vibe;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\ManagedUserService;
+use App\Support\UserAccountManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -36,14 +39,19 @@ class UserController extends Controller
         return response()->json($users);
     }
 
-    public function update(Request $request, User $user): JsonResponse
+    public function update(Request $request, User $user, UserAccountManager $userAccountManager): JsonResponse
     {
+        $request->merge($userAccountManager->normalizePartialProfileInput($request->only([
+            'name',
+            'email',
+            'phone',
+            'avatar_url',
+            'bio',
+        ])));
+
         $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:40'],
-            'email' => ['sometimes', 'nullable', 'email', 'max:120', Rule::unique('users', 'email')->ignore($user->id)],
-            'phone' => ['sometimes', 'nullable', 'string', 'max:32', Rule::unique('users', 'phone')->ignore($user->id)],
+            ...$userAccountManager->partialProfileValidationRules($user),
             'role' => ['sometimes', Rule::in([User::ROLE_ADMIN, User::ROLE_MEMBER])],
-            'bio' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
         $nextEmail = array_key_exists('email', $validated) ? $validated['email'] : $user->email;
@@ -73,6 +81,20 @@ class UserController extends Controller
 
         $user->refresh();
 
-        return response()->json(['user' => $user->only(['id', 'user_id', 'name', 'email', 'phone', 'role', 'bio'])]);
+        return response()->json(['user' => $user->only(['id', 'user_id', 'name', 'email', 'phone', 'role', 'bio', 'avatar_url'])]);
+    }
+
+    public function destroy(User $user, ManagedUserService $managedUserService): JsonResponse
+    {
+        try {
+            $managedUserService->delete($user);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'error' => 'protected_user',
+                'message' => $exception->validator->errors()->first('user') ?: '该用户当前不可删除。',
+            ], 422);
+        }
+
+        return response()->json(['ok' => true]);
     }
 }

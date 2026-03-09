@@ -38,4 +38,5 @@ Route::prefix('vibe')->middleware('vibe-api')->name('vibe.')->group(function ():
     // Users
     Route::get('/users', [VibeUserController::class, 'index'])->name('users.index');
     Route::put('/users/{user}', [VibeUserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [VibeUserController::class, 'destroy'])->name('users.destroy');
 });

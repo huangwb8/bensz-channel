@@ -8,6 +8,9 @@
 
 ### Added（新增）
 
+- 新增了管理员删除普通用户的实现计划 `docs/plans/2026-03-09-admin-user-governance.md`：用于沉淀后台用户删除、会话清理、评论计数回补与 Docker 验收步骤
+- 新增了管理员删除普通用户与 DevTools 用户删除回归测试：用于锁定普通用户资料托管、删除链路、权限边界与关联数据清理行为
+
 - 新增了 `app/tests/Feature/Api/Vibe/DevtoolsApiTest.php` 与 `app/tests/Feature/Admin/AdminArticleManagementTest.php` 的精华主频道约束回归用例：用于锁定“精华”只能作为聚合频道、不能被当作文章主频道的行为
 
 - 新增了 `app/tests/Feature/Channels/TopNavChannelVisibilityTest.php` 的移动端频道切换回归断言：用于锁定左上角频道按钮、移动端抽屉入口与当前频道高亮状态
@@ -39,6 +42,9 @@
 - 新增了 `app/tests/Feature/Channels/TopNavChannelVisibilityTest.php`：用于锁定“仅显示被允许出现在顶栏的频道”以及“隐藏频道仍可直达访问”的回归行为
 
 ### Changed（变更）
+
+- 更新了后台用户管理与 DevTools 用户接口：管理员现在可维护普通用户头像资料并删除普通用户，删除时会同步清理会话、密码重置令牌并回补受影响文章的评论计数
+- 更新了 `config.yaml` 与 `README.md`：将项目版本推进到 `1.23.0`，并补充管理员可删除普通用户、托管头像资料与清理运行时凭据的说明
 
 - 更新了 `config.yaml` 与 `README.md`：将项目版本推进到 `1.22.0`，并明确“精华”是跨频道聚合入口，文章实际归属仍由普通频道承载
 - 更新了后台文章表单与 DevTools 文章接口：现在会统一拒绝把 `featured` 作为文章主频道，同时继续允许文章通过 `is_featured` 同时出现在“精华”与原始频道中

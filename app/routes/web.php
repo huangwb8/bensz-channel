@@ -62,6 +62,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
     Route::get('/articles', [AdminArticleController::class, 'index'])->name('articles.index');
     Route::get('/articles/create', [AdminArticleController::class, 'create'])->name('articles.create');

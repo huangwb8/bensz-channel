@@ -60,104 +60,139 @@
                 $formRole = $isEditingRow ? old('role', $managedUser->role) : $managedUser->role;
                 $formEmail = $isEditingRow ? old('email', $managedUser->email) : $managedUser->email;
                 $formPhone = $isEditingRow ? old('phone', $managedUser->phone) : $managedUser->phone;
+                $formAvatarUrl = $isEditingRow ? old('avatar_url', $managedUser->avatar_url) : $managedUser->avatar_url;
                 $formBio = $isEditingRow ? old('bio', $managedUser->bio) : $managedUser->bio;
             @endphp
-            <form action="{{ route('admin.users.update', $managedUser) }}" method="POST" class="article-card">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="editing_user_id" value="{{ $managedUser->id }}">
-                <input type="hidden" name="q" value="{{ $filters['q'] }}">
-                <input type="hidden" name="role_filter" value="{{ $filters['role'] }}">
+            <section class="article-card">
+                <form action="{{ route('admin.users.update', $managedUser) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="editing_user_id" value="{{ $managedUser->id }}">
+                    <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                    <input type="hidden" name="role_filter" value="{{ $filters['role'] }}">
 
-                @if($isEditingRow && $errors->any())
-                    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        当前用户保存失败，请检查输入后重试。
-                    </div>
-                @endif
-
-                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
-                    <div class="flex min-w-0 items-center gap-3">
-                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
-                            {{ mb_substr($managedUser->name, 0, 1) }}
+                    @if($isEditingRow && $errors->any())
+                        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            当前用户保存失败，请检查输入后重试。
                         </div>
-                        <div class="min-w-0">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <h3 class="truncate text-base font-semibold text-gray-900">{{ $managedUser->name }}</h3>
-                                <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                                    ID {{ $managedUser->user_id }}
-                                </span>
-                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs {{ $managedUser->isAdmin() ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-600' }}">
-                                    {{ $managedUser->isAdmin() ? '管理员' : '成员' }}
-                                </span>
-                                @if(auth()->id() === $managedUser->id)
-                                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">当前登录</span>
-                                @endif
+                    @endif
+
+                    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+                                {{ mb_substr($managedUser->name, 0, 1) }}
                             </div>
-                            <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                                <span>{{ $managedUser->email ?: '未填写邮箱' }}</span>
-                                <span>{{ $managedUser->phone ?: '未填写手机号' }}</span>
-                                <span>发文 {{ $managedUser->articles_count }}</span>
-                                <span>评论 {{ $managedUser->comments_count }}</span>
-                                <span>最近活跃 {{ optional($managedUser->last_seen_at)->format('Y-m-d H:i') ?? '暂无记录' }}</span>
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="truncate text-base font-semibold text-gray-900">{{ $managedUser->name }}</h3>
+                                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                                        ID {{ $managedUser->user_id }}
+                                    </span>
+                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs {{ $managedUser->isAdmin() ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-600' }}">
+                                        {{ $managedUser->isAdmin() ? '管理员' : '成员' }}
+                                    </span>
+                                    @if(auth()->id() === $managedUser->id)
+                                        <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">当前登录</span>
+                                    @endif
+                                </div>
+                                <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                                    <span>{{ $managedUser->email ?: '未填写邮箱' }}</span>
+                                    <span>{{ $managedUser->phone ?: '未填写手机号' }}</span>
+                                    <span>发文 {{ $managedUser->articles_count }}</span>
+                                    <span>评论 {{ $managedUser->comments_count }}</span>
+                                    <span>最近活跃 {{ optional($managedUser->last_seen_at)->format('Y-m-d H:i') ?? '暂无记录' }}</span>
+                                </div>
                             </div>
                         </div>
+                        <div class="flex flex-wrap items-center justify-end gap-2 text-xs text-gray-400">
+                            <span>邮箱{{ $managedUser->email_verified_at ? '已验证' : '未验证' }}</span>
+                            <span>手机{{ $managedUser->phone_verified_at ? '已验证' : '未验证' }}</span>
+                        </div>
                     </div>
-                    <div class="flex flex-wrap items-center justify-end gap-2 text-xs text-gray-400">
-                        <span>邮箱{{ $managedUser->email_verified_at ? '已验证' : '未验证' }}</span>
-                        <span>手机{{ $managedUser->phone_verified_at ? '已验证' : '未验证' }}</span>
-                    </div>
-                </div>
 
-                <div class="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_160px_minmax(0,1.25fr)_180px_minmax(0,1.4fr)_auto]">
-                    <input
-                        type="text"
-                        name="name"
-                        value="{{ $formName }}"
-                        class="input-field h-10"
-                        placeholder="昵称"
-                        aria-label="昵称"
-                        required
+                    <div class="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_160px_minmax(0,1.25fr)_180px]">
+                        <input
+                            type="text"
+                            name="name"
+                            value="{{ $formName }}"
+                            class="input-field h-10"
+                            placeholder="昵称"
+                            aria-label="昵称"
+                            required
+                        >
+                        <select name="role" class="input-field h-10" aria-label="角色">
+                            <option value="{{ \App\Models\User::ROLE_ADMIN }}" @selected($formRole === \App\Models\User::ROLE_ADMIN)>管理员</option>
+                            <option value="{{ \App\Models\User::ROLE_MEMBER }}" @selected($formRole === \App\Models\User::ROLE_MEMBER)>成员</option>
+                        </select>
+                        <input
+                            type="email"
+                            name="email"
+                            value="{{ $formEmail }}"
+                            class="input-field h-10"
+                            placeholder="邮箱"
+                            aria-label="邮箱"
+                        >
+                        <input
+                            type="text"
+                            name="phone"
+                            value="{{ $formPhone }}"
+                            class="input-field h-10"
+                            placeholder="手机号"
+                            aria-label="手机号"
+                        >
+                    </div>
+                    <div class="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1.4fr)_auto]">
+                        <input
+                            type="url"
+                            name="avatar_url"
+                            value="{{ $formAvatarUrl }}"
+                            class="input-field h-10"
+                            placeholder="头像链接"
+                            aria-label="头像链接"
+                        >
+                        <input
+                            type="text"
+                            name="bio"
+                            value="{{ $formBio }}"
+                            class="input-field h-10"
+                            placeholder="简介 / 职责"
+                            aria-label="简介"
+                        >
+                        <div class="flex items-center justify-end gap-2">
+                            <x-icon-button
+                                icon="save"
+                                label="保存用户"
+                                title="保存用户"
+                                :aria-label="'保存用户：'.$managedUser->name"
+                                variant="primary"
+                                type="submit"
+                            />
+                        </div>
+                    </div>
+                </form>
+
+                @unless($managedUser->isAdmin())
+                    <form
+                        action="{{ route('admin.users.destroy', $managedUser) }}"
+                        method="POST"
+                        class="mt-3 flex justify-end"
+                        onsubmit="return confirm('确认删除普通用户“{{ $managedUser->name }}”吗？该用户的文章、评论和登录状态都会一并清理。');"
                     >
-                    <select name="role" class="input-field h-10" aria-label="角色">
-                        <option value="{{ \App\Models\User::ROLE_ADMIN }}" @selected($formRole === \App\Models\User::ROLE_ADMIN)>管理员</option>
-                        <option value="{{ \App\Models\User::ROLE_MEMBER }}" @selected($formRole === \App\Models\User::ROLE_MEMBER)>成员</option>
-                    </select>
-                    <input
-                        type="email"
-                        name="email"
-                        value="{{ $formEmail }}"
-                        class="input-field h-10"
-                        placeholder="邮箱"
-                        aria-label="邮箱"
-                    >
-                    <input
-                        type="text"
-                        name="phone"
-                        value="{{ $formPhone }}"
-                        class="input-field h-10"
-                        placeholder="手机号"
-                        aria-label="手机号"
-                    >
-                    <input
-                        type="text"
-                        name="bio"
-                        value="{{ $formBio }}"
-                        class="input-field h-10"
-                        placeholder="简介 / 职责"
-                        aria-label="简介"
-                    >
-                    <div class="flex items-center justify-end gap-2">
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                        <input type="hidden" name="role_filter" value="{{ $filters['role'] }}">
                         <x-icon-button
-                            icon="save"
-                            label="保存用户"
-                            title="保存用户"
-                            :aria-label="'保存用户：'.$managedUser->name"
-                            variant="primary"
+                            icon="trash"
+                            label="删除用户"
+                            title="删除用户"
+                            :aria-label="'删除用户：'.$managedUser->name"
+                            variant="danger"
                             type="submit"
                         />
-                    </div>
-                </div>
-            </form>
+                    </form>
+                @endunless
+            </section>
         @empty
             <section class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center text-sm text-gray-500">
                 当前筛选条件下没有用户。

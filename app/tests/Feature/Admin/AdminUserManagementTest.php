@@ -2,8 +2,12 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\Article;
+use App\Models\Channel;
+use App\Models\Comment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class AdminUserManagementTest extends TestCase
@@ -27,6 +31,7 @@ class AdminUserManagementTest extends TestCase
             'email' => 'member@example.com',
             'phone' => '13800000000',
             'role' => User::ROLE_MEMBER,
+            'avatar_url' => 'https://cdn.example.com/old.png',
             'bio' => 'old bio',
         ]);
 
@@ -36,6 +41,7 @@ class AdminUserManagementTest extends TestCase
                 'email' => 'ops@example.com',
                 'phone' => '13900000000',
                 'role' => User::ROLE_ADMIN,
+                'avatar_url' => 'https://cdn.example.com/avatar.png',
                 'bio' => '负责社区运营与用户支持',
             ])
             ->assertRedirect(route('admin.users.index'));
@@ -47,7 +53,119 @@ class AdminUserManagementTest extends TestCase
             'email' => 'ops@example.com',
             'phone' => '13900000000',
             'role' => User::ROLE_ADMIN,
+            'avatar_url' => 'https://cdn.example.com/avatar.png',
             'bio' => '负责社区运营与用户支持',
+        ]);
+    }
+
+    public function test_admin_can_delete_member_and_cleanup_related_runtime_data(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $member = User::factory()->create([
+            'name' => '待删除成员',
+            'email' => 'member-delete@example.com',
+            'phone' => '13800138008',
+            'role' => User::ROLE_MEMBER,
+        ]);
+        $otherMember = User::factory()->create(['role' => User::ROLE_MEMBER]);
+        $channel = Channel::query()->create([
+            'name' => '测试频道',
+            'slug' => 'user-delete-channel',
+            'description' => '用于用户删除测试。',
+            'accent_color' => '#8b5cf6',
+            'icon' => '🧪',
+            'sort_order' => 1,
+            'is_public' => true,
+            'show_in_top_nav' => true,
+        ]);
+
+        $memberArticle = Article::query()->create([
+            'channel_id' => $channel->id,
+            'author_id' => $member->id,
+            'title' => '成员文章',
+            'slug' => 'member-owned-article',
+            'excerpt' => '成员文章摘要',
+            'markdown_body' => '成员文章正文',
+            'html_body' => '<p>成员文章正文</p>',
+            'is_published' => true,
+            'is_pinned' => false,
+            'is_featured' => false,
+            'published_at' => now(),
+            'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
+            'comment_count' => 0,
+        ]);
+
+        $sharedArticle = Article::query()->create([
+            'channel_id' => $channel->id,
+            'author_id' => $admin->id,
+            'title' => '公共文章',
+            'slug' => 'shared-article',
+            'excerpt' => '公共文章摘要',
+            'markdown_body' => '公共文章正文',
+            'html_body' => '<p>公共文章正文</p>',
+            'is_published' => true,
+            'is_pinned' => false,
+            'is_featured' => false,
+            'published_at' => now(),
+            'cover_gradient' => 'from-sky-500 via-cyan-500 to-emerald-500',
+            'comment_count' => 2,
+        ]);
+
+        Comment::query()->create([
+            'article_id' => $sharedArticle->id,
+            'user_id' => $member->id,
+            'markdown_body' => '待删除成员评论',
+            'html_body' => '<p>待删除成员评论</p>',
+            'is_visible' => true,
+        ]);
+
+        Comment::query()->create([
+            'article_id' => $sharedArticle->id,
+            'user_id' => $otherMember->id,
+            'markdown_body' => '保留评论',
+            'html_body' => '<p>保留评论</p>',
+            'is_visible' => true,
+        ]);
+
+        DB::table('password_reset_tokens')->insert([
+            'email' => $member->email,
+            'token' => 'reset-token-for-member',
+            'created_at' => now(),
+        ]);
+
+        DB::table('sessions')->insert([
+            'id' => 'member-session-id',
+            'user_id' => $member->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'phpunit',
+            'payload' => 'payload',
+            'last_activity' => now()->timestamp,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.users.destroy', $member))
+            ->assertRedirect(route('admin.users.index'));
+
+        $this->assertDatabaseMissing('users', ['id' => $member->id]);
+        $this->assertDatabaseMissing('articles', ['id' => $memberArticle->id]);
+        $this->assertDatabaseMissing('sessions', ['user_id' => $member->id]);
+        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $member->email]);
+        $this->assertSame(1, $sharedArticle->fresh()->comment_count);
+    }
+
+    public function test_admin_cannot_delete_admin_account_from_user_management(): void
+    {
+        $superAdmin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $managedAdmin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $this->actingAs($superAdmin)
+            ->from(route('admin.users.index'))
+            ->delete(route('admin.users.destroy', $managedAdmin))
+            ->assertRedirect(route('admin.users.index'));
+
+        $this->assertDatabaseHas('users', [
+            'id' => $managedAdmin->id,
+            'role' => User::ROLE_ADMIN,
         ]);
     }
 

@@ -11,6 +11,7 @@ use App\Support\ArticleSubscriptionNotifier;
 use App\Support\MarkdownRenderer;
 use App\Support\StaticPageBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Mockery;
 use Tests\TestCase;
 
@@ -211,17 +212,20 @@ class DevtoolsApiTest extends TestCase
             'email' => 'member@example.com',
             'phone' => '13800138002',
             'role' => User::ROLE_MEMBER,
+            'avatar_url' => 'https://cdn.example.com/old-member.png',
         ]);
 
         $this->withHeaders($this->headers())
             ->putJson("/api/vibe/users/{$member->id}", [
                 'role' => User::ROLE_ADMIN,
+                'avatar_url' => 'https://cdn.example.com/new-member.png',
             ])
             ->assertOk()
             ->assertJsonPath('user.user_id', $member->user_id)
             ->assertJsonPath('user.role', User::ROLE_ADMIN)
             ->assertJsonPath('user.name', '待更新成员')
-            ->assertJsonPath('user.email', 'member@example.com');
+            ->assertJsonPath('user.email', 'member@example.com')
+            ->assertJsonPath('user.avatar_url', 'https://cdn.example.com/new-member.png');
 
         $member->refresh();
 
@@ -230,6 +234,80 @@ class DevtoolsApiTest extends TestCase
         $this->assertSame('待更新成员', $member->name);
         $this->assertSame('member@example.com', $member->email);
         $this->assertSame('13800138002', $member->phone);
+        $this->assertSame('https://cdn.example.com/new-member.png', $member->avatar_url);
+    }
+
+    public function test_users_delete_removes_member_and_cleans_runtime_artifacts(): void
+    {
+        $member = User::factory()->create([
+            'name' => 'API 待删除成员',
+            'email' => 'api-member-delete@example.com',
+            'phone' => '13800138009',
+            'role' => User::ROLE_MEMBER,
+        ]);
+        $otherMember = User::factory()->create(['role' => User::ROLE_MEMBER]);
+        $channel = $this->createChannel(['slug' => 'api-user-delete-channel']);
+        $article = $this->createArticle($channel, [
+            'author_id' => User::query()->where('role', User::ROLE_ADMIN)->firstOrFail()->id,
+            'slug' => 'api-user-delete-shared-article',
+            'comment_count' => 2,
+        ]);
+
+        Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $member->id,
+            'markdown_body' => '待删除成员评论',
+            'html_body' => '<p>待删除成员评论</p>',
+            'is_visible' => true,
+        ]);
+
+        Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $otherMember->id,
+            'markdown_body' => '保留评论',
+            'html_body' => '<p>保留评论</p>',
+            'is_visible' => true,
+        ]);
+
+        DB::table('password_reset_tokens')->insert([
+            'email' => $member->email,
+            'token' => 'api-reset-token-for-member',
+            'created_at' => now(),
+        ]);
+
+        DB::table('sessions')->insert([
+            'id' => 'api-member-session-id',
+            'user_id' => $member->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'phpunit',
+            'payload' => 'payload',
+            'last_activity' => now()->timestamp,
+        ]);
+
+        $this->withHeaders($this->headers())
+            ->deleteJson("/api/vibe/users/{$member->id}")
+            ->assertOk()
+            ->assertJsonPath('ok', true);
+
+        $this->assertDatabaseMissing('users', ['id' => $member->id]);
+        $this->assertDatabaseMissing('sessions', ['user_id' => $member->id]);
+        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $member->email]);
+        $this->assertSame(1, $article->fresh()->comment_count);
+    }
+
+    public function test_users_delete_rejects_admin_account(): void
+    {
+        $managedAdmin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'email' => 'managed-admin@example.com',
+        ]);
+
+        $this->withHeaders($this->headers())
+            ->deleteJson("/api/vibe/users/{$managedAdmin->id}")
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'protected_user');
+
+        $this->assertDatabaseHas('users', ['id' => $managedAdmin->id]);
     }
 
     private function headers(): array

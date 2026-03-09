@@ -25,6 +25,37 @@ class UserAccountManager
     }
 
     /**
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public function normalizePartialProfileInput(array $input): array
+    {
+        $normalized = [];
+
+        if (array_key_exists('name', $input)) {
+            $normalized['name'] = trim((string) $input['name']);
+        }
+
+        if (array_key_exists('email', $input)) {
+            $normalized['email'] = $this->normalizeOptionalEmail($input['email']);
+        }
+
+        if (array_key_exists('phone', $input)) {
+            $normalized['phone'] = $this->normalizeOptionalPhone($input['phone']);
+        }
+
+        if (array_key_exists('avatar_url', $input)) {
+            $normalized['avatar_url'] = $this->normalizeOptionalUrl($input['avatar_url']);
+        }
+
+        if (array_key_exists('bio', $input)) {
+            $normalized['bio'] = $this->normalizeOptionalString($input['bio']);
+        }
+
+        return $normalized;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function profileValidationRules(User $user): array
@@ -35,6 +66,20 @@ class UserAccountManager
             'phone' => ['nullable', 'string', 'max:32', Rule::unique('users', 'phone')->ignore($user->id)],
             'avatar_url' => ['nullable', 'url', 'max:2048'],
             'bio' => ['nullable', 'string', 'max:500'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function partialProfileValidationRules(User $user): array
+    {
+        return [
+            'name' => ['sometimes', 'required', 'string', 'max:40'],
+            'email' => ['sometimes', 'nullable', 'email', 'max:120', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:32', Rule::unique('users', 'phone')->ignore($user->id)],
+            'avatar_url' => ['sometimes', 'nullable', 'url', 'max:2048'],
+            'bio' => ['sometimes', 'nullable', 'string', 'max:500'],
         ];
     }
 
