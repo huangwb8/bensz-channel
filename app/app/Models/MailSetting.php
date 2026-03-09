@@ -15,6 +15,7 @@ class MailSetting extends Model
         'smtp_password',
         'from_address',
         'from_name',
+        'test_recipient',
     ];
 
     protected function casts(): array

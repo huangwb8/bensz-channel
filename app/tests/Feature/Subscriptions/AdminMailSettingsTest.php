@@ -56,6 +56,32 @@ class AdminMailSettingsTest extends TestCase
         $this->assertSame('smtp-secret', $setting->smtp_password);
         $this->assertSame('noreply@example.com', $setting->from_address);
         $this->assertSame('Bensz Channel Mailer', $setting->from_name);
+        $this->assertSame('verify@example.com', $setting->test_recipient);
+    }
+
+    public function test_saved_test_recipient_is_shown_in_smtp_configuration_form(): void
+    {
+        MailSetting::query()->create([
+            'enabled' => true,
+            'smtp_scheme' => 'tls',
+            'smtp_host' => 'smtp.saved.example.com',
+            'smtp_port' => 587,
+            'smtp_username' => 'saved-user@example.com',
+            'smtp_password' => 'saved-secret',
+            'from_address' => 'saved@example.com',
+            'from_name' => 'Saved Mailer',
+            'test_recipient' => 'verify@example.com',
+        ]);
+
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'email' => 'admin@example.com',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('settings.subscriptions.edit'))
+            ->assertOk()
+            ->assertSee('value="verify@example.com"', false);
     }
 
     public function test_member_cannot_update_smtp_configuration(): void

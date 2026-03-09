@@ -32,6 +32,7 @@ class MailSettingsManager
             'smtp_username' => $setting?->smtp_username ?? (string) config('mail.mailers.smtp.username'),
             'from_address' => $setting?->from_address ?? (string) config('mail.from.address'),
             'from_name' => $setting?->from_name ?? (string) config('mail.from.name'),
+            'test_recipient' => $setting?->test_recipient,
         ];
     }
 
@@ -62,6 +63,7 @@ class MailSettingsManager
             'smtp_username' => $attributes['smtp_username'],
             'from_address' => $attributes['from_address'],
             'from_name' => $attributes['from_name'],
+            'test_recipient' => $attributes['test_recipient'],
         ]);
 
         $setting->smtp_password = $attributes['smtp_password'];
@@ -150,6 +152,7 @@ class MailSettingsManager
             'smtp_password' => $providedPassword ?? $currentPassword,
             'from_address' => $this->nullableString($validated['from_address'] ?? null),
             'from_name' => $this->nullableString($validated['from_name'] ?? null),
+            'test_recipient' => $this->nullableString($validated['test_recipient'] ?? null),
         ];
     }
 
