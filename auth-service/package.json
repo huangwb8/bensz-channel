@@ -7,7 +7,7 @@
     "deps:sync": "sh ./scripts/ensure-managed-node-modules.sh",
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "migrate": "node src/ensure-schema.js && npx better-auth migrate --config ./src/auth.js -y",
+    "migrate": "node src/ensure-schema.js && better-auth migrate --config ./src/auth.js -y",
     "test:smoke": "node -e \"fetch('http://127.0.0.1:' + (process.env.PORT || 3001) + '/health').then(r => { if (!r.ok) process.exit(1) })\""
   },
   "dependencies": {

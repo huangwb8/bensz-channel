@@ -1,57 +1,45 @@
 services:
-  web:
-    # 推荐默认使用本地构建：直接 git clone 后执行 `docker compose up --build`
-    # 如需改用远程已发布镜像，可注释掉下面的 `build:`，并启用示例 `image:`
-    # image: "${WEB_IMAGE:-your-dockerhub-namespace/bensz-channel-web:latest}"
-    build:
-      context: .
-      dockerfile: docker/web/Dockerfile
-    ports:
-      - "${WEB_PORT:-6542}:80"
+  channel-web:
+    image: huangwb8/bensz-channel-web:latest
+    container_name: channel-web
+    expose:
+      - "80"
     env_file:
       - config/.env
     depends_on:
-      auth:
+      channel-auth:
         condition: service_healthy
-      postgres:
+      channel-postgres:
         condition: service_healthy
-      redis:
+      channel-redis:
         condition: service_started
-      mailpit:
+      channel-mailpit:
         condition: service_started
     volumes:
       - ./data/web/storage:/var/www/html/storage
       - ./data/web/bootstrap-cache:/var/www/html/bootstrap/cache
       - ./data/web/static:/var/www/html/public/${STATIC_SITE_OUTPUT_DIR:-static}
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/up || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
 
-  auth:
-    # 推荐默认使用本地构建：直接 git clone 后执行 `docker compose up --build`
-    # 如需改用远程已发布镜像，可注释掉下面的 `build:`，并启用示例 `image:`
-    # image: "${AUTH_IMAGE:-your-dockerhub-namespace/bensz-channel-auth:latest}"
-    build:
-      context: .
-      dockerfile: auth-service/Dockerfile
+  channel-auth:
+    image: huangwb8/bensz-channel-auth:latest
+    container_name: channel-auth
     env_file:
       - config/.env
     depends_on:
-      postgres:
+      channel-postgres:
         condition: service_healthy
-      mailpit:
+      channel-mailpit:
         condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 30s
+      start_period: 120s
 
-  postgres:
+  channel-postgres:
     image: postgres:17-alpine
+    container_name: channel-postgres
     env_file:
       - config/.env
     volumes:
@@ -62,16 +50,22 @@ services:
       timeout: 5s
       retries: 12
 
-  redis:
+  channel-redis:
     image: redis:7-alpine
+    container_name: channel-redis
     command: redis-server --appendonly yes --dir /data
     volumes:
       - ./data/redis:/data
 
-  mailpit:
+  channel-mailpit:
     image: axllent/mailpit:latest
+    container_name: channel-mailpit
     command: ["--database", "/data/mailpit.db"]
     ports:
       - "${MAILPIT_PORT:-8025}:8025"
     volumes:
       - ./data/mailpit:/data
+  
+# networks:
+#   default:
+#     name: npm_default
