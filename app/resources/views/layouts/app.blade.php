@@ -12,7 +12,7 @@
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
     </head>
-    <body class="antialiased">
+    <body class="min-h-screen bg-gray-50 antialiased flex flex-col">
         <!-- 顶部固定导航栏 -->
         <header class="top-nav">
             <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
@@ -98,7 +98,7 @@
         </header>
 
         <!-- 主内容区 -->
-        <main class="mx-auto max-w-6xl px-4 py-6">
+        <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
             @if(($staticPage ?? false) === true)
                 <div class="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
                     📦 静态快照模式

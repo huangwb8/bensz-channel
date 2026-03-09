@@ -97,7 +97,7 @@
 
     /* 帖子卡片 */
     .article-card {
-        @apply rounded-xl border border-gray-200 bg-white p-5 transition-all hover:border-gray-300 hover:shadow-sm;
+        @apply rounded-xl border border-gray-200 bg-white p-5 transition-all hover:border-gray-300 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40;
     }
 
     /* 频道徽章 */

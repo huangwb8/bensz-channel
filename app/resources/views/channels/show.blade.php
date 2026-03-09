@@ -28,7 +28,7 @@
 
     <section class="space-y-3">
         @forelse($channelArticles as $article)
-            <article class="article-card">
+            <a href="{{ route('articles.show', [$article->channel, $article]) }}" class="article-card block">
                 <div class="flex gap-4">
                     <div class="flex-1 min-w-0">
                         <div class="mb-2 flex flex-wrap items-center gap-2">
@@ -45,10 +45,8 @@
                                 <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">精华</span>
                             @endif
                         </div>
-                        <h3 class="text-base font-semibold text-gray-900 mb-1">
-                            <a href="{{ route('articles.show', [$article->channel, $article]) }}" class="hover:text-blue-600 line-clamp-2">
-                                {{ $article->title }}
-                            </a>
+                        <h3 class="text-base font-semibold text-gray-900 mb-1 line-clamp-2">
+                            {{ $article->title }}
                         </h3>
                         <p class="text-sm text-gray-600 line-clamp-2 mb-3">
                             {{ $article->excerpt }}
@@ -75,7 +73,7 @@
                         </div>
                     </div>
                 </div>
-            </article>
+            </a>
         @empty
             <div class="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500">
                 <div class="text-4xl mb-2">📭</div>
