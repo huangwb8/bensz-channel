@@ -178,6 +178,80 @@ bensz-channel/
 - 静态 HTML 会额外生成 `.gz` 文件，Nginx 开启 `gzip_static`
 - 资源文件采用 Vite 指纹命名，可通过 `ASSET_URL` 接入 CDN
 
+## DogeCloud CDN 接入
+
+本项目现已针对 DogeCloud 融合 CDN 做了兼容性收口，重点解决了以下问题：
+
+- Laravel 生成的绝对链接现在统一以 `APP_URL` 作为公开访问根地址，避免 DogeCloud 回源 Host 与公网访问域名不一致时，页面、表单、RSS、重定向泄漏源站域名
+- Vite 指纹资源继续走 `ASSET_URL` / 后台“静态资源 CDN”设置，适合将 CSS、JS、图片挂到独立 CDN 域名
+- Docker 重部署会自动重建静态页，因此 CDN 回源内容与应用当前状态保持一致
+- Nginx 继续为 `public/build/` 提供长缓存，为 `public/static/` 提供短缓存和 `.gz` 静态压缩文件，便于直接配合 DogeCloud 的缓存与压缩策略
+
+### 推荐配置
+
+编辑 `config/.compose.env`，至少确认以下变量：
+
+```env
+APP_URL=https://community.example.com
+ASSET_URL=https://cdn.example.com
+SESSION_SECURE_COOKIE=true
+BETTER_AUTH_TRUSTED_ORIGINS=https://community.example.com
+```
+
+说明：
+
+- `APP_URL`：站点公开访问域名；Laravel 生成页面链接、表单地址、RSS 链接时会以它为准
+- `ASSET_URL`：静态资源 CDN 域名；如果你更喜欢后台可配，也可以部署后在“站点设置”里填写“静态资源 CDN”
+- `SESSION_SECURE_COOKIE=true`：当公网通过 HTTPS 访问时建议开启，避免登录 Cookie 因为浏览器安全策略被拦截
+- `BETTER_AUTH_TRUSTED_ORIGINS`：如果未单独配置，项目会默认跟随 `APP_URL`；多域名场景请显式填写
+
+### DogeCloud 控制台建议
+
+参考 DogeCloud 文档：
+
+- 文档首页：`https://docs.dogecloud.com/cdn/`
+- 快速入门：`https://docs.dogecloud.com/cdn/manual-quickstart-full`
+- 源站配置：`https://docs.dogecloud.com/cdn/manual-config-source`
+- 回源请求头：`https://docs.dogecloud.com/cdn/manual-config-request-header`
+- 缓存规则：`https://docs.dogecloud.com/cdn/manual-config-cache-rules`
+- 浏览器缓存：`https://docs.dogecloud.com/cdn/manual-config-clientcache-rules`
+- 智能压缩：`https://docs.dogecloud.com/cdn/manual-config-gzip`
+
+建议按下面方式配置：
+
+- **加速域名**：填写你的公网访问域名，例如 `community.example.com`
+- **业务类型**：选择“网页小文件”
+- **源站类型**：选择“源站域名”或“源站 IP”
+- **回源协议**：如果你的源站已配 TLS，优先选 HTTPS；否则选 HTTP
+- **回源 Host**：填源站真实 Host；如果公网域名与源站域名不同，这是 DogeCloud 正常推荐用法，本项目已兼容这种场景
+- **回源请求头**：DogeCloud 默认会带 `X-Forwarded-For` 和 `X-Forwarded-Proto`，无需额外添加
+- **缓存规则**：
+  - `/build/*` 建议长缓存，因为资源文件带内容哈希
+  - `/static/*` 建议 5–10 分钟缓存，适合游客静态页
+  - 动态接口、登录相关路径不要在 CDN 上做激进缓存
+- **浏览器缓存**：优先跟随源站，或按上面的路径策略分别设置
+- **智能压缩**：保持开启；项目已生成 `.gz` 静态文件，DogeCloud 也可继续做 GZip / Brotli 分发
+
+### 部署与重部署
+
+修改配置后，执行：
+
+```bash
+docker compose up -d --build
+```
+
+容器启动时会自动执行迁移、系统初始化、静态页重建，因此适合直接作为 DogeCloud 回源。
+
+### 审查清单
+
+完成部署后，建议至少检查：
+
+- 首页 HTML 中站内链接是否指向 `APP_URL`
+- `build` 资源是否指向 `ASSET_URL` / 后台填写的 CDN 域名
+- 登录后 Cookie 是否带 `Secure` 标记（HTTPS 场景）
+- DogeCloud 回源命中后，`/build/*` 是否稳定命中缓存
+- 新发文章、改频道后，`/static/` 对应页面是否已重建
+
 ## 本地开发
 
 如果需要在宿主机直接运行：
