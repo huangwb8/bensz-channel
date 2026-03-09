@@ -53,4 +53,10 @@ return [
         'enabled' => filter_var(env('STATIC_SITE_ENABLED', true), FILTER_VALIDATE_BOOL),
         'output_dir' => env('STATIC_SITE_OUTPUT_DIR', 'static'),
     ],
+
+    'theme' => [
+        'mode' => env('THEME_MODE', 'auto'),
+        'day_start' => env('THEME_DAY_START', '07:00'),
+        'night_start' => env('THEME_NIGHT_START', '19:00'),
+    ],
 ];

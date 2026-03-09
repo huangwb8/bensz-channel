@@ -16,9 +16,17 @@ class CommunityViewData
 
     public function layout(?Channel $currentChannel = null, ?Article $currentArticle = null): array
     {
+        $themeMode = (string) config('community.theme.mode', 'auto');
+        $themeDayStart = (string) config('community.theme.day_start', '07:00');
+        $themeNightStart = (string) config('community.theme.night_start', '19:00');
+
         return [
             'siteName' => config('community.site.name'),
             'siteTagline' => config('community.site.tagline'),
+            'themeMode' => $themeMode,
+            'themeDayStart' => $themeDayStart,
+            'themeNightStart' => $themeNightStart,
+            'themeApplied' => $this->resolveTheme($themeMode, $themeDayStart, $themeNightStart),
             'channels' => Channel::query()
                 ->visibleInTopNav()
                 ->ordered()
@@ -121,5 +129,39 @@ class CommunityViewData
             ],
             'qrProviders' => config('community.auth.qr_providers'),
         ];
+    }
+
+    private function resolveTheme(string $mode, string $dayStart, string $nightStart): string
+    {
+        $normalizedMode = strtolower(trim($mode));
+        if (in_array($normalizedMode, ['light', 'dark'], true)) {
+            return $normalizedMode;
+        }
+
+        $dayMinutes = $this->timeToMinutes($dayStart) ?? (7 * 60);
+        $nightMinutes = $this->timeToMinutes($nightStart) ?? (19 * 60);
+        $now = now();
+        $currentMinutes = ((int) $now->format('H')) * 60 + (int) $now->format('i');
+
+        if ($dayMinutes === $nightMinutes) {
+            return 'light';
+        }
+
+        if ($dayMinutes < $nightMinutes) {
+            return $currentMinutes >= $dayMinutes && $currentMinutes < $nightMinutes ? 'light' : 'dark';
+        }
+
+        return $currentMinutes >= $dayMinutes || $currentMinutes < $nightMinutes ? 'light' : 'dark';
+    }
+
+    private function timeToMinutes(string $value): ?int
+    {
+        if (preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $value) !== 1) {
+            return null;
+        }
+
+        [$hours, $minutes] = array_map('intval', explode(':', $value));
+
+        return ($hours * 60) + $minutes;
     }
 }

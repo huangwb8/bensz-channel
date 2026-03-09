@@ -26,5 +26,8 @@ class SiteSetting extends Model
         'site_tagline',
         'auth_enabled_methods',
         'cdn_asset_url',
+        'theme_mode',
+        'theme_day_start',
+        'theme_night_start',
     ];
 }

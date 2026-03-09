@@ -54,6 +54,40 @@
                 <p class="mt-2 text-xs text-gray-500">用于加速 CSS、JS、图片和其它公开静态资源。页面主域名仍由 `APP_URL` 决定；这里建议填写 DogeCloud 等 CDN 加速域名。</p>
             </div>
 
+            <section class="space-y-4 rounded-xl border border-slate-200 bg-slate-50/70 p-5">
+                <div>
+                    <h4 class="text-base font-semibold text-gray-900">主题模式与时间段</h4>
+                    <p class="mt-1 text-sm text-gray-500">管理员可固定白天 / 夜间模式，或设置在指定时间段自动切换。</p>
+                </div>
+
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                        <label for="theme_mode" class="mb-2 block text-sm font-medium text-gray-700">主题模式</label>
+                        <select id="theme_mode" name="theme_mode" class="input-field h-11">
+                            @foreach($themeModeOptions as $modeKey => $modeLabel)
+                                <option value="{{ $modeKey }}" @selected(old('theme_mode', $siteSettingsForm['theme_mode']) === $modeKey)>{{ $modeLabel }}</option>
+                            @endforeach
+                        </select>
+                        <p class="mt-2 text-xs text-gray-500">选择“自动”时会按下方时间段判断当前应该使用白天或夜间主题。</p>
+                    </div>
+
+                    <div class="grid gap-3">
+                        <div>
+                            <label for="theme_day_start" class="mb-2 block text-sm font-medium text-gray-700">白天模式开始</label>
+                            <input id="theme_day_start" type="time" name="theme_day_start" value="{{ old('theme_day_start', $siteSettingsForm['theme_day_start']) }}" class="input-field h-11">
+                        </div>
+                        <div>
+                            <label for="theme_night_start" class="mb-2 block text-sm font-medium text-gray-700">夜间模式开始</label>
+                            <input id="theme_night_start" type="time" name="theme_night_start" value="{{ old('theme_night_start', $siteSettingsForm['theme_night_start']) }}" class="input-field h-11">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-lg border border-white bg-white px-4 py-3 text-xs text-gray-600">
+                    说明：当“白天开始时间”晚于“夜间开始时间”时，系统会自动跨午夜计算，确保晚上与清晨仍处于夜间模式。
+                </div>
+            </section>
+
             <section class="space-y-4 rounded-xl border border-blue-100 bg-blue-50/40 p-5">
                 <div>
                     <h4 class="text-base font-semibold text-gray-900">允许用户使用的登录 / 注册方式</h4>

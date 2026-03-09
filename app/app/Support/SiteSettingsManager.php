@@ -44,6 +44,9 @@ class SiteSettingsManager
             'site_tagline' => $setting?->site_tagline ?? (string) config('community.site.tagline'),
             'auth_enabled_methods' => $this->normalizeAuthMethods($setting?->auth_enabled_methods),
             'cdn_asset_url' => $setting?->cdn_asset_url ?? (string) config('app.asset_url'),
+            'theme_mode' => $setting?->theme_mode ?? (string) config('community.theme.mode', 'auto'),
+            'theme_day_start' => $setting?->theme_day_start ?? (string) config('community.theme.day_start', '07:00'),
+            'theme_night_start' => $setting?->theme_night_start ?? (string) config('community.theme.night_start', '19:00'),
         ];
     }
 
@@ -58,6 +61,9 @@ class SiteSettingsManager
                 || filled($setting->site_tagline)
                 || $setting->auth_enabled_methods !== null
                 || filled($setting->cdn_asset_url)
+                || filled($setting->theme_mode)
+                || filled($setting->theme_day_start)
+                || filled($setting->theme_night_start)
             );
     }
 
@@ -85,6 +91,9 @@ class SiteSettingsManager
             'site_tagline' => $this->nullableString($validated['site_tagline'] ?? null),
             'auth_enabled_methods' => $this->normalizeAuthMethods($validated['auth_enabled_methods'] ?? null),
             'cdn_asset_url' => $this->normalizeUrl($validated['cdn_asset_url'] ?? null),
+            'theme_mode' => $this->normalizeThemeMode($validated['theme_mode'] ?? null),
+            'theme_day_start' => $this->normalizeThemeTime($validated['theme_day_start'] ?? null, '07:00'),
+            'theme_night_start' => $this->normalizeThemeTime($validated['theme_night_start'] ?? null, '19:00'),
         ]);
         $setting->save();
 
@@ -116,6 +125,12 @@ class SiteSettingsManager
                 'app.asset_url' => filled($setting->cdn_asset_url)
                     ? rtrim($setting->cdn_asset_url, '/')
                     : null,
+            ]);
+
+            config([
+                'community.theme.mode' => $this->normalizeThemeMode($setting->theme_mode ?? null),
+                'community.theme.day_start' => $this->normalizeThemeTime($setting->theme_day_start ?? null, '07:00'),
+                'community.theme.night_start' => $this->normalizeThemeTime($setting->theme_night_start ?? null, '19:00'),
             ]);
         }
 
@@ -169,6 +184,32 @@ class SiteSettingsManager
         )));
 
         return $methods !== [] ? $methods : self::DEFAULT_AUTH_METHODS;
+    }
+
+    private function normalizeThemeMode(mixed $value): string
+    {
+        if (! is_string($value)) {
+            return 'auto';
+        }
+
+        $mode = strtolower(trim($value));
+
+        return in_array($mode, ['light', 'dark', 'auto'], true) ? $mode : 'auto';
+    }
+
+    private function normalizeThemeTime(mixed $value, string $fallback): string
+    {
+        if (! is_string($value)) {
+            return $fallback;
+        }
+
+        $time = trim($value);
+
+        if (preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $time) !== 1) {
+            return $fallback;
+        }
+
+        return $time;
     }
 
     private function enabledQrProvidersFromMethods(array $methods): array

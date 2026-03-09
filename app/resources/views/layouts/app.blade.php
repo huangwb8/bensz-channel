@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ $pageTitle ? $pageTitle.' · '.$siteName : $siteName }}</title>
         <meta name="description" content="{{ $siteTagline }}">
+        <meta name="color-scheme" content="light dark">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,7 +13,13 @@
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
     </head>
-    <body class="min-h-screen bg-gray-50 antialiased flex flex-col">
+    <body
+        class="min-h-screen bg-gray-50 antialiased flex flex-col"
+        data-theme-mode="{{ $themeMode ?? 'auto' }}"
+        data-theme-day-start="{{ $themeDayStart ?? '07:00' }}"
+        data-theme-night-start="{{ $themeNightStart ?? '19:00' }}"
+        data-theme="{{ $themeApplied ?? 'light' }}"
+    >
         @php
             $mobileCurrentChannelIcon = $currentChannel?->icon ?? '🏠';
             $mobileCurrentChannelName = $currentChannel?->name ?? '全部';
