@@ -189,12 +189,14 @@ class DevtoolsApiTest extends TestCase
                 'role' => User::ROLE_ADMIN,
             ])
             ->assertOk()
+            ->assertJsonPath('user.user_id', $member->user_id)
             ->assertJsonPath('user.role', User::ROLE_ADMIN)
             ->assertJsonPath('user.name', '待更新成员')
             ->assertJsonPath('user.email', 'member@example.com');
 
         $member->refresh();
 
+        $this->assertSame(101, $member->user_id);
         $this->assertSame(User::ROLE_ADMIN, $member->role);
         $this->assertSame('待更新成员', $member->name);
         $this->assertSame('member@example.com', $member->email);

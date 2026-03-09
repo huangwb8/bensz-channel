@@ -38,7 +38,7 @@
                 name="q"
                 value="{{ $filters['q'] }}"
                 class="input-field h-11"
-                placeholder="搜索昵称、邮箱或手机号"
+                placeholder="搜索用户ID、昵称、邮箱或手机号"
             >
             <select name="role_filter" class="input-field h-11">
                 <option value="">全部角色</option>
@@ -83,6 +83,9 @@
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
                                 <h3 class="truncate text-base font-semibold text-gray-900">{{ $managedUser->name }}</h3>
+                                <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                                    ID {{ $managedUser->user_id }}
+                                </span>
                                 <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs {{ $managedUser->isAdmin() ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-600' }}">
                                     {{ $managedUser->isAdmin() ? '管理员' : '成员' }}
                                 </span>

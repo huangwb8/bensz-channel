@@ -12,14 +12,18 @@ class UserController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = User::query()->select(['id', 'name', 'email', 'phone', 'role', 'bio', 'avatar_url', 'last_seen_at', 'created_at']);
+        $query = User::query()->select(['id', 'user_id', 'name', 'email', 'phone', 'role', 'bio', 'avatar_url', 'last_seen_at', 'created_at']);
 
         if ($request->filled('q')) {
-            $q = $request->input('q');
+            $q = trim((string) $request->input('q'));
             $query->where(function ($qb) use ($q): void {
                 $qb->where('name', 'like', "%{$q}%")
                     ->orWhere('email', 'like', "%{$q}%")
                     ->orWhere('phone', 'like', "%{$q}%");
+
+                if (ctype_digit($q)) {
+                    $qb->orWhere('user_id', (int) $q);
+                }
             });
         }
 
@@ -69,6 +73,6 @@ class UserController extends Controller
 
         $user->refresh();
 
-        return response()->json(['user' => $user->only(['id', 'name', 'email', 'phone', 'role', 'bio'])]);
+        return response()->json(['user' => $user->only(['id', 'user_id', 'name', 'email', 'phone', 'role', 'bio'])]);
     }
 }

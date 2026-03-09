@@ -51,6 +51,7 @@ class BetterAuthLoginTest extends TestCase
         $this->assertDatabaseHas(User::class, [
             'phone' => '13800138000',
             'name' => '手机用户',
+            'user_id' => 101,
         ]);
     }
 

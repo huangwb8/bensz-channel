@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
@@ -50,6 +51,11 @@ class OtpLoginTest extends TestCase
         ])->assertRedirect(route('home'));
 
         $this->assertAuthenticated();
+        $this->assertDatabaseHas(User::class, [
+            'email' => 'member@example.com',
+            'name' => '测试成员',
+            'user_id' => 101,
+        ]);
 
         Http::assertSentCount(2);
         Http::assertSent(function ($request): bool {

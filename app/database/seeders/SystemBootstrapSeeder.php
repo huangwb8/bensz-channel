@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Channel;
 use App\Models\User;
+use App\Support\StableUserIdManager;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -14,7 +15,7 @@ class SystemBootstrapSeeder extends Seeder
 
     public function run(): void
     {
-        User::query()->updateOrCreate([
+        $admin = User::query()->updateOrCreate([
             'email' => config('community.admin.email'),
         ], [
             'name' => config('community.admin.name'),
@@ -23,6 +24,11 @@ class SystemBootstrapSeeder extends Seeder
             'email_verified_at' => now(),
             'last_seen_at' => now(),
         ]);
+
+        if ($admin->user_id === null) {
+            app(StableUserIdManager::class)->ensureAssigned($admin);
+            $admin->save();
+        }
 
         Channel::query()->updateOrCreate([
             'slug' => Channel::SLUG_FEATURED,

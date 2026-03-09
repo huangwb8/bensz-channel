@@ -10,6 +10,7 @@ use App\Support\CanonicalUrlManager;
 use App\Support\CommunityViewData;
 use App\Support\MailSettingsManager;
 use App\Support\SiteSettingsManager;
+use App\Support\StableUserIdManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -36,6 +37,10 @@ class AppServiceProvider extends ServiceProvider
         app(SiteSettingsManager::class)->applyConfiguredSettings();
         app(MailSettingsManager::class)->applyConfiguredSettings();
         app(CanonicalUrlManager::class)->apply();
+
+        User::creating(function (User $user): void {
+            app(StableUserIdManager::class)->ensureAssigned($user);
+        });
 
         User::created(function (User $user): void {
             $user->notificationPreference()->firstOrCreate();

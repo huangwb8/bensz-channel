@@ -57,6 +57,7 @@ class AccountSettingsTest extends TestCase
 
         $user->refresh();
 
+        $this->assertSame(101, $user->user_id);
         $this->assertSame('新昵称', $user->name);
         $this->assertSame('after@example.com', $user->email);
         $this->assertSame('13900000000', $user->phone);
@@ -64,6 +65,28 @@ class AccountSettingsTest extends TestCase
         $this->assertSame('新的个人简介', $user->bio);
         $this->assertNull($user->email_verified_at);
         $this->assertNull($user->phone_verified_at);
+    }
+
+    public function test_profile_updates_do_not_change_stable_user_id(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'member@example.com',
+            'phone' => '13800000000',
+        ]);
+
+        $originalUserId = $user->user_id;
+
+        $this->actingAs($user)
+            ->put(route('settings.account.profile.update'), [
+                'name' => '新昵称',
+                'email' => 'after@example.com',
+                'phone' => '13900000000',
+                'avatar_url' => '',
+                'bio' => '新的个人简介',
+            ])
+            ->assertRedirect(route('settings.account.edit'));
+
+        $this->assertSame($originalUserId, $user->fresh()->user_id);
     }
 
     public function test_user_must_keep_at_least_one_login_identifier(): void

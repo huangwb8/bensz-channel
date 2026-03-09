@@ -29,11 +29,16 @@ class SubscriptionSettingsController extends Controller
         ];
 
         if ($user->isAdmin()) {
+            $mailSettingForm = $mailSettingsManager->formData();
+
             $viewData = array_merge($viewData, [
-                'mailSettingForm' => $mailSettingsManager->formData(),
+                'mailSettingForm' => $mailSettingForm,
                 'mailSettingUsingCustomConfig' => $mailSettingsManager->usingCustomSettings(),
                 'mailSettingHasPassword' => $mailSettingsManager->hasStoredPassword(),
-                'mailSettingTestRecipient' => $this->defaultTestRecipient($user->email, $mailSettingsManager->formData()['from_address'] ?? null),
+                'mailSettingTestRecipient' => $this->defaultTestRecipient(
+                    $mailSettingForm['test_recipient'] ?? null,
+                    $this->defaultTestRecipient($user->email, $mailSettingForm['from_address'] ?? null),
+                ),
             ]);
         }
 

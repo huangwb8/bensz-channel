@@ -20,6 +20,9 @@
                     <span class="rounded-full px-3 py-1 font-semibold {{ $currentUser?->phone_verified_at ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700' }}">
                         手机{{ $currentUser?->phone_verified_at ? '已验证' : '未验证' }}
                     </span>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600">
+                        用户ID {{ $currentUser?->user_id }}
+                    </span>
                 </div>
             </div>
 

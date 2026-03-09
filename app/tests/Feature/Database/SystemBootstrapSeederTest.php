@@ -20,6 +20,7 @@ class SystemBootstrapSeederTest extends TestCase
 
         $this->assertNotNull($admin);
         $this->assertSame(User::ROLE_ADMIN, $admin->role);
+        $this->assertSame(0, $admin->user_id);
         $this->assertTrue(Hash::check(config('community.admin.password'), (string) $admin->password));
 
         $this->assertDatabaseCount('users', 1);
@@ -48,6 +49,7 @@ class SystemBootstrapSeederTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => config('community.admin.email'),
             'role' => User::ROLE_ADMIN,
+            'user_id' => 0,
         ]);
     }
 }

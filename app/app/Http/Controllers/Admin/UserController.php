@@ -33,6 +33,10 @@ class UserController extends Controller
                             ->where('name', 'like', "%{$keyword}%")
                             ->orWhere('email', 'like', "%{$keyword}%")
                             ->orWhere('phone', 'like', "%{$keyword}%");
+
+                        if (ctype_digit($keyword)) {
+                            $userQuery->orWhere('user_id', (int) $keyword);
+                        }
                     });
                 })
                 ->when(in_array($filters['role'], [User::ROLE_ADMIN, User::ROLE_MEMBER], true), function ($query) use ($filters): void {

@@ -42,6 +42,7 @@ class AdminUserManagementTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'id' => $member->id,
+            'user_id' => $member->user_id,
             'name' => '运营负责人',
             'email' => 'ops@example.com',
             'phone' => '13900000000',
