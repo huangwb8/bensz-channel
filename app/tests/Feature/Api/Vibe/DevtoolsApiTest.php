@@ -111,6 +111,35 @@ class DevtoolsApiTest extends TestCase
         $this->assertDatabaseMissing('articles', ['id' => $article->id]);
     }
 
+    public function test_article_create_rejects_featured_channel_as_primary_channel(): void
+    {
+        $featuredChannel = $this->createChannel([
+            'name' => '精华',
+            'slug' => Channel::SLUG_FEATURED,
+            'description' => '站内精选内容与重点沉淀。',
+            'accent_color' => '#f59e0b',
+            'icon' => '⭐',
+            'sort_order' => 0,
+        ]);
+
+        $this->withHeaders($this->headers())
+            ->postJson('/api/vibe/articles', [
+                'channel_id' => $featuredChannel->id,
+                'title' => '不合法精华主频道文章',
+                'slug' => 'invalid-featured-primary-channel',
+                'markdown_body' => '测试正文',
+                'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
+                'is_published' => true,
+                'is_featured' => true,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['channel_id']);
+
+        $this->assertDatabaseMissing('articles', [
+            'slug' => 'invalid-featured-primary-channel',
+        ]);
+    }
+
     public function test_articles_list_honors_false_published_filter(): void
     {
         $channel = $this->createChannel();

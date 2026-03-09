@@ -38,7 +38,7 @@ class ArticleController extends Controller
                 'is_featured' => false,
                 'published_at' => now(),
             ]),
-            'channels' => Channel::query()->ordered()->get(),
+            'channels' => Channel::query()->assignableArticleChannels()->ordered()->get(),
             'formAction' => route('admin.articles.store'),
             'formMethod' => 'POST',
         ]);
@@ -72,7 +72,7 @@ class ArticleController extends Controller
     {
         return view('admin.articles.form', [
             'article' => $article,
-            'channels' => Channel::query()->ordered()->get(),
+            'channels' => Channel::query()->assignableArticleChannels()->ordered()->get(),
             'formAction' => route('admin.articles.update', $article),
             'formMethod' => 'PUT',
         ]);
@@ -137,7 +137,17 @@ class ArticleController extends Controller
     private function validateArticle(Request $request, ?Article $article = null): array
     {
         $validated = $request->validate([
-            'channel_id' => ['required', 'exists:channels,id'],
+            'channel_id' => [
+                'required',
+                'exists:channels,id',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $channel = Channel::query()->find($value);
+
+                    if ($channel instanceof Channel && ! $channel->canOwnArticlesDirectly()) {
+                        $fail('精华频道只负责聚合展示，不能作为文章主频道。');
+                    }
+                },
+            ],
             'title' => ['required', 'string', 'max:120'],
             'slug' => ['nullable', 'string', 'max:140', Rule::unique('articles', 'slug')->ignore($article?->id)],
             'excerpt' => ['nullable', 'string', 'max:200'],

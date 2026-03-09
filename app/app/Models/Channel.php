@@ -50,6 +50,11 @@ class Channel extends Model
         return $this->slug === self::SLUG_UNCATEGORIZED || $this->name === '未分类';
     }
 
+    public function canOwnArticlesDirectly(): bool
+    {
+        return ! $this->isFeaturedChannel();
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -68,5 +73,12 @@ class Channel extends Model
     public function scopeVisibleInTopNav(Builder $query): Builder
     {
         return $query->where('show_in_top_nav', true);
+    }
+
+    public function scopeAssignableArticleChannels(Builder $query): Builder
+    {
+        return $query
+            ->where('slug', '!=', self::SLUG_FEATURED)
+            ->where('name', '!=', '精华');
     }
 }

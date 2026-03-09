@@ -49,6 +49,46 @@ class AdminArticleManagementTest extends TestCase
         ]);
     }
 
+    public function test_admin_cannot_use_featured_channel_as_article_primary_channel(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $featuredChannel = $this->createFeaturedChannel();
+
+        $this->actingAs($admin)
+            ->from(route('admin.articles.create'))
+            ->post(route('admin.articles.store'), [
+                'channel_id' => $featuredChannel->id,
+                'title' => '错误频道文章',
+                'slug' => 'invalid-featured-primary-channel',
+                'excerpt' => '摘要',
+                'markdown_body' => "# 标题\n\n正文内容",
+                'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
+                'published_at' => now()->format('Y-m-d H:i:s'),
+                'is_published' => 1,
+                'is_featured' => 1,
+            ])
+            ->assertRedirect(route('admin.articles.create'))
+            ->assertSessionHasErrors(['channel_id']);
+
+        $this->assertDatabaseMissing('articles', [
+            'slug' => 'invalid-featured-primary-channel',
+        ]);
+    }
+
+    public function test_admin_article_form_hides_featured_channel_from_primary_channel_options(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $featuredChannel = $this->createFeaturedChannel();
+        $regularChannel = $this->createChannel();
+
+        $this->actingAs($admin)
+            ->get(route('admin.articles.create'))
+            ->assertOk()
+            ->assertDontSee('<option value="'.$featuredChannel->id.'"', false)
+            ->assertSee('<option value="'.$regularChannel->id.'"', false)
+            ->assertSee('精华频道只负责聚合展示', false);
+    }
+
     public function test_admin_can_update_article(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
@@ -182,6 +222,20 @@ class AdminArticleManagementTest extends TestCase
             'icon' => '📢',
             'sort_order' => 1,
             'is_public' => true,
+        ]);
+    }
+
+    private function createFeaturedChannel(): Channel
+    {
+        return Channel::query()->create([
+            'name' => '精华',
+            'slug' => Channel::SLUG_FEATURED,
+            'description' => '站内精选内容与重点沉淀。',
+            'accent_color' => '#f59e0b',
+            'icon' => '⭐',
+            'sort_order' => 0,
+            'is_public' => true,
+            'show_in_top_nav' => true,
         ]);
     }
 

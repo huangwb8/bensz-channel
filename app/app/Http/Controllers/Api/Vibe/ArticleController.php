@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Vibe;
 
 use App\Http\Controllers\Controller;
 use App\Models\Article;
+use App\Models\Channel;
 use App\Support\ArticleSubscriptionNotifier;
 use App\Support\MarkdownRenderer;
 use App\Support\StaticPageBuilder;
@@ -120,7 +121,17 @@ class ArticleController extends Controller
         $isUpdate = $article !== null;
 
         $validated = $request->validate([
-            'channel_id' => [$isUpdate ? 'sometimes' : 'required', 'exists:channels,id'],
+            'channel_id' => [
+                $isUpdate ? 'sometimes' : 'required',
+                'exists:channels,id',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $channel = Channel::query()->find($value);
+
+                    if ($channel instanceof Channel && ! $channel->canOwnArticlesDirectly()) {
+                        $fail('精华频道只负责聚合展示，不能作为文章主频道。');
+                    }
+                },
+            ],
             'title' => [$isUpdate ? 'sometimes' : 'required', 'string', 'max:120'],
             'slug' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'string', 'max:140', Rule::unique('articles', 'slug')->ignore($article?->id)],
             'excerpt' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'string', 'max:200'],

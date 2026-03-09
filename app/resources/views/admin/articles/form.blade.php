@@ -33,6 +33,7 @@
                             <option value="{{ $channel->id }}" @selected((int) old('channel_id', $article->channel_id) === $channel->id)>{{ $channel->icon }} {{ $channel->name }}</option>
                         @endforeach
                     </select>
+                    <p class="mt-2 text-xs text-gray-500">精华频道只负责聚合展示；文章主频道仍应选择实际归属频道，再按需勾选“精华文章”。</p>
                 </div>
                 <div>
                     <label class="mb-2 block text-sm font-medium text-gray-700">发布时间</label>
