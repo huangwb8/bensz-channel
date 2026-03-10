@@ -3,6 +3,10 @@ import QRCode from 'qrcode';
 
 const syncInteractiveTitles = (root = document) => {
     root.querySelectorAll('button[aria-label]:not([title]), a[aria-label]:not([title]), [role="button"][aria-label]:not([title])').forEach((element) => {
+        if (element.hasAttribute('data-tooltip')) {
+            return;
+        }
+
         const label = element.getAttribute('aria-label')?.trim();
 
         if (! label) {
