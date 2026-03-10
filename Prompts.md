@@ -1,18 +1,24 @@
 # General
 
-- 启动后访问：
+- 本地测试用启动后访问：
   - 站点首页：http://localhost:6542
   - Mailpit：http://localhost:8025
 - 发布release
 
 ```
-/git-commit ; 创建tag； /git-publish-release 。 然后触发一次docker image构建的github action，确实地将最新的image推送至 docker hub 。  
+创建tag； /git-commit ; /git-publish-release 。 然后触发一次docker image构建的github action，确实地将最新的image推送至 docker hub 。  
 ```
 
 - 保持skill的最新兼容性
 
 ```
 根据目前项目的最新代码， skills/bensz-channel-devtools 要不要调整下？ 使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
+```
+
+- RN3服务器里更新
+
+```
+docker compose down; docker compose pull; docker compose up -d
 ```
 
 # 日常
