@@ -6,6 +6,14 @@
 
 ## [Unreleased]
 
+### Fixed（修复）
+
+- 修复了 README.md 中版本号管理章节引用过时 `config.yaml` 的问题：现已更新为正确的 `app/config.toml` 路径，并同步更新版本号示例为当前版本 `1.28.2`
+- 修复了 GitHub Actions 工作流 `create-release.yml` 中仍然引用 `config.yaml` 的问题：工作流名称和提示信息已更新为 `config.toml`
+- 修复了 README.md 中 Docker 镜像自动发布工作流的调度时间描述错误：从错误的 `0 */12 * * *`（每 12 小时）更正为实际的 `0 18 * * *`（UTC 每天 18:00，即北京时间 02:00）
+- 修复了 GitHub Actions 工作流 `check-version-sync.yml` 中两处仍然引用 `config.yaml` 的问题：工作流输出和 PR 评论中的提示信息已更新为 `config.toml`
+- 修复了 `docs/version-management.md` 文档中多处过时引用：将 `config.yaml` 更新为 `app/config.toml`，将"每 12 小时"更正为"每天北京时间 02:00"
+
 ### Changed（变更）
 
 - 优化了 RSS 按钮复制提示的样式：从直接替换按钮内容改为独立的 Toast 提示框，使用现代渐变背景、流畅动画和更清晰的视觉反馈，提升用户体验

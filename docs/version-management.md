@@ -17,15 +17,15 @@
 
 **方式二：使用自动化工作流**
 
-1. 更新 [config.yaml](../config.yaml) 中的版本号
+1. 更新 [app/config.toml](../app/config.toml) 中 `[project]` 部分的版本号
 2. 更新 [CHANGELOG.md](../CHANGELOG.md) 中的变更内容
-3. 在 GitHub Actions 页面手动触发 `Create Release from config.yaml` 工作流
+3. 在 GitHub Actions 页面手动触发 `Create Release from config.toml` 工作流
 
 ### 2. 自动构建 Docker 镜像
 
 创建 GitHub Release 后，`publish-release-images` 工作流会：
 
-- 每 12 小时自动检查一次最新 Release
+- 每天北京时间 02:00（UTC 18:00）自动检查一次最新 Release
 - 检查 Docker Hub 是否已存在该版本的镜像
 - 如果不存在，自动构建并推送：
   - `{namespace}/{repo}-web:{version}` 和 `:latest`
@@ -35,11 +35,11 @@
 
 `check-version-sync` 工作流会在以下情况自动运行：
 
-- 修改 config.yaml 或 CHANGELOG.md 时
+- 修改 app/config.toml 或 CHANGELOG.md 时
 - 创建 Pull Request 时
 
 检查内容：
-- config.yaml 版本号与最新 Release 是否一致
+- app/config.toml 版本号与最新 Release 是否一致
 - CHANGELOG.md 是否包含当前版本的变更记录
 
 ## 配置要求
@@ -86,5 +86,5 @@
 ### 版本号不一致
 
 1. 运行 `check-version-sync` 工作流查看详细状态
-2. 手动同步 config.yaml 和最新 Release 的版本号
+2. 手动同步 app/config.toml 和最新 Release 的版本号
 3. 更新 CHANGELOG.md 中的版本记录

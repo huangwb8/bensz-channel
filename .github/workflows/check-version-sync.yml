@@ -114,7 +114,7 @@ jobs:
             if [ "${{ steps.compare.outputs.status }}" == "needs_release" ]; then
               echo "### 📝 Next Steps"
               echo "1. Ensure CHANGELOG.md has an entry for version \`${{ steps.config_version.outputs.version }}\`"
-              echo "2. Run the 'Create Release from config.yaml' workflow to create a new release"
+              echo "2. Run the 'Create Release from config.toml' workflow to create a new release"
               echo "3. The Docker images will be automatically built and pushed with the new version tag"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
@@ -138,7 +138,7 @@ jobs:
             if (status === 'needs_release') {
               body += `### 📝 Recommended Actions\n`;
               body += `1. Ensure CHANGELOG.md has an entry for version \`${{ steps.config_version.outputs.version }}\`\n`;
-              body += `2. After merging, run the 'Create Release from config.yaml' workflow\n`;
+              body += `2. After merging, run the 'Create Release from config.toml' workflow\n`;
               body += `3. Docker images will be automatically built with the new version tag\n`;
             }
 

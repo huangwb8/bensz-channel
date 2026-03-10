@@ -1,4 +1,4 @@
-name: Create Release from config.yaml
+name: Create Release from config.toml
 
 on:
   workflow_dispatch:
@@ -95,4 +95,4 @@ jobs:
         if: steps.check_tag.outputs.exists == 'true'
         run: |
           echo "::warning::Tag ${{ steps.version.outputs.tag }} already exists. Skipping release creation."
-          echo "If you want to create a new release, please update the version in config.yaml first."
+          echo "If you want to create a new release, please update the version in app/config.toml first."

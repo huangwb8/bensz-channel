@@ -73,26 +73,28 @@
 
 ### 版本号管理
 
-项目版本号统一在 [config.yaml](config.yaml) 中管理（Single Source of Truth）：
+项目版本号统一在 [app/config.toml](app/config.toml) 的 `[project]` 部分管理（Single Source of Truth）：
 
-```yaml
-project_info:
-  version: 1.24.0  # 当前开发版本
+```toml
+[project]
+name = "bensz-channel"
+version = "1.28.2"
+description = "类似 QQ 频道的 Web 社区平台，基于 PHP、PostgreSQL、Docker 构建"
 ```
 
 ### 创建新版本
 
-1. **更新版本号**：修改 [config.yaml](config.yaml) 中的 `version` 字段
+1. **更新版本号**：修改 [app/config.toml](app/config.toml) 中 `[project]` 部分的 `version` 字段
 2. **更新变更日志**：在 [CHANGELOG.md](CHANGELOG.md) 中添加新版本的变更内容
-3. **创建 Release**：在 GitHub Actions 页面手动触发 `Create Release from config.yaml` 工作流
-   - 工作流会自动从 config.yaml 读取版本号
+3. **创建 Release**：在 GitHub Actions 页面手动触发 `Create Release from config.toml` 工作流
+   - 工作流会自动从 app/config.toml 读取版本号
    - 自动创建 Git tag（格式：`v{version}`）
    - 自动从 CHANGELOG.md 提取 Release Notes
    - 创建 GitHub Release
 
 ### 自动发布 Docker 镜像
 
-项目包含 GitHub Actions 工作流 `publish-release-images`，会按 `0 */12 * * *`（UTC 每天 `00:00` 与 `12:00`）自动检查最新的 **已发布 GitHub Release**。
+项目包含 GitHub Actions 工作流 `publish-release-images`，会按 `0 18 * * *`（UTC 每天 18:00，即北京时间 02:00）自动检查最新的 **已发布 GitHub Release**。
 
 当 Docker Hub 中还不存在该 Release 对应的镜像标签时，工作流会自动构建并推送：
 
@@ -125,11 +127,11 @@ Auth 镜像（[auth-service/Dockerfile](auth-service/Dockerfile)）：
 ### 版本同步检查
 
 项目包含自动版本同步检查工作流，会在以下情况触发：
-- 修改 config.yaml 或 CHANGELOG.md 时
+- 修改 app/config.toml 或 CHANGELOG.md 时
 - 创建 Pull Request 时
 
 检查内容：
-- config.yaml 版本号与最新 GitHub Release 是否同步
+- app/config.toml 版本号与最新 GitHub Release 是否同步
 - CHANGELOG.md 是否包含当前版本的变更记录
 - 自动在 PR 中添加版本状态评论
 
