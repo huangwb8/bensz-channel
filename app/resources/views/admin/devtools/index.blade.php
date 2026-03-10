@@ -33,14 +33,23 @@
     {{-- API 端点说明 --}}
     <section class="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-5">
         <h3 class="font-semibold text-blue-900">API 接入信息</h3>
-        <dl class="mt-3 grid gap-2 sm:grid-cols-2 text-sm">
+        <dl class="mt-3 grid gap-3 text-sm">
             <div>
-                <dt class="text-blue-700 font-medium">Base URL</dt>
-                <dd><code class="font-mono text-blue-900">{{ url('') }}/api/vibe</code></dd>
+                <dt class="text-blue-700 font-medium">环境变量配置</dt>
+                <dd class="mt-1">
+                    <code class="inline-block rounded bg-blue-100 px-2 py-1 font-mono text-blue-900">BENSZ_CHANNEL_URL={{ url('') }}</code>
+                </dd>
+                <p class="mt-1 text-xs text-blue-600">⚠️ 注意：只需配置基础 URL，不要包含 <code class="font-mono">/api/vibe</code> 路径</p>
             </div>
-            <div>
-                <dt class="text-blue-700 font-medium">认证方式</dt>
-                <dd><code class="font-mono text-blue-900">X-Devtools-Key: &lt;你的密钥&gt;</code></dd>
+            <div class="grid gap-2 sm:grid-cols-2">
+                <div>
+                    <dt class="text-blue-700 font-medium">API 端点前缀</dt>
+                    <dd><code class="font-mono text-blue-900">/api/vibe</code></dd>
+                </div>
+                <div>
+                    <dt class="text-blue-700 font-medium">认证方式</dt>
+                    <dd><code class="font-mono text-blue-900">X-Devtools-Key: &lt;你的密钥&gt;</code></dd>
+                </div>
             </div>
         </dl>
         <div class="mt-3 text-xs text-blue-700">

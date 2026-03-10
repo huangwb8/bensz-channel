@@ -23,23 +23,62 @@
             <button type="submit" class="btn-secondary">保存排序</button>
         </form>
 
-        <form action="{{ route('admin.channels.store') }}" method="POST" class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-5">
+        <form action="{{ route('admin.channels.store') }}" method="POST" class="mt-6 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm">
             @csrf
-            <h3 class="mb-4 font-medium text-gray-900">新增频道</h3>
-            <div class="grid gap-4 lg:grid-cols-7">
-                <input type="text" name="name" class="input-field h-10" placeholder="频道名称" required>
-                <input type="text" name="slug" class="input-field h-10" placeholder="slug（留空自动生成）">
-                <input type="text" name="description" class="input-field h-10 lg:col-span-2" placeholder="频道简介">
-                <input type="text" name="icon" class="input-field h-10" placeholder="图标" value="#">
-                <input type="text" name="accent_color" class="input-field h-10" placeholder="#8b5cf6" value="#8b5cf6">
-                <input type="number" name="sort_order" class="input-field h-10" placeholder="排序" value="0">
+            <h3 class="mb-5 text-lg font-semibold text-gray-900">新增频道</h3>
+
+            <div class="space-y-4">
+                <!-- 基础信息 -->
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700">频道名称 <span class="text-red-500">*</span></label>
+                        <input type="text" name="name" class="input-field h-11" placeholder="例如：技术分享" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700">URL Slug</label>
+                        <input type="text" name="slug" class="input-field h-11" placeholder="留空自动生成">
+                    </div>
+                </div>
+
+                <!-- 描述 -->
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700">频道简介</label>
+                    <input type="text" name="description" class="input-field h-11" placeholder="简要描述频道的主题和内容">
+                </div>
+
+                <!-- 视觉元素 -->
+                <div class="grid gap-4 md:grid-cols-3">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700">图标 <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <input type="text" name="icon" id="new-channel-icon" class="input-field h-11 pl-12" placeholder="📌" value="#" required>
+                            <div class="absolute left-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg bg-gray-100 text-xl" id="new-icon-preview">#</div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700">主题色 <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <input type="text" name="accent_color" id="new-channel-color" class="input-field h-11 pl-12" placeholder="#8b5cf6" value="#8b5cf6" required pattern="^#[0-9A-Fa-f]{6}$">
+                            <div class="absolute left-3 top-1/2 h-7 w-7 -translate-y-1/2 rounded-lg border-2 border-white shadow-sm" id="new-color-preview" style="background-color: #8b5cf6;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700">排序权重</label>
+                        <input type="number" name="sort_order" class="input-field h-11" placeholder="0" value="0" min="0" max="999">
+                    </div>
+                </div>
+
+                <!-- 显示选项 -->
+                <div class="rounded-lg border border-gray-200 bg-white p-4">
+                    <input type="hidden" name="show_in_top_nav" value="0">
+                    <label class="inline-flex cursor-pointer items-center gap-3">
+                        <input type="checkbox" name="show_in_top_nav" value="1" checked class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <span class="text-sm font-medium text-gray-700">在顶部导航栏显示该频道</span>
+                    </label>
+                </div>
             </div>
-            <input type="hidden" name="show_in_top_nav" value="0">
-            <label class="mt-4 inline-flex items-center gap-3 text-sm text-gray-600">
-                <input type="checkbox" name="show_in_top_nav" value="1" checked class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                <span>在顶栏显示该频道</span>
-            </label>
-            <button type="submit" class="btn-primary mt-4">新增频道</button>
+
+            <button type="submit" class="btn-primary mt-6 shadow-sm hover:shadow-md">新增频道</button>
         </form>
 
         <div class="mt-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
@@ -146,6 +185,27 @@
                 const rect = target.getBoundingClientRect();
                 const before = event.clientY < rect.top + rect.height / 2;
                 list.insertBefore(dragging, before ? target : target.nextSibling);
+            });
+        }
+
+        // 实时预览：新增频道表单
+        const newIconInput = document.getElementById('new-channel-icon');
+        const newIconPreview = document.getElementById('new-icon-preview');
+        const newColorInput = document.getElementById('new-channel-color');
+        const newColorPreview = document.getElementById('new-color-preview');
+
+        if (newIconInput && newIconPreview) {
+            newIconInput.addEventListener('input', (e) => {
+                newIconPreview.textContent = e.target.value || '#';
+            });
+        }
+
+        if (newColorInput && newColorPreview) {
+            newColorInput.addEventListener('input', (e) => {
+                const color = e.target.value;
+                if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                    newColorPreview.style.backgroundColor = color;
+                }
             });
         }
     </script>

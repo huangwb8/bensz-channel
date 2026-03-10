@@ -6,6 +6,24 @@
 
 ## [Unreleased]
 
+### Changed（变更）
+
+- 优化了 admin/devtools 页面的 API 接入信息显示：
+  - 将 "Base URL" 改为 "环境变量配置"，直接显示完整的环境变量设置格式 `BENSZ_CHANNEL_URL=http://localhost:6542`
+  - 添加了警告提示，明确告诉用户只需配置基础 URL，不要包含 `/api/vibe` 路径
+  - 新增了 "API 端点前缀" 字段，显示 `/api/vibe`，让用户清楚地理解实际的 API 路径结构
+  - 避免了用户误配置 `BENSZ_CHANNEL_URL=http://localhost:6542/api/vibe` 的问题
+  - 修改文件：`app/resources/views/admin/devtools/index.blade.php`
+
+- 优化了 admin/channels 频道管理页面的"新增频道"表单 UI 设计和交互体验：
+  - 重构了表单布局，从 7 列密集网格改为响应式分组布局（2 列基础信息 + 3 列视觉元素），提升可读性和移动端体验
+  - 新增了颜色和图标的实时预览功能，用户输入时即时显示效果
+  - 添加了清晰的字段标签和必填标识（红色星号）
+  - 优化了表单字段的间距和视觉层次感
+  - 改进了渐变背景和阴影效果，增强现代感
+  - 保持现有频道列表（拖拽排序部分）不变
+  - 所有功能测试通过，确保不破坏现有功能
+
 ### Added（新增）
 
 - 新增了固定长度公开标识生成器 `app/app/Support/PublicIdGenerator.php` 与模型能力 `app/app/Models/Concerns/HasPublicId.php`：为频道和文章生成不可变的 16 位十六进制 `public_id`，用于稳定公开链接
