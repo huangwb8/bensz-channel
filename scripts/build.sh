@@ -3,7 +3,8 @@
 set -eu
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-CACHE_BASE_DIR="${CACHE_BASE_DIR:-/Volumes/2T01/Test/bensz-channel}"
+# 默认缓存目录：优先使用环境变量，其次使用项目内 .cache 目录
+CACHE_BASE_DIR="${CACHE_BASE_DIR:-$ROOT_DIR/.cache}"
 
 show_usage() {
     cat <<EOF
@@ -29,9 +30,13 @@ show_usage() {
   $0 --no-cache web       # 强制重新构建 web 服务
 
 本地缓存目录:
+  当前使用: $CACHE_BASE_DIR
   Composer: $CACHE_BASE_DIR/app/composer-cache
   npm (web): $CACHE_BASE_DIR/app/npm-cache
   npm (auth): $CACHE_BASE_DIR/auth-service/npm-cache
+
+环境变量:
+  CACHE_BASE_DIR    自定义缓存基础目录（默认：项目根目录/.cache）
 
 EOF
 }

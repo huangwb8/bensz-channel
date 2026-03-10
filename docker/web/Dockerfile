@@ -24,7 +24,12 @@ WORKDIR /app
 
 COPY app/package.json app/package-lock.json ./
 COPY app/scripts ./scripts
-RUN npm ci --ignore-scripts
+
+# 支持本地缓存目录挂载
+ARG NPM_CACHE_DIR_WEB
+RUN --mount=type=cache,target=/tmp/npm-cache,sharing=locked \
+    npm_config_cache=${NPM_CACHE_DIR_WEB:-/tmp/npm-cache} \
+    npm ci --ignore-scripts
 
 COPY app/resources ./resources
 COPY app/public ./public

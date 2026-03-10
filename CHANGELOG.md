@@ -6,8 +6,18 @@
 
 ## [Unreleased]
 
+### Added（新增）
+
+- 新增了 Docker 镜像构建脚本 `scripts/build.sh`：支持本地缓存模式（默认）和联网模式，通过参数化控制构建行为，避免每次重建都联网下载依赖
+- 新增了构建文档 `scripts/BUILD.md`：详细说明构建模式、缓存管理、故障排查和最佳实践
+
 ### Changed（变更）
 
+- 优化了 Docker 构建流程：修改 `docker/web/Dockerfile` 和 `auth-service/Dockerfile`，支持通过 BuildKit 缓存挂载使用本地缓存目录，大幅提升构建速度并支持离线构建；缓存目录默认为项目根目录的 `.cache/`，可通过 `CACHE_BASE_DIR` 环境变量自定义，确保 fork 用户开箱即用
+- 优化了构建脚本 `scripts/build.sh`：缓存目录从硬编码路径改为默认使用项目内 `.cache/` 目录，支持通过 `CACHE_BASE_DIR` 环境变量自定义，提升跨平台兼容性和 fork 友好性
+- 更新了 `AGENTS.md`：新增"项目环境变量"章节，定义 `CHANNEL_CACHE_PATH` 作为第三方包统一托管目录的标准变量名；新增"Docker 镜像构建规范"章节，详细说明构建模式、缓存目录结构（项目内 `.cache/` 和开发者专用 `${CHANNEL_CACHE_PATH}`）、构建流程、修改 Dockerfile 的规范和与 docker-compose 的集成方式
+- 更新了 `scripts/BUILD.md`：更新缓存目录路径为项目内 `.cache/` 目录，添加自定义缓存目录的说明
+- 更新了 `README.md`：在"快速部署"章节添加构建脚本使用说明，引导用户使用 `scripts/build.sh` 进行镜像构建
 - 统一补齐了全站图标按钮的悬停提示：为布局中的移动端频道抽屉按钮等手写图标按钮补充 `title`，并在前端启动时自动为带 `aria-label` 但缺失 `title` 的交互元素兜底同步提示文案，避免用户仅看到图标却不知道按钮用途；同时补充频道页与后台用户管理页的回归测试
 - 精简了 Docker Compose 配置链路：`scripts/compose.sh` 不再在 `config/` 下持久化生成 `/.compose.env` 中间文件，现改为运行时临时文件；用户只需维护 `config/.env` 这一份覆盖配置，README 与忽略规则已同步更新
 - **重构了配置系统架构**：将 `config/config.toml` 移动到 `app/config.toml` 作为应用基础配置（包含在镜像中），`config/.env` 作为用户自定义配置层（运行时挂载，覆盖 toml），实现配置分层管理

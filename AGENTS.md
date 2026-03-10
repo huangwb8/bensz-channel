@@ -61,18 +61,140 @@
 
 除非用户明确要求其他语言，始终使用 简体中文 与用户对话与撰写文档/说明。
 
+## 项目环境变量
+
+本项目定义以下环境变量，用于统一管理路径和配置：
+
+| 变量名 | 默认值 | 说明 |
+|--------|--------|------|
+| `CHANNEL_CACHE_PATH` | `/Volumes/2T01/Test/bensz-channel` | 第三方包统一托管目录，用于存放 Composer、npm 等依赖缓存 |
+
+**使用说明**：
+- 在 AGENTS.md 中引用路径时，使用 `${CHANNEL_CACHE_PATH}` 而非硬编码路径
+- Fork 用户可通过设置环境变量自定义缓存目录：`export CHANNEL_CACHE_PATH=/your/custom/path`
+- 构建脚本会自动检测并使用该环境变量
+
 ## 联网与搜索
 
 默认优先使用项目内文件与本地上下文；确需联网获取信息时， 优先使用本地搜索工具。仅当本地工具不足以满足需求时再使用其它联网手段，并说明原因与保留关键链接。
 
 ## 依赖管理
 
-**第三方包统一托管目录**：`/Volumes/2T01/Test/bensz-channel`
+**第三方包统一托管目录**：`${CHANNEL_CACHE_PATH}`（默认：`/Volumes/2T01/Test/bensz-channel`）
 
 当项目需要下载任何第三方包（如 npm modules、pip packages 等）时：
 - 包文件统一存放在上述托管目录
 - 通过符号链接或配置文件引用，保持项目目录整洁
 - 避免将大型依赖包提交到版本控制
+
+## Docker 镜像构建规范
+
+**核心原则**：默认使用本地缓存构建，避免每次重建都联网下载依赖；需要联网时通过参数明确指定。
+
+### 构建脚本
+
+**统一构建入口**：`scripts/build.sh`
+
+所有 Docker 镜像构建必须通过此脚本执行，不要直接使用 `docker build` 或 `docker compose build`。
+
+### 构建模式
+
+| 模式 | 命令 | 使用场景 |
+|------|------|----------|
+| **本地缓存模式**（默认） | `./scripts/build.sh` | 日常开发、CI/CD、离线环境 |
+| **联网模式** | `./scripts/build.sh --online` | 首次构建、依赖更新、验证依赖完整性 |
+| **强制重建** | `./scripts/build.sh --no-cache` | 清理缓存后重建、调试构建问题 |
+
+### 缓存目录结构
+
+**默认缓存位置**：`项目根目录/.cache/`（可通过 `CACHE_BASE_DIR` 环境变量自定义）
+
+**开发者专用缓存**：`${CHANNEL_CACHE_PATH}`（默认：`/Volumes/2T01/Test/bensz-channel`）
+
+```
+.cache/                                    # 项目内缓存（推荐，fork 友好）
+├── app/
+│   ├── composer-cache/                    # PHP Composer 缓存
+│   └── npm-cache/                         # Web 前端 npm 缓存
+└── auth-service/
+    └── npm-cache/                         # Auth 服务 npm 缓存
+
+${CHANNEL_CACHE_PATH}/                     # 开发者专用缓存（可选）
+├── app/
+│   ├── composer-cache/
+│   └── npm-cache/
+└── auth-service/
+    └── npm-cache/
+```
+
+**自定义缓存目录**：
+
+```bash
+# 使用项目内缓存（默认，推荐）
+./scripts/build.sh
+
+# 使用开发者专用缓存
+export CACHE_BASE_DIR=${CHANNEL_CACHE_PATH}
+./scripts/build.sh
+
+# 使用完全自定义的缓存目录
+export CACHE_BASE_DIR=/path/to/your/cache
+./scripts/build.sh
+```
+
+### 构建流程
+
+**Web 服务**（[docker/web/Dockerfile](docker/web/Dockerfile)）：
+1. Composer 依赖安装（PHP 后端）→ 使用 `composer-cache`
+2. npm 依赖安装（前端资源）→ 使用 `app/npm-cache`
+3. 前端资源构建（Vite）
+4. 系统包安装（Alpine + PHP 扩展）
+
+**Auth 服务**（[auth-service/Dockerfile](auth-service/Dockerfile)）：
+1. npm 依赖安装 → 使用 `auth-service/npm-cache`
+2. 配置文件复制
+
+### 修改 Dockerfile 的规范
+
+当需要修改 Dockerfile 时，必须保持以下特性：
+
+1. **支持缓存挂载**：使用 `--mount=type=cache` 和 `ARG` 参数
+2. **支持离线构建**：缓存目录存在时不联网
+3. **保持层级优化**：依赖安装层在前，代码复制层在后
+4. **使用 BuildKit**：确保 `RUN --mount` 语法可用
+
+### 示例用法
+
+```bash
+# 日常开发：使用本地缓存
+./scripts/build.sh
+
+# 仅构建 web 服务
+./scripts/build.sh web
+
+# 依赖更新后：联网重新下载
+./scripts/build.sh --online
+
+# 调试构建问题：强制重建
+./scripts/build.sh --no-cache web
+```
+
+### 与 docker-compose 集成
+
+构建完成后，使用 `compose.sh` 启动服务：
+
+```bash
+# 1. 构建镜像
+./scripts/build.sh
+
+# 2. 启动服务
+./scripts/compose.sh up -d
+
+# 3. 查看日志
+./scripts/compose.sh logs -f
+```
+
+**重要**：不要使用 `docker compose up --build`，因为它会绕过缓存优化。
 
 ## Codex CLI 特定说明
 

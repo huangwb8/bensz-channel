@@ -30,6 +30,37 @@
 
 ## 快速部署
 
+### 构建镜像
+
+项目提供专门的构建脚本，支持本地缓存（默认）和联网模式：
+
+```bash
+# 使用本地缓存构建（推荐，快速且支持离线）
+./scripts/build.sh
+
+# 联网模式构建（首次构建或验证依赖）
+./scripts/build.sh --online
+
+# 仅构建特定服务
+./scripts/build.sh web
+./scripts/build.sh auth
+```
+
+详细说明请参考 [scripts/BUILD.md](scripts/BUILD.md)。
+
+### 启动服务
+
+```bash
+# 启动所有服务
+./scripts/compose.sh up -d
+
+# 查看日志
+./scripts/compose.sh logs -f
+
+# 停止服务
+./scripts/compose.sh down
+```
+
 > 之后会出教程。
 
 启动后访问：
