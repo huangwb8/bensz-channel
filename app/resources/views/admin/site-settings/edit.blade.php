@@ -68,7 +68,7 @@
                                 <option value="{{ $modeKey }}" @selected(old('theme_mode', $siteSettingsForm['theme_mode']) === $modeKey)>{{ $modeLabel }}</option>
                             @endforeach
                         </select>
-                        <p class="mt-2 text-xs text-gray-500">选择“自动”时会按下方时间段判断当前应该使用白天或夜间主题。</p>
+                        <p class="mt-2 text-xs text-gray-500">选择"自动"时会按下方时间段判断当前应该使用白天或夜间主题。</p>
                     </div>
 
                     <div class="grid gap-3">
@@ -84,24 +84,39 @@
                 </div>
 
                 <div class="rounded-lg border border-white bg-white px-4 py-3 text-xs text-gray-600">
-                    说明：当“白天开始时间”晚于“夜间开始时间”时，系统会自动跨午夜计算，确保晚上与清晨仍处于夜间模式。
+                    说明：当"白天开始时间"晚于"夜间开始时间"时，系统会自动跨午夜计算，确保晚上与清晨仍处于夜间模式。
                 </div>
             </section>
 
             <section class="space-y-4 rounded-xl border border-blue-100 bg-blue-50/40 p-5">
                 <div>
                     <h4 class="text-base font-semibold text-gray-900">允许用户使用的登录 / 注册方式</h4>
-                    <p class="mt-1 text-sm text-gray-500">至少保留一种方式。邮箱验证码与扫码方式可承担注册入口；邮箱密码主要用于已有账号登录。</p>
+                    <p class="mt-1 text-sm text-gray-500">至少保留一种方式。拖拽调整顺序，从左到右显示。邮箱验证码与扫码方式可承担注册入口；邮箱密码主要用于已有账号登录。</p>
                 </div>
 
-                <div class="grid gap-3 md:grid-cols-2">
-                    @foreach($authMethodOptions as $methodKey => $methodOption)
-                        <label class="flex items-start gap-3 rounded-lg border border-white bg-white p-4 shadow-sm">
-                            <input type="checkbox" name="auth_enabled_methods[]" value="{{ $methodKey }}" class="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" @checked(in_array($methodKey, old('auth_enabled_methods', $siteSettingsForm['auth_enabled_methods']), true))>
-                            <div>
+                <div id="auth-methods-sortable" class="grid gap-3 md:grid-cols-2">
+                    @php
+                        $enabledMethods = old('auth_enabled_methods', $siteSettingsForm['auth_enabled_methods']);
+                        $sortedMethods = [];
+                        foreach ($enabledMethods as $methodKey) {
+                            if (isset($authMethodOptions[$methodKey])) {
+                                $sortedMethods[$methodKey] = $authMethodOptions[$methodKey];
+                            }
+                        }
+                        foreach ($authMethodOptions as $methodKey => $methodOption) {
+                            if (!in_array($methodKey, $enabledMethods, true)) {
+                                $sortedMethods[$methodKey] = $methodOption;
+                            }
+                        }
+                    @endphp
+                    @foreach($sortedMethods as $methodKey => $methodOption)
+                        <label class="auth-method-item flex items-start gap-3 rounded-lg border border-white bg-white p-4 shadow-sm cursor-move" draggable="true" data-method="{{ $methodKey }}">
+                            <input type="checkbox" name="auth_enabled_methods[]" value="{{ $methodKey }}" class="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" @checked(in_array($methodKey, $enabledMethods, true))>
+                            <div class="flex-1">
                                 <div class="text-sm font-medium text-gray-900">{{ $methodOption['label'] }}</div>
                                 <div class="mt-1 text-sm text-gray-500">{{ $methodOption['description'] }}</div>
                             </div>
+                            <div class="text-gray-400 text-xl" title="拖拽排序">⋮⋮</div>
                         </label>
                     @endforeach
                 </div>
@@ -116,4 +131,52 @@
             </div>
         </form>
     </section>
+
+    <script>
+    (function() {
+        const container = document.getElementById('auth-methods-sortable');
+        if (!container) return;
+
+        let draggedElement = null;
+
+        container.addEventListener('dragstart', function(e) {
+            if (e.target.classList.contains('auth-method-item')) {
+                draggedElement = e.target;
+                e.target.style.opacity = '0.5';
+            }
+        });
+
+        container.addEventListener('dragend', function(e) {
+            if (e.target.classList.contains('auth-method-item')) {
+                e.target.style.opacity = '';
+                draggedElement = null;
+            }
+        });
+
+        container.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(container, e.clientY);
+            if (afterElement == null) {
+                container.appendChild(draggedElement);
+            } else {
+                container.insertBefore(draggedElement, afterElement);
+            }
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.auth-method-item:not([style*="opacity: 0.5"])')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+    })();
+    </script>
 @endsection

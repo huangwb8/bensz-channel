@@ -188,12 +188,13 @@
 .brand-text {
     font-family: 'Syne', sans-serif;
     font-weight: 800;
-    font-size: 1.125rem;
+    font-size: 1.375rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
 }
 
 .auth-badge {

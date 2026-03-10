@@ -63,7 +63,6 @@
                     <span aria-hidden="true">💬</span>
                     <span class="brand-text">{{ $siteName ?? 'Bensz Channel' }}</span>
                 </a>
-                <p class="auth-badge">Better Auth 驱动的自托管安全登录</p>
                 <h1 class="page-title">欢迎回来</h1>
                 <p class="page-subtitle">选择一种登录方式继续访问社区内容</p>
             </header>
