@@ -1,3 +1,11 @@
+# General
+
+- 发布release
+
+```
+创建tag，然后 /git-commit ; /git-publish-release 。 然后触发一次docker image构建的github action，确实地将最新的image推送至 docker hub 。  
+```
+
 # 日常
 
 ---
