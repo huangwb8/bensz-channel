@@ -14,48 +14,44 @@
             </div>
         </div>
 
-        <section class="user-ops-dashboard mt-6 rounded-2xl p-5">
-            <div class="flex flex-wrap items-start justify-between gap-4">
+        <section class="user-ops-dashboard mt-4 rounded-2xl p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p class="user-ops-dashboard-kicker text-xs font-semibold uppercase tracking-[0.22em]">Dashboard</p>
-                    <h3 class="mt-2 text-lg font-semibold">用户运营仪表盘</h3>
-                    <p class="user-ops-dashboard-muted mt-1 text-sm">聚合最近 7 天用户登录 / 活跃、评论与发文趋势，帮助管理员快速判断社区热度。</p>
+                    <h3 class="mt-1 text-base font-semibold">用户运营仪表盘</h3>
                 </div>
-                <div class="user-ops-dashboard-badge rounded-full px-3 py-1 text-xs">
-                    登录按最后活跃时间统计
+                <div class="user-ops-dashboard-badge rounded-full px-2.5 py-0.5 text-xs">
+                    最近 7 天数据
                 </div>
             </div>
 
-            <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div class="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
                 @foreach($dashboard['cards'] as $card)
-                    <div class="user-ops-dashboard-card rounded-2xl p-4 backdrop-blur-sm">
-                        <p class="user-ops-dashboard-muted text-sm">{{ $card['label'] }}</p>
-                        <p class="user-ops-dashboard-value mt-2 text-3xl font-semibold">{{ $card['value'] }}</p>
-                        <p class="user-ops-dashboard-soft mt-2 text-xs">{{ $card['helper'] }}</p>
+                    <div class="user-ops-dashboard-card rounded-xl p-3 backdrop-blur-sm">
+                        <p class="user-ops-dashboard-muted text-xs">{{ $card['label'] }}</p>
+                        <p class="user-ops-dashboard-value mt-1 text-2xl font-semibold">{{ $card['value'] }}</p>
+                        <p class="user-ops-dashboard-soft mt-1 text-xs">{{ $card['helper'] }}</p>
                     </div>
                 @endforeach
             </div>
 
-            <div class="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.8fr)]">
-                <div class="user-ops-dashboard-panel rounded-2xl p-4">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <h4 class="user-ops-dashboard-title text-sm font-semibold">最近 7 天登录 / 活跃分布</h4>
-                            <p class="user-ops-dashboard-soft mt-1 text-xs">同图对比登录 / 活跃、评论与已发布文章走势。</p>
-                        </div>
-                        <div class="user-ops-dashboard-muted flex flex-wrap items-center gap-3 text-xs">
-                            <span class="inline-flex items-center gap-2"><span class="dashboard-legend dashboard-legend-login"></span>登录 / 活跃</span>
-                            <span class="inline-flex items-center gap-2"><span class="dashboard-legend dashboard-legend-comments"></span>评论</span>
-                            <span class="inline-flex items-center gap-2"><span class="dashboard-legend dashboard-legend-articles"></span>发文</span>
+            <div class="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_280px]">
+                <div class="user-ops-dashboard-panel rounded-xl p-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <h4 class="user-ops-dashboard-title text-sm font-semibold">7 天活跃趋势</h4>
+                        <div class="user-ops-dashboard-muted flex flex-wrap items-center gap-2.5 text-xs">
+                            <span class="inline-flex items-center gap-1.5"><span class="dashboard-legend dashboard-legend-login"></span>登录</span>
+                            <span class="inline-flex items-center gap-1.5"><span class="dashboard-legend dashboard-legend-comments"></span>评论</span>
+                            <span class="inline-flex items-center gap-1.5"><span class="dashboard-legend dashboard-legend-articles"></span>发文</span>
                         </div>
                     </div>
 
-                    <div class="dashboard-chart mt-6" role="img" aria-label="最近 7 天登录、评论与发文情况图表">
+                    <div class="dashboard-chart" role="img" aria-label="最近 7 天登录、评论与发文情况图表">
                         @foreach($dashboard['series'] as $point)
                             <div class="dashboard-chart-column">
                                 <div class="dashboard-chart-bars">
                                     @foreach([
-                                        'login' => ['label' => '登录 / 活跃', 'class' => 'dashboard-bar-login'],
+                                        'login' => ['label' => '登录', 'class' => 'dashboard-bar-login'],
                                         'comments' => ['label' => '评论', 'class' => 'dashboard-bar-comments'],
                                         'articles' => ['label' => '发文', 'class' => 'dashboard-bar-articles'],
                                     ] as $key => $meta)
@@ -70,33 +66,35 @@
                                                 class="dashboard-chart-bar {{ $meta['class'] }}"
                                                 style="height: {{ $height }}%;"
                                                 title="{{ $point['full_label'] }} {{ $meta['label'] }}：{{ $value }}"
+                                                data-value="{{ $value }}"
                                             ></div>
                                         </div>
                                     @endforeach
                                 </div>
-                                <div class="dashboard-chart-label mt-3 text-center text-xs">{{ $point['label'] }}</div>
+                                <div class="dashboard-chart-label mt-2 text-center text-xs">{{ $point['label'] }}</div>
                             </div>
                         @endforeach
                     </div>
                 </div>
 
-                <div class="space-y-3">
-                    <div class="user-ops-dashboard-card rounded-2xl p-4">
-                        <p class="user-ops-dashboard-muted text-sm">总用户数</p>
-                        <p class="user-ops-dashboard-value mt-2 text-2xl font-semibold">{{ $stats['total'] }}</p>
-                    </div>
-                    <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                        <div class="user-ops-dashboard-card rounded-2xl p-4">
-                            <p class="user-ops-dashboard-muted text-sm">管理员</p>
-                            <p class="user-ops-dashboard-value mt-2 text-2xl font-semibold">{{ $stats['admins'] }}</p>
+                <div class="user-ops-dashboard-panel rounded-xl p-3">
+                    <h4 class="user-ops-dashboard-title text-sm font-semibold mb-2">用户统计</h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between rounded-lg bg-white/40 px-3 py-2">
+                            <span class="user-ops-dashboard-muted text-xs">总用户数</span>
+                            <span class="user-ops-dashboard-value text-lg font-semibold">{{ $stats['total'] }}</span>
                         </div>
-                        <div class="user-ops-dashboard-card rounded-2xl p-4">
-                            <p class="user-ops-dashboard-muted text-sm">成员</p>
-                            <p class="user-ops-dashboard-value mt-2 text-2xl font-semibold">{{ $stats['members'] }}</p>
+                        <div class="flex items-center justify-between rounded-lg bg-white/40 px-3 py-2">
+                            <span class="user-ops-dashboard-muted text-xs">管理员</span>
+                            <span class="user-ops-dashboard-value text-lg font-semibold">{{ $stats['admins'] }}</span>
                         </div>
-                        <div class="user-ops-dashboard-card rounded-2xl p-4">
-                            <p class="user-ops-dashboard-muted text-sm">7 日活跃用户</p>
-                            <p class="user-ops-dashboard-value mt-2 text-2xl font-semibold">{{ $stats['recent'] }}</p>
+                        <div class="flex items-center justify-between rounded-lg bg-white/40 px-3 py-2">
+                            <span class="user-ops-dashboard-muted text-xs">成员</span>
+                            <span class="user-ops-dashboard-value text-lg font-semibold">{{ $stats['members'] }}</span>
+                        </div>
+                        <div class="flex items-center justify-between rounded-lg bg-white/40 px-3 py-2">
+                            <span class="user-ops-dashboard-muted text-xs">7 日活跃</span>
+                            <span class="user-ops-dashboard-value text-lg font-semibold">{{ $stats['recent'] }}</span>
                         </div>
                     </div>
                 </div>
