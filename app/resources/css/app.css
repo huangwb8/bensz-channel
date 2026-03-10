@@ -297,10 +297,57 @@
     }
 
     .icon-action {
+        position: relative;
         @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-sm;
         @apply transition-all duration-200 ease-out;
         @apply hover:-translate-y-0.5 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 hover:shadow-md;
         @apply focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/10;
+    }
+
+    .icon-action[data-tooltip]::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 0.6rem);
+        transform: translateX(-50%) translateY(0.2rem);
+        min-width: max-content;
+        max-width: 14rem;
+        padding: 0.4rem 0.6rem;
+        border-radius: 0.6rem;
+        background: rgba(15, 23, 42, 0.94);
+        color: #f8fafc;
+        font-size: 0.75rem;
+        font-weight: 500;
+        line-height: 1.2;
+        white-space: nowrap;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.24);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.16s ease, transform 0.16s ease;
+        z-index: 80;
+    }
+
+    .icon-action[data-tooltip]::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 0.2rem);
+        transform: translateX(-50%) translateY(0.2rem);
+        border-width: 0.35rem;
+        border-style: solid;
+        border-color: rgba(15, 23, 42, 0.94) transparent transparent transparent;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.16s ease, transform 0.16s ease;
+        z-index: 79;
+    }
+
+    .icon-action[data-tooltip]:hover::after,
+    .icon-action[data-tooltip]:hover::before,
+    .icon-action[data-tooltip]:focus-visible::after,
+    .icon-action[data-tooltip]:focus-visible::before {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
     }
 
     .icon-action-primary {

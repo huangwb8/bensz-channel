@@ -24,6 +24,7 @@
     <a
         href="{{ $href }}"
         title="{{ $tooltip }}"
+        data-tooltip="{{ $tooltip }}"
         aria-label="{{ $accessibleLabel }}"
         {{ $buttonAttributes->class([$variantClasses]) }}
     >
@@ -34,6 +35,7 @@
     <button
         type="{{ $type }}"
         title="{{ $tooltip }}"
+        data-tooltip="{{ $tooltip }}"
         aria-label="{{ $accessibleLabel }}"
         {{ $buttonAttributes->class([$variantClasses]) }}
     >
