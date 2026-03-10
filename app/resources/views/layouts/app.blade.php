@@ -37,7 +37,7 @@
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
     </head>
-    <body class="min-h-screen bg-gray-50 antialiased flex flex-col">
+    <body class="theme-page-shell min-h-screen antialiased flex flex-col">
         @php
             $mobileCurrentChannelIcon = $currentChannel?->icon ?? '🏠';
             $mobileCurrentChannelName = $currentChannel?->name ?? '全部';

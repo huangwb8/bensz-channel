@@ -503,7 +503,33 @@ class StaticPageBuilder
 
     private function minify(string $html): string
     {
-        return trim((string) preg_replace('/>\s+</', '><', $html));
+        // 保护 <script> 和 <style> 标签内的内容
+        $protected = [];
+        $html = preg_replace_callback(
+            '/<(script|style)[^>]*>.*?<\/\1>/is',
+            function ($matches) use (&$protected) {
+                $placeholder = '___PROTECTED_' . count($protected) . '___';
+                $protected[$placeholder] = $matches[0];
+                return $placeholder;
+            },
+            $html
+        );
+
+        // 移除标签之间的多余空白（但保留单个空格，避免破坏内联元素）
+        $html = preg_replace('/>\\s+</', '> <', $html);
+
+        // 移除行首行尾空白
+        $html = preg_replace('/^\\s+|\\s+$/m', '', $html);
+
+        // 将多个空白字符压缩为单个空格
+        $html = preg_replace('/\\s{2,}/', ' ', $html);
+
+        // 恢复被保护的内容
+        foreach ($protected as $placeholder => $content) {
+            $html = str_replace($placeholder, $content, $html);
+        }
+
+        return trim($html);
     }
 
     private function loadManifest(): array

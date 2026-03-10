@@ -61,20 +61,46 @@ if (mobileChannelTrigger && mobileChannelDrawer) {
         });
     };
 
-    mobileChannelTrigger.addEventListener('click', () => {
-        if (mobileChannelDrawer.hidden) {
-            openDrawer();
-            return;
+    const toggleDrawer = (event) => {
+        // 防止默认行为和事件冒泡
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
         }
 
+        if (mobileChannelDrawer.hidden) {
+            openDrawer();
+        } else {
+            closeDrawer();
+        }
+    };
+
+    const handleCloseDrawer = (event) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
         closeDrawer();
+    };
+
+    // 添加 click 和 touchend 事件支持（移动端优化）
+    mobileChannelTrigger.addEventListener('click', toggleDrawer);
+    mobileChannelTrigger.addEventListener('touchend', (event) => {
+        // 防止 touchend 后触发 click 事件
+        event.preventDefault();
+        toggleDrawer(event);
     });
 
     closeButtons.forEach((button) => {
-        button.addEventListener('click', closeDrawer);
+        button.addEventListener('click', handleCloseDrawer);
+        button.addEventListener('touchend', (event) => {
+            event.preventDefault();
+            handleCloseDrawer(event);
+        });
     });
 
     channelLinks.forEach((link) => {
+        // 频道链接不需要阻止默认行为，因为需要导航
         link.addEventListener('click', closeDrawer);
     });
 

@@ -12,6 +12,21 @@
   - 修改文件：`app/resources/js/app.js`（重构复制逻辑，新增 `showCopyToast` 函数）
   - 修改文件：`app/resources/css/app.css`（新增 `.copy-toast` 系列样式和 `.rss-copy-success`/`.rss-copy-error` 按钮状态样式）
 
+## [1.28.2] - 2026-03-10
+
+### Added（新增）
+
+- 新增了夜间模式样式回归测试 `app/tests/Feature/Static/ThemeStylesheetTest.php`：锁定主站与登录页样式表中的关键 dark override，避免夜间模式覆盖回退
+
+### Changed（变更）
+
+- 优化了 `app/resources/css/app.css`：统一补齐深色主题变量、组件状态色与常用 Tailwind 实用类的深色覆盖，首页、频道页、文章页、设置页与后台管理页在夜间模式下保持一致的深色基调
+- 优化了 `app/resources/css/auth.css`：登录页、登录方式切换器、输入框与社交登录入口在夜间模式下改为高对比深色视觉，不再保留浅色玻璃卡片与浅色表单底板
+
+### Fixed（修复）
+
+- 修复了夜间模式开启后页面背景、卡片、提示框、表单和局部按钮仍大量显示浅色样式的问题
+
 ## [1.28.1] - 2026-03-10
 
 ### Added（新增）
