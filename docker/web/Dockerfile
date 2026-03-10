@@ -48,6 +48,7 @@ RUN apk add --no-cache \
 
 # 复制应用代码（排除 vendor，.dockerignore 会处理）
 COPY app ./
+# config.toml 已包含在 app/ 目录中，无需单独复制
 COPY config /var/www/config
 
 # 从 vendor 阶段复制已安装的依赖

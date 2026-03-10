@@ -150,12 +150,8 @@ if (! function_exists('load_root_config')) {
             return [];
         }
 
-        if (! is_dir($configDirectory)) {
-            return [];
-        }
-
         $values = [];
-        $tomlPath = $configDirectory.'/config.toml';
+        $tomlPath = dirname(__DIR__).'/config.toml';
         $envPath = $configDirectory.'/.env';
 
         if (is_file($tomlPath)) {

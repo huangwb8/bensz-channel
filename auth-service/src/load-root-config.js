@@ -133,12 +133,8 @@ export const loadRootConfig = ({ configDir = path.resolve(__dirname, '../../conf
         return {};
     }
 
-    if (!fs.existsSync(configDir) || !fs.statSync(configDir).isDirectory()) {
-        return {};
-    }
-
     const values = {};
-    const tomlPath = path.join(configDir, 'config.toml');
+    const tomlPath = path.resolve(__dirname, '../../app/config.toml');
     const dotenvPath = path.join(configDir, '.env');
 
     if (fs.existsSync(tomlPath)) {

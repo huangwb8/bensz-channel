@@ -173,20 +173,55 @@
 - **修改后**：完善变更描述，添加具体细节和影响范围
 - **发布时**：将 `[Unreleased]` 内容移至具体版本号下
 
-## 版本号管理规范
+## 配置系统架构
 
-**核心原则**：项目的版本号统一通过配置文件管理（Single Source of Truth），确保版本信息的一致性和可追溯性。
+**核心原则**：配置分层管理，基础配置与用户自定义配置分离，确保镜像构建的灵活性和安全性。
 
 ### 配置文件结构
 
-如果项目需要版本管理，应在根目录的配置文件中包含版本信息：
+项目采用双层配置系统：
 
-```yaml
-# 项目基本信息
-project_info:
-  name: bensz-channel
-  version: 1.0.0        # 遵循语义化版本规范
-  description: "通用项目，遵循工程最佳实践"
+```
+app/config.toml          # 应用基础配置（包含在镜像中）
+config/.env              # 用户自定义配置（运行时挂载，覆盖 toml）
+```
+
+### 配置层级与优先级
+
+| 配置文件 | 用途 | 优先级 | 是否包含在镜像 | 是否版本控制 |
+|---------|------|--------|--------------|------------|
+| `app/config.toml` | 应用默认配置、项目元信息 | 低（默认值） | 是 | 是 |
+| `config/.env` | 用户自定义配置、密钥 | 高（覆盖 toml） | 否 | 否（.gitignore） |
+
+### 配置加载机制
+
+1. **加载顺序**：
+   ```
+   app/config.toml（默认配置）
+   ↓
+   config/.env（用户配置，覆盖同名键）
+   ↓
+   派生值计算（如 APP_URL 从 WEB_HOST + WEB_PORT 计算）
+   ```
+
+2. **配置文件内容**：
+   - `app/config.toml`：包含 `[project]` 元信息（name/version/description）和 `[env]` 默认配置
+   - `config/.env`：仅包含需要覆盖的配置项和敏感信息（密码、密钥等）
+
+### 版本号管理
+
+**核心原则**：项目版本号统一在 `app/config.toml` 的 `[project]` 部分管理（Single Source of Truth）。
+
+配置文件结构：
+
+```toml
+[project]
+name = "bensz-channel"
+version = "1.25.0"        # 遵循语义化版本规范
+description = "类似 QQ 频道的 Web 社区平台，基于 PHP、PostgreSQL、Docker 构建"
+
+[env]
+# 应用默认配置...
 ```
 
 ### 版本号命名规则
@@ -238,8 +273,24 @@ project_info:
 
 ```bash
 # 查看配置文件中的版本号
-grep -A 3 "project_info:" config.yaml | grep "version"
+grep -A 2 "^\[project\]" app/config.toml | grep "version"
 ```
+
+### 配置文件最佳实践
+
+1. **密钥管理**：
+   - 所有密钥（DB_PASSWORD、BETTER_AUTH_SECRET 等）仅存放在 `config/.env`
+   - `app/config.toml` 不包含任何敏感信息
+   - `config/.env` 已在 `.gitignore` 中排除
+
+2. **镜像构建**：
+   - `app/config.toml` 随应用代码一起打包到镜像
+   - `config/.env` 通过 Docker volume 挂载，不包含在镜像中
+   - 支持同一镜像在不同环境使用不同的 `.env` 配置
+
+3. **配置覆盖**：
+   - 需要修改默认配置时，在 `config/.env` 中添加同名键值对
+   - 不需要修改 `app/config.toml`（除非是全局默认值变更）
 
 ## 有机更新原则
 

@@ -4,7 +4,7 @@ set -eu
 
 MODE="${1:-env-file}"
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-CONFIG_TOML="$ROOT_DIR/config/config.toml"
+CONFIG_TOML="$ROOT_DIR/app/config.toml"
 CONFIG_ENV="$ROOT_DIR/config/.env"
 
 trim() {

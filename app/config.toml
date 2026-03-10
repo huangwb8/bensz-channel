@@ -1,3 +1,11 @@
+# bensz-channel 项目配置文件
+# 此文件包含项目元信息和应用默认配置
+
+[project]
+name = "bensz-channel"
+version = "1.25.0"
+description = "类似 QQ 频道的 Web 社区平台，基于 PHP、PostgreSQL、Docker 构建"
+
 [env]
 # 服务器配置
 WEB_HOST = "localhost"

@@ -6,6 +6,8 @@ COPY auth-service/package.json auth-service/package-lock.json ./
 RUN npm ci --ignore-scripts
 
 COPY auth-service .
+# 复制 app/config.toml（应用基础配置）和 config/.env（用户自定义配置）
+COPY app/config.toml /srv/app/config.toml
 COPY config /srv/config
 
 RUN chmod +x ./scripts/entrypoint.sh
