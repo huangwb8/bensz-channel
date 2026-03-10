@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\Channel;
 use App\Support\RssFeedBuilder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 
 class RssFeedController extends Controller
@@ -23,9 +24,13 @@ class RssFeedController extends Controller
         ]);
     }
 
-    public function channel(Channel $channel, RssFeedBuilder $builder): Response
+    public function channel(Channel $channel, RssFeedBuilder $builder): Response|RedirectResponse
     {
         abort_unless($channel->is_public, 404);
+
+        if (request()->segment(3) !== $channel->public_id.'.xml') {
+            return to_route('feeds.channels.show', $channel, 301);
+        }
 
         $articles = Article::query()
             ->published()

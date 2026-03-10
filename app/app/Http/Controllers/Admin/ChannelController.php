@@ -33,7 +33,7 @@ class ChannelController extends Controller
 
         Channel::query()->create($validated);
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         return back()->with('status', '频道已创建。');
     }
@@ -44,7 +44,7 @@ class ChannelController extends Controller
 
         $channel->update($validated);
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         return back()->with('status', $channel->isReserved() ? '系统频道设置已更新。' : '频道已更新。');
     }
@@ -69,7 +69,7 @@ class ChannelController extends Controller
 
         $channel->delete();
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         return back()->with('status', '频道已删除，原有文章已归入未分类。');
     }
@@ -94,7 +94,7 @@ class ChannelController extends Controller
                 ->update(['sort_order' => $index]);
         }
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         return back()->with('status', '频道排序已更新。');
     }

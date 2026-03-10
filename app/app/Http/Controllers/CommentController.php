@@ -41,7 +41,7 @@ class CommentController extends Controller
             'comment_count' => $article->allComments()->count(),
         ]);
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAfterComment($article->fresh(['channel']));
 
         return to_route('articles.show', [$article->channel, $article])->with('status', '评论已发布。');
     }

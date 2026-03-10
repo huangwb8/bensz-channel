@@ -8,9 +8,13 @@ use Illuminate\Contracts\View\View;
 
 class ChannelController extends Controller
 {
-    public function show(Channel $channel, CommunityViewData $viewData): View
+    public function show(Channel $channel, CommunityViewData $viewData): View|\Illuminate\Http\RedirectResponse
     {
         abort_unless($channel->is_public, 404);
+
+        if (request()->segment(2) !== $channel->public_id) {
+            return to_route('channels.show', $channel, 301);
+        }
 
         return view('channels.show', $viewData->channel($channel));
     }

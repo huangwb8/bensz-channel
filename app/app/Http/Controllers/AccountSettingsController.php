@@ -46,7 +46,7 @@ class AccountSettingsController extends Controller
         $userAccountManager->fillProfile($user, $validated);
         $user->save();
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         return to_route('settings.account.edit')->with('status', '账户资料已更新。');
     }

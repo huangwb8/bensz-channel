@@ -18,6 +18,7 @@ class ChannelController extends Controller
     {
         $channels = Channel::query()->ordered()->get([
             'id',
+            'public_id',
             'name',
             'slug',
             'description',
@@ -39,7 +40,7 @@ class ChannelController extends Controller
 
         $channel = Channel::query()->create($validated);
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         return response()->json(['channel' => $channel], 201);
     }
@@ -51,7 +52,7 @@ class ChannelController extends Controller
 
         $channel->update($validated);
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         return response()->json(['channel' => $channel->fresh()]);
     }
@@ -78,7 +79,7 @@ class ChannelController extends Controller
 
         $channel->delete();
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         return response()->json(['ok' => true]);
     }
@@ -134,13 +135,7 @@ class ChannelController extends Controller
     private function resolveChannel(string $identifier): Channel
     {
         return Channel::query()
-            ->where(function ($query) use ($identifier): void {
-                $query->where('slug', $identifier);
-
-                if (ctype_digit($identifier)) {
-                    $query->orWhere('id', (int) $identifier);
-                }
-            })
+            ->wherePublicReference($identifier)
             ->firstOrFail();
     }
 

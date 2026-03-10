@@ -40,9 +40,11 @@ class StaticBuildTest extends TestCase
         $this->artisan('site:build-static')->assertSuccessful();
 
         $this->assertFileExists(public_path('static/index.html'));
-        $this->assertFileExists(public_path('static/channels/notice/articles/static-build-test/index.html'));
-        $this->assertFileExists(public_path('static/channels/notice/articles/static-build-test/index.html.gz'));
-        $this->assertStringContainsString('文章目录', file_get_contents(public_path('static/channels/notice/articles/static-build-test/index.html')));
-        $this->assertStringContainsString('href="#overview"', file_get_contents(public_path('static/channels/notice/articles/static-build-test/index.html')));
+        $articlePath = public_path(sprintf('static/channels/%s/articles/%s/index.html', $channel->public_id, $article->public_id));
+
+        $this->assertFileExists($articlePath);
+        $this->assertFileExists($articlePath.'.gz');
+        $this->assertStringContainsString('文章目录', file_get_contents($articlePath));
+        $this->assertStringContainsString('href="#overview"', file_get_contents($articlePath));
     }
 }

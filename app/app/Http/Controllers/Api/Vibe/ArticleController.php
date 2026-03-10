@@ -17,7 +17,7 @@ class ArticleController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Article::query()->with(['channel:id,name,slug', 'author:id,name']);
+        $query = Article::query()->with(['channel:id,public_id,name,slug', 'author:id,name']);
 
         if ($request->filled('channel_id')) {
             $query->where('channel_id', $request->integer('channel_id'));
@@ -44,7 +44,7 @@ class ArticleController extends Controller
     {
         $article = $this->resolveArticle($article);
 
-        return response()->json(['article' => $article->load(['channel:id,name,slug', 'author:id,name'])]);
+        return response()->json(['article' => $article->load(['channel:id,public_id,name,slug', 'author:id,name'])]);
     }
 
     public function store(
@@ -68,9 +68,9 @@ class ArticleController extends Controller
             $articleSubscriptionNotifier->send($article);
         }
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildArticle($article->fresh(['channel']));
 
-        return response()->json(['article' => $article->load(['channel:id,name,slug', 'author:id,name'])], 201);
+        return response()->json(['article' => $article->load(['channel:id,public_id,name,slug', 'author:id,name'])], 201);
     }
 
     public function update(
@@ -81,6 +81,7 @@ class ArticleController extends Controller
         StaticPageBuilder $staticPageBuilder,
     ): JsonResponse {
         $article = $this->resolveArticle($article);
+        $before = $staticPageBuilder->captureArticleState($article->loadMissing('channel'));
         $wasLive = $this->isLiveArticle($article);
         $validated = $this->validateArticle($request, $article);
 
@@ -100,18 +101,19 @@ class ArticleController extends Controller
             $articleSubscriptionNotifier->send($article->fresh(['channel', 'author']));
         }
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildArticle($article->fresh(['channel']), $before);
 
-        return response()->json(['article' => $article->fresh(['channel:id,name,slug', 'author:id,name'])]);
+        return response()->json(['article' => $article->fresh(['channel:id,public_id,name,slug', 'author:id,name'])]);
     }
 
     public function destroy(string $article, StaticPageBuilder $staticPageBuilder): JsonResponse
     {
         $article = $this->resolveArticle($article);
+        $before = $staticPageBuilder->captureArticleState($article->loadMissing('channel'));
 
         $article->delete();
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildDeletedArticle($before);
 
         return response()->json(['ok' => true]);
     }
@@ -177,13 +179,7 @@ class ArticleController extends Controller
     private function resolveArticle(string $identifier): Article
     {
         return Article::query()
-            ->where(function ($query) use ($identifier): void {
-                $query->where('slug', $identifier);
-
-                if (ctype_digit($identifier)) {
-                    $query->orWhere('id', (int) $identifier);
-                }
-            })
+            ->wherePublicReference($identifier)
             ->firstOrFail();
     }
 
@@ -199,7 +195,7 @@ class ArticleController extends Controller
             return $article->slug;
         }
 
-        return 'article-' . Str::lower(Str::random(8));
+        return 'article-'.Str::lower(Str::random(8));
     }
 
     private function isLiveArticle(Article $article): bool

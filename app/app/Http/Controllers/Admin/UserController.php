@@ -93,7 +93,7 @@ class UserController extends Controller
         $deletedCount = $managedUserService->deleteMany($deletableUsers);
         $skippedAdminCount = $selectedUsers->count() - $deletedCount;
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         $message = "已删除 {$deletedCount} 位普通用户。";
 
@@ -131,7 +131,7 @@ class UserController extends Controller
         $user->role = $validated['role'];
         $user->save();
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         if ($request->user()?->is($user) && $validated['role'] === User::ROLE_MEMBER) {
             return to_route('home')->with('status', '你的角色已调整为成员，后台权限已同步更新。');
@@ -148,7 +148,7 @@ class UserController extends Controller
     ): RedirectResponse {
         $managedUserService->delete($user);
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         return to_route('admin.users.index', $request->only(['q', 'role_filter']))->with('status', '普通用户已删除。');
     }

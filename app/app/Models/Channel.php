@@ -5,12 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Concerns\HasPublicId;
 use Illuminate\Database\Eloquent\Builder;
 
 class Channel extends Model
 {
     /** @use HasFactory<\Database\Factories\ChannelFactory> */
-    use HasFactory;
+    use HasFactory, HasPublicId;
 
     public const SLUG_UNCATEGORIZED = 'uncategorized';
     public const SLUG_FEATURED = 'featured';
@@ -55,10 +56,6 @@ class Channel extends Model
         return ! $this->isFeaturedChannel();
     }
 
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
-    }
 
     public function articles(): HasMany
     {

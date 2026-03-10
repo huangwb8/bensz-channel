@@ -34,7 +34,10 @@ class DevtoolsApiTest extends TestCase
         [, $this->rawKey] = DevtoolsApiKey::generate($admin->id, 'phpunit');
 
         $staticPageBuilder = Mockery::mock(StaticPageBuilder::class);
-        $staticPageBuilder->shouldReceive('buildAll')->andReturnNull();
+        $staticPageBuilder->shouldReceive('rebuildAll')->andReturnNull();
+        $staticPageBuilder->shouldReceive('rebuildArticle')->andReturnNull();
+        $staticPageBuilder->shouldReceive('rebuildDeletedArticle')->andReturnNull();
+        $staticPageBuilder->shouldReceive('captureArticleState')->andReturn([]);
         $this->app->instance(StaticPageBuilder::class, $staticPageBuilder);
 
         $markdownRenderer = Mockery::mock(MarkdownRenderer::class);

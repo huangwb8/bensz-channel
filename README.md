@@ -171,21 +171,21 @@ Auth 镜像（[auth-service/Dockerfile](auth-service/Dockerfile)）：
 ### RSS 订阅
 
 - 全部版块：`/feeds/articles.xml`
-- 单个版块：`/feeds/channels/{channel-slug}.xml`
+- 单个版块：`/feeds/channels/{channel-public-id}.xml`
+- 公开文章、频道和频道 RSS 链接统一使用固定长度的不可变 `public_id`，避免标题、slug 或频道名调整后链接失效
 - 任何拿到链接的用户都可直接在 RSS 阅读器中订阅
 
 ## 目录结构
 
 ```text
 bensz-channel/
-├── config/                 # 根配置：config.toml 放非密钥，.env 放密钥
+├── config/                 # 用户运行时配置（.env 等，不入镜像）
 ├── scripts/                # 配置导出与 Docker Compose 包装脚本
-├── app/                    # Laravel 应用源码
+├── app/                    # Laravel 应用源码（含 `app/config.toml` 默认配置）
 ├── auth-service/           # Better Auth 自托管认证服务
 ├── docker/                 # Dockerfile、Nginx、Supervisor 配置
 ├── docker-compose.yml      # 容器编排模板（由 scripts/compose.sh 注入环境）
 ├── data/                   # Docker 持久化数据目录（自动创建，默认 Git 忽略）
-├── config.yaml             # 项目版本单一事实来源
 ├── AGENTS.md               # Codex 项目指令
 ├── CLAUDE.md               # Claude Code 项目指令
 ├── CHANGELOG.md            # 变更记录
@@ -199,7 +199,7 @@ bensz-channel/
 - Mailpit 数据库显式挂载到 `./data/mailpit`
 - Laravel 运行时存储与静态页面输出显式挂载到 `./data/web/`
 - Web 容器启动时只执行 `migrate + SystemBootstrapSeeder`，避免重部署时反复写入 demo 内容
-- 仓库更新时只需执行 `git pull` 后重新运行 `./scripts/compose.sh up --build -d`
+- 仓库更新时只需执行 `git pull` 后依次运行 `./scripts/build.sh` 与 `./scripts/compose.sh up -d`
 
 ## 认证说明
 
@@ -222,9 +222,9 @@ bensz-channel/
 - 项目现在已经同时支持两种运行形态：
   - **演示模式**：默认开启，无需任何外部平台账号，适合 Docker 重部署后直接审查
   - **真实 OAuth 模式**：在微信开放平台 / QQ 互联完成网站应用创建、审核和回调配置后即可启用
-- 默认配置下，`config/config.toml` 里的 `WECHAT_QR_MODE` 与 `QQ_QR_MODE` 都是 `demo`，因此 `./scripts/compose.sh up --build -d` 后登录页可直接使用演示二维码流程
+- 默认配置下，`app/config.toml` 里的 `WECHAT_QR_MODE` 与 `QQ_QR_MODE` 都是 `demo`，因此完成 `./scripts/build.sh` 与 `./scripts/compose.sh up -d` 后登录页可直接使用演示二维码流程
 - 切换到真实模式时：
-  - 在 `config/config.toml` 设置 `WECHAT_QR_MODE="oauth"`、`QQ_QR_MODE="oauth"`
+  - 在 `app/config.toml` 设置 `WECHAT_QR_MODE="oauth"`、`QQ_QR_MODE="oauth"`
   - 填写 `WECHAT_CLIENT_ID`、`QQ_CLIENT_ID`
   - 在 `config/.env` 填写 `WECHAT_CLIENT_SECRET`、`QQ_CLIENT_SECRET`
   - 如需自定义回调地址，再补 `WECHAT_REDIRECT_URI`、`QQ_REDIRECT_URI`
@@ -241,7 +241,7 @@ bensz-channel/
 - 微信 / QQ 扫码登录由 Laravel 直接对接各自官方 OAuth，避免把第三方网页登录协议强塞进 Better Auth OTP 服务
 - Better Auth 独立使用 PostgreSQL `auth` schema，避免与 Laravel 的 `public` schema 冲突
 - Laravel 通过内部共享密钥调用 `auth-service` 的 `/internal/otp/send` 与 `/internal/otp/verify`
-- `app/` 与 `auth-service/` 都会在启动早期自动加载根目录 `config/config.toml` 与 `config/.env`
+- `app/` 与 `auth-service/` 都会在启动早期自动加载 `app/config.toml` 与 `config/.env`
 
 ### 游客
 
@@ -251,7 +251,7 @@ bensz-channel/
 ## 静态 HTML 与 CDN
 
 - 游客 GET 请求优先命中 `public/static/` 内的构建结果
-- 每次管理员改文章/频道、成员发评论后，都会重新构建静态站点
+- 每次管理员改文章/频道、成员发评论后，都会触发静态站点重建；高频文章/评论更新默认走异步队列与增量重建
 - 静态 HTML 会额外生成 `.gz` 文件，Nginx 开启 `gzip_static`
 - 资源文件采用 Vite 指纹命名，可通过 `ASSET_URL` 接入 CDN
 
@@ -335,7 +335,8 @@ SESSION_SECURE_COOKIE=true
 **第三步：重启应用**
 
 ```bash
-./scripts/compose.sh up --build -d
+./scripts/build.sh
+./scripts/compose.sh up -d
 ```
 
 ### 方式二：仅静态资源加速
@@ -365,7 +366,8 @@ SESSION_SECURE_COOKIE=true
 **第三步：重启应用**
 
 ```bash
-./scripts/compose.sh up --build -d
+./scripts/build.sh
+./scripts/compose.sh up -d
 ```
 
 ### 缓存规则说明

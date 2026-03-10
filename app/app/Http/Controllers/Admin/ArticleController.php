@@ -63,7 +63,7 @@ class ArticleController extends Controller
             $articleSubscriptionNotifier->send($article);
         }
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildArticle($article->fresh(['channel']));
 
         return to_route('admin.articles.index')->with('status', '文章已发布。');
     }
@@ -85,6 +85,7 @@ class ArticleController extends Controller
         ArticleSubscriptionNotifier $articleSubscriptionNotifier,
         StaticPageBuilder $staticPageBuilder,
     ): RedirectResponse {
+        $before = $staticPageBuilder->captureArticleState($article->loadMissing('channel'));
         $wasLive = $this->isLiveArticle($article);
         $validated = $this->validateArticle($request, $article);
 
@@ -98,38 +99,44 @@ class ArticleController extends Controller
             $articleSubscriptionNotifier->send($article->fresh(['channel', 'author']));
         }
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildArticle($article->fresh(['channel']), $before);
 
         return to_route('admin.articles.index')->with('status', '文章已更新。');
     }
 
     public function togglePin(Article $article, StaticPageBuilder $staticPageBuilder): RedirectResponse
     {
+        $before = $staticPageBuilder->captureArticleState($article->loadMissing('channel'));
+
         $article->update([
             'is_pinned' => ! $article->is_pinned,
         ]);
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildArticle($article->fresh(['channel']), $before);
 
         return to_route('admin.articles.index')->with('status', $article->fresh()->is_pinned ? '文章已置顶。' : '文章已取消置顶。');
     }
 
     public function toggleFeature(Article $article, StaticPageBuilder $staticPageBuilder): RedirectResponse
     {
+        $before = $staticPageBuilder->captureArticleState($article->loadMissing('channel'));
+
         $article->update([
             'is_featured' => ! $article->is_featured,
         ]);
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildArticle($article->fresh(['channel']), $before);
 
         return to_route('admin.articles.index')->with('status', $article->fresh()->is_featured ? '文章已设为精华。' : '文章已取消精华。');
     }
 
     public function destroy(Article $article, StaticPageBuilder $staticPageBuilder): RedirectResponse
     {
+        $before = $staticPageBuilder->captureArticleState($article->loadMissing('channel'));
+
         $article->delete();
 
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildDeletedArticle($before);
 
         return to_route('admin.articles.index')->with('status', '文章已删除。');
     }

@@ -9,9 +9,16 @@
                     <p class="mt-1 text-sm text-gray-500">SMTP 邮件提醒仅对已注册用户开放；RSS 可直接复制链接到任意阅读器。</p>
                 </div>
                 <div class="flex flex-wrap gap-2 text-sm">
-                    <a href="{{ route('feeds.articles') }}" class="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-orange-700 hover:bg-orange-100">
-                        RSS：全部版块
-                    </a>
+                    <button
+                        data-copy-rss="{{ route('feeds.articles') }}"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-orange-700 hover:bg-orange-100 transition-colors"
+                        title="点击复制 RSS 订阅链接"
+                    >
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+                        </svg>
+                        <span>RSS：全部版块</span>
+                    </button>
                 </div>
             </div>
 
@@ -55,7 +62,16 @@
                                 <div class="min-w-0">
                                     <div class="text-sm font-medium text-gray-900">{{ $channel->icon }} {{ $channel->name }}</div>
                                     <div class="mt-1 text-sm text-gray-500">{{ $channel->description ?: '订阅该版块的新文章邮件。' }}</div>
-                                    <a href="{{ route('feeds.channels.show', $channel) }}" class="mt-2 inline-flex text-xs text-orange-600 hover:text-orange-700">RSS 链接</a>
+                                    <button
+                                        data-copy-rss="{{ route('feeds.channels.show', $channel) }}"
+                                        class="mt-2 inline-flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 transition-colors"
+                                        title="点击复制 RSS 订阅链接"
+                                    >
+                                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+                                        </svg>
+                                        <span>RSS 链接</span>
+                                    </button>
                                 </div>
                             </label>
                         @endforeach

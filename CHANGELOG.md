@@ -8,11 +8,21 @@
 
 ### Added（新增）
 
+- 新增了固定长度公开标识生成器 `app/app/Support/PublicIdGenerator.php` 与模型能力 `app/app/Models/Concerns/HasPublicId.php`：为频道和文章生成不可变的 16 位十六进制 `public_id`，用于稳定公开链接
+- 新增了异步静态构建任务 `app/app/Jobs/ProcessStaticSiteBuildJob.php`：支持将游客静态页重建放入队列后台执行，并通过去重与互斥锁避免重复并发构建
+- 新增了静态构建优化回归测试 `app/tests/Feature/Static/StaticBuildOptimizationTest.php`：覆盖增量重建与命令异步调度行为
 - 新增了 Docker 镜像构建脚本 `scripts/build.sh`：支持本地缓存模式（默认）和联网模式，通过参数化控制构建行为，避免每次重建都联网下载依赖
 - 新增了构建文档 `scripts/BUILD.md`：详细说明构建模式、缓存管理、故障排查和最佳实践
 
 ### Changed（变更）
 
+- 更新了频道、文章与频道 RSS 的公开 URL 方案：`app/app/Models/Channel.php`、`app/app/Models/Article.php`、`app/routes/web.php` 相关链路现默认使用固定长度 `public_id` 生成链接，同时继续兼容旧 slug 与数字 ID 访问并自动 301 跳转到新规范 URL
+- 优化了静态站与 DevTools 兼容层：`app/app/Support/StaticPageBuilder.php`、`app/app/Console/Commands/BuildStaticSite.php`、`app/app/Http/Controllers/Api/Vibe/ChannelController.php`、`app/app/Http/Controllers/Api/Vibe/ArticleController.php` 现统一识别 `public_id` / slug / 数字 ID，保证增量构建、API 管理和旧链接迁移稳定工作
+- 更新了 `README.md` 与 `app/config.toml`：补充固定长度公开链接说明，并将项目版本推进到 `1.27.0`
+- 优化了 `app/app/Support/StaticPageBuilder.php`：全量构建改为分块加载，Gzip 压缩级别改为可配置，并新增基于目标页的增量重建、构建产物哈希跳过与旧静态路径清理能力
+- 优化了后台与 DevTools 的静态重建链路：文章与评论更新默认走增量重建，频道/站点/用户等结构性修改继续走全量重建，兼顾正确性与性能
+- 优化了 Docker 编排与回归脚本：`docker-compose.yml` 现在显式复用 `./scripts/build.sh` 产出的镜像，并新增 `worker` 队列消费者服务；`scripts/test/docker-redeploy.sh` 改为遵循先构建再启动的项目规范
+- 更新了 `README.md` 与 `app/config.toml`：补充静态站点异步队列、增量构建和新的 Docker 重部署流程说明，并将项目版本推进到 `1.26.0`
 - 优化了 Docker 构建流程：修改 `docker/web/Dockerfile` 和 `auth-service/Dockerfile`，支持通过 BuildKit 缓存挂载使用本地缓存目录，大幅提升构建速度并支持离线构建；缓存目录默认为项目根目录的 `.cache/`，可通过 `CACHE_BASE_DIR` 环境变量自定义，确保 fork 用户开箱即用
 - 优化了构建脚本 `scripts/build.sh`：缓存目录从硬编码路径改为默认使用项目内 `.cache/` 目录，支持通过 `CACHE_BASE_DIR` 环境变量自定义，提升跨平台兼容性和 fork 友好性
 - 更新了 `AGENTS.md`：新增"项目环境变量"章节，定义 `CHANNEL_CACHE_PATH` 作为第三方包统一托管目录的标准变量名；新增"Docker 镜像构建规范"章节，详细说明构建模式、缓存目录结构（项目内 `.cache/` 和开发者专用 `${CHANNEL_CACHE_PATH}`）、构建流程、修改 Dockerfile 的规范和与 docker-compose 的集成方式

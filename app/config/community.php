@@ -51,7 +51,12 @@ return [
 
     'static' => [
         'enabled' => filter_var(env('STATIC_SITE_ENABLED', true), FILTER_VALIDATE_BOOL),
+        'async' => filter_var(env('STATIC_SITE_ASYNC', true), FILTER_VALIDATE_BOOL),
         'output_dir' => env('STATIC_SITE_OUTPUT_DIR', 'static'),
+        'queue' => env('STATIC_SITE_QUEUE', 'static-builds'),
+        'gzip_level' => (int) env('STATIC_SITE_GZIP_LEVEL', 6),
+        'channel_chunk_size' => (int) env('STATIC_SITE_CHANNEL_CHUNK_SIZE', 50),
+        'article_chunk_size' => (int) env('STATIC_SITE_ARTICLE_CHUNK_SIZE', 100),
     ],
 
     'theme' => [

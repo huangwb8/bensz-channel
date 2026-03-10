@@ -51,7 +51,7 @@ class SiteSettingsController extends Controller
 
         $siteSettingsManager->save($validated);
         $siteSettingsManager->applyConfiguredSettings();
-        $staticPageBuilder->buildAll();
+        $staticPageBuilder->rebuildAll();
 
         return to_route('admin.site-settings.edit')->with('status', '站点设置已保存。');
     }

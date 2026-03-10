@@ -1,8 +1,7 @@
 services:
   web:
-    # 推荐默认使用本地构建：直接 git clone 后执行 `docker compose up --build`
-    # 如需改用远程已发布镜像，可注释掉下面的 `build:`，并启用示例 `image:`
-    # image: "${WEB_IMAGE:-your-dockerhub-namespace/bensz-channel-web:latest}"
+    # 推荐流程：先执行 `./scripts/build.sh`，再执行 `./scripts/compose.sh up -d`
+    image: "${WEB_IMAGE:-bensz-channel-web:latest}"
     build:
       context: .
       dockerfile: docker/web/Dockerfile
@@ -29,10 +28,33 @@ services:
       timeout: 5s
       retries: 12
 
+  worker:
+    image: "${WEB_IMAGE:-bensz-channel-web:latest}"
+    entrypoint:
+      - php
+      - /var/www/html/artisan
+      - queue:work
+      - --queue=static-builds,default
+      - --sleep=1
+      - --tries=3
+      - --timeout=900
+    env_file:
+      - config/.env
+    depends_on:
+      web:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./data/web/storage:/var/www/html/storage
+      - ./data/web/bootstrap-cache:/var/www/html/bootstrap/cache
+      - ./data/web/static:/var/www/html/public/${STATIC_SITE_OUTPUT_DIR:-static}
+
   auth:
-    # 推荐默认使用本地构建：直接 git clone 后执行 `docker compose up --build`
-    # 如需改用远程已发布镜像，可注释掉下面的 `build:`，并启用示例 `image:`
-    # image: "${AUTH_IMAGE:-your-dockerhub-namespace/bensz-channel-auth:latest}"
+    # 推荐流程：先执行 `./scripts/build.sh`，再执行 `./scripts/compose.sh up -d`
+    image: "${AUTH_IMAGE:-bensz-channel-auth:latest}"
     build:
       context: .
       dockerfile: auth-service/Dockerfile
