@@ -31,14 +31,19 @@ if (mobileChannelTrigger && mobileChannelDrawer) {
     const desktopMediaQuery = window.matchMedia('(min-width: 768px)');
     let lastFocusedElement = null;
 
+    const setDrawerState = (isOpen) => {
+        mobileChannelDrawer.hidden = ! isOpen;
+        mobileChannelDrawer.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        mobileChannelTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+    };
+
     const closeDrawer = () => {
         if (mobileChannelDrawer.hidden) {
             return;
         }
 
-        mobileChannelDrawer.hidden = true;
-        mobileChannelTrigger.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
+        setDrawerState(false);
 
         if (lastFocusedElement instanceof HTMLElement) {
             lastFocusedElement.focus();
@@ -50,9 +55,7 @@ if (mobileChannelTrigger && mobileChannelDrawer) {
             ? document.activeElement
             : mobileChannelTrigger;
 
-        mobileChannelDrawer.hidden = false;
-        mobileChannelTrigger.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
+        setDrawerState(true);
 
         window.requestAnimationFrame(() => {
             if (closeButton instanceof HTMLElement) {
@@ -80,29 +83,21 @@ if (mobileChannelTrigger && mobileChannelDrawer) {
             event.preventDefault();
             event.stopPropagation();
         }
+
         closeDrawer();
     };
 
-    // 添加 click 和 touchend 事件支持（移动端优化）
     mobileChannelTrigger.addEventListener('click', toggleDrawer);
-    mobileChannelTrigger.addEventListener('touchend', (event) => {
-        // 防止 touchend 后触发 click 事件
-        event.preventDefault();
-        toggleDrawer(event);
-    });
 
     closeButtons.forEach((button) => {
         button.addEventListener('click', handleCloseDrawer);
-        button.addEventListener('touchend', (event) => {
-            event.preventDefault();
-            handleCloseDrawer(event);
-        });
     });
 
     channelLinks.forEach((link) => {
-        // 频道链接不需要阻止默认行为，因为需要导航
         link.addEventListener('click', closeDrawer);
     });
+
+    setDrawerState(false);
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {

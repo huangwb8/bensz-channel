@@ -151,71 +151,72 @@
                 </div>
             </div>
 
-            <div id="mobile-channel-drawer" class="mobile-channel-drawer-shell" data-mobile-channel-drawer hidden>
-                <button
-                    type="button"
-                    class="mobile-channel-backdrop"
-                    data-mobile-channel-close
-                    title="关闭频道列表"
-                    aria-label="关闭频道列表"
-                ></button>
+        </header>
 
-                <div class="mobile-channel-drawer" role="dialog" aria-modal="true" aria-label="频道列表">
-                    <div class="flex items-start justify-between gap-3 border-b border-gray-100 px-4 py-4">
-                        <div>
-                            <p class="text-sm font-semibold text-gray-900">切换频道</p>
-                            <p class="mt-1 text-xs text-gray-500">移动端频道较多时，可在这里快速选择。</p>
-                        </div>
-                        <button
-                            type="button"
-                            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:border-gray-300 hover:text-gray-700"
-                            data-mobile-channel-close
-                            data-mobile-channel-close-primary
-                            title="关闭频道列表"
-                            aria-label="关闭频道列表"
-                        >
-                            ✕
-                        </button>
+        <div id="mobile-channel-drawer" class="mobile-channel-drawer-shell" data-mobile-channel-drawer hidden aria-hidden="true">
+            <button
+                type="button"
+                class="mobile-channel-backdrop"
+                data-mobile-channel-close
+                title="关闭频道列表"
+                aria-label="关闭频道列表"
+            ></button>
+
+            <div class="mobile-channel-drawer" role="dialog" aria-modal="true" aria-label="频道列表">
+                <div class="flex items-start justify-between gap-3 border-b border-gray-100 px-4 py-4">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">切换频道</p>
+                        <p class="mt-1 text-xs text-gray-500">移动端频道较多时，可在这里快速选择。</p>
                     </div>
+                    <button
+                        type="button"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:border-gray-300 hover:text-gray-700"
+                        data-mobile-channel-close
+                        data-mobile-channel-close-primary
+                        title="关闭频道列表"
+                        aria-label="关闭频道列表"
+                    >
+                        ✕
+                    </button>
+                </div>
 
-                    <nav class="mobile-channel-list" aria-label="移动端频道列表">
+                <nav class="mobile-channel-list" aria-label="移动端频道列表">
+                    <a
+                        href="{{ route('home') }}"
+                        class="mobile-channel-link {{ $currentChannel === null ? 'mobile-channel-link-active' : '' }}"
+                        data-mobile-channel-link
+                        @if($currentChannel === null) aria-current="page" @endif
+                    >
+                        <span class="flex items-center gap-3">
+                            <span class="text-lg">🏠</span>
+                            <span>
+                                <span class="block text-sm font-semibold">全部</span>
+                                <span class="block text-xs text-gray-500">查看所有频道的最新内容</span>
+                            </span>
+                        </span>
+                        <span class="text-sm text-gray-400">›</span>
+                    </a>
+
+                    @foreach($channels as $channel)
                         <a
-                            href="{{ route('home') }}"
-                            class="mobile-channel-link {{ $currentChannel === null ? 'mobile-channel-link-active' : '' }}"
+                            href="{{ route('channels.show', $channel) }}"
+                            class="mobile-channel-link {{ optional($currentChannel)->is($channel) ? 'mobile-channel-link-active' : '' }}"
                             data-mobile-channel-link
-                            @if($currentChannel === null) aria-current="page" @endif
+                            @if(optional($currentChannel)->is($channel)) aria-current="page" @endif
                         >
                             <span class="flex items-center gap-3">
-                                <span class="text-lg">🏠</span>
+                                <span class="text-lg">{{ $channel->icon }}</span>
                                 <span>
-                                    <span class="block text-sm font-semibold">全部</span>
-                                    <span class="block text-xs text-gray-500">查看所有频道的最新内容</span>
+                                    <span class="block text-sm font-semibold">{{ $channel->name }}</span>
+                                    <span class="block text-xs text-gray-500">{{ $channel->description ?: '进入 '.$channel->name.' 频道' }}</span>
                                 </span>
                             </span>
                             <span class="text-sm text-gray-400">›</span>
                         </a>
-
-                        @foreach($channels as $channel)
-                            <a
-                                href="{{ route('channels.show', $channel) }}"
-                                class="mobile-channel-link {{ optional($currentChannel)->is($channel) ? 'mobile-channel-link-active' : '' }}"
-                                data-mobile-channel-link
-                                @if(optional($currentChannel)->is($channel)) aria-current="page" @endif
-                            >
-                                <span class="flex items-center gap-3">
-                                        <span class="text-lg">{{ $channel->icon }}</span>
-                                        <span>
-                                            <span class="block text-sm font-semibold">{{ $channel->name }}</span>
-                                            <span class="block text-xs text-gray-500">{{ $channel->description ?: '进入 '.$channel->name.' 频道' }}</span>
-                                        </span>
-                                    </span>
-                                    <span class="text-sm text-gray-400">›</span>
-                            </a>
-                        @endforeach
-                    </nav>
-                </div>
+                    @endforeach
+                </nav>
             </div>
-        </header>
+        </div>
 
         <!-- 主内容区 -->
         <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">

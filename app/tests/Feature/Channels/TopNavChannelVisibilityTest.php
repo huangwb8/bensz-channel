@@ -79,6 +79,28 @@ class TopNavChannelVisibilityTest extends TestCase
         $response->assertSee('title="点击复制 RSS 订阅链接"', false);
     }
 
+    public function test_mobile_channel_drawer_is_rendered_outside_sticky_header(): void
+    {
+        $channel = Channel::query()->create([
+            'name' => '开发交流',
+            'slug' => 'engineering',
+            'description' => '开发讨论',
+            'icon' => '🛠️',
+            'accent_color' => '#06b6d4',
+            'sort_order' => 1,
+            'is_public' => true,
+            'show_in_top_nav' => true,
+        ]);
+
+        $response = $this->get(route('channels.show', $channel));
+
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            '</header>',
+            'id="mobile-channel-drawer"',
+        ], false);
+    }
+
     public function test_hidden_channel_remains_accessible_by_direct_route(): void
     {
         $channel = Channel::query()->create([

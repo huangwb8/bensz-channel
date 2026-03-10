@@ -78,7 +78,7 @@
 ```toml
 [project]
 name = "bensz-channel"
-version = "1.28.2"
+version = "1.28.3"
 description = "类似 QQ 频道的 Web 社区平台，基于 PHP、PostgreSQL、Docker 构建"
 ```
 

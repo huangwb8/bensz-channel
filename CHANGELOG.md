@@ -6,6 +6,21 @@
 
 ## [Unreleased]
 
+## [1.28.3] - 2026-03-10
+
+### Added（新增）
+
+- 新增了移动端频道切换抽屉结构回归测试 `app/tests/Feature/Channels/TopNavChannelVisibilityTest.php`：锁定抽屉必须渲染在粘性头部之外，避免移动端浏览器再次出现固定层渲染异常
+
+### Changed（变更）
+
+- 优化了移动端频道切换抽屉的渲染结构与交互状态：`app/resources/views/layouts/app.blade.php` 现将抽屉从带模糊效果的 `top-nav` 外移到页面根层，`app/resources/js/app.js` 改为统一状态同步并移除易导致双触发的 `touchend` 监听，关闭后不再残留异常遮罩或卡死状态
+- 优化了 `app/resources/css/app.css` 中移动端抽屉容器的隔离与滚动行为：补充 `isolation` 与 `overscroll-behavior`，提升移动端层叠稳定性
+
+### Fixed（修复）
+
+- 修复了移动模式下点击左上角频道选择按钮后抽屉界面异常、关闭后仍残留异常显示并影响继续操作的问题
+
 ### Fixed（修复）
 
 - 修复了 README.md 中版本号管理章节引用过时 `config.yaml` 的问题：现已更新为正确的 `app/config.toml` 路径，并同步更新版本号示例为当前版本 `1.28.2`

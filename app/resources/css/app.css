@@ -183,6 +183,7 @@
             inset: 0;
             z-index: 60;
             display: block;
+            isolation: isolate;
         }
 
         .mobile-channel-backdrop {
@@ -194,6 +195,7 @@
             @apply relative z-10 flex h-full max-w-full flex-col shadow-2xl;
             border-right: 1px solid var(--color-border);
             background: var(--color-surface-elevated);
+            overscroll-behavior: contain;
         }
 
         .mobile-channel-list {
