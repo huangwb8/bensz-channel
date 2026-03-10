@@ -138,6 +138,49 @@ class AdminArticleManagementTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_bulk_delete_selected_articles(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $channel = $this->createChannel();
+        $articleA = $this->createArticle($admin, $channel, [
+            'title' => '批量删除文章 A',
+            'slug' => 'bulk-delete-article-a',
+        ]);
+        $articleB = $this->createArticle($admin, $channel, [
+            'title' => '批量删除文章 B',
+            'slug' => 'bulk-delete-article-b',
+        ]);
+        $articleC = $this->createArticle($admin, $channel, [
+            'title' => '保留文章',
+            'slug' => 'bulk-delete-article-c',
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.articles.index'))
+            ->delete(route('admin.articles.bulk-destroy'), [
+                'selected_article_ids' => [$articleA->id, $articleB->id],
+            ])
+            ->assertRedirect(route('admin.articles.index'))
+            ->assertSessionHas('status', '已删除 2 篇文章。');
+
+        $this->assertDatabaseMissing('articles', ['id' => $articleA->id]);
+        $this->assertDatabaseMissing('articles', ['id' => $articleB->id]);
+        $this->assertDatabaseHas('articles', ['id' => $articleC->id]);
+    }
+
+    public function test_admin_bulk_delete_requires_selected_articles(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.articles.index'))
+            ->delete(route('admin.articles.bulk-destroy'), [
+                'selected_article_ids' => [],
+            ])
+            ->assertRedirect(route('admin.articles.index'))
+            ->assertSessionHas('status', '请先选择要删除的文章。');
+    }
+
     public function test_admin_article_index_renders_icon_actions_with_tooltips(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
@@ -155,6 +198,26 @@ class AdminArticleManagementTest extends TestCase
             ->assertSee('title="编辑文章"', false)
             ->assertSee('title="删除文章"', false)
             ->assertSee('aria-label="编辑文章：'.$article->title.'"', false);
+    }
+
+    public function test_admin_article_index_renders_bulk_delete_controls(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $channel = $this->createChannel();
+
+        $this->createArticle($admin, $channel, [
+            'title' => '批量控件文章',
+            'slug' => 'bulk-controls-article',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.articles.index'))
+            ->assertOk()
+            ->assertSee('id="bulk-delete-form"', false)
+            ->assertSee('全选当前页文章', false)
+            ->assertSee('data-bulk-selected-count', false)
+            ->assertSee('data-bulk-select-item', false)
+            ->assertSee('批量删除', false);
     }
 
     public function test_admin_can_toggle_article_pinned_and_featured_flags_from_index(): void

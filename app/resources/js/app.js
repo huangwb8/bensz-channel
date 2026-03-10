@@ -283,15 +283,85 @@ const applyThemeSchedule = () => {
 applyThemeSchedule();
 window.setInterval(applyThemeSchedule, 60 * 1000);
 
+const initializeBulkSelection = (root, options = {}) => {
+    if (! root) {
+        return;
+    }
+
+    const selectableCheckboxes = Array.from(root.querySelectorAll('[data-bulk-select-item]'));
+
+    if (selectableCheckboxes.length === 0) {
+        return;
+    }
+
+    const selectAllCheckbox = root.querySelector('[data-bulk-select-all]');
+    const selectedCount = root.querySelector('[data-bulk-selected-count]');
+    const bulkDeleteButton = root.querySelector('[data-bulk-delete-submit]');
+    const clearSelectionButton = root.querySelector('[data-bulk-clear-selection]');
+    const cardSelector = options.cardSelector || '[data-bulk-select-card]';
+    const selectedClass = options.selectedClass || 'bulk-select-card-selected';
+    const cards = Array.from(root.querySelectorAll(cardSelector));
+
+    const syncSelectionState = () => {
+        const checkedItems = selectableCheckboxes.filter((checkbox) => checkbox.checked);
+        const selectableItems = selectableCheckboxes.filter((checkbox) => ! checkbox.disabled);
+        const checkedCount = checkedItems.length;
+
+        if (selectedCount) {
+            selectedCount.textContent = String(checkedCount);
+        }
+
+        if (selectAllCheckbox instanceof HTMLInputElement) {
+            selectAllCheckbox.checked = selectableItems.length > 0 && checkedCount === selectableItems.length;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < selectableItems.length;
+        }
+
+        if (bulkDeleteButton instanceof HTMLButtonElement) {
+            bulkDeleteButton.disabled = checkedCount === 0;
+        }
+
+        cards.forEach((card) => {
+            const checkbox = card.querySelector('[data-bulk-select-item]');
+            card.classList.toggle(selectedClass, checkbox instanceof HTMLInputElement && checkbox.checked);
+        });
+    };
+
+    selectableCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener('change', syncSelectionState);
+    });
+
+    if (selectAllCheckbox instanceof HTMLInputElement) {
+        selectAllCheckbox.addEventListener('change', () => {
+            selectableCheckboxes
+                .filter((checkbox) => ! checkbox.disabled)
+                .forEach((checkbox) => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+
+            syncSelectionState();
+        });
+    }
+
+    clearSelectionButton?.addEventListener('click', () => {
+        selectableCheckboxes.forEach((checkbox) => {
+            checkbox.checked = false;
+        });
+
+        if (selectAllCheckbox instanceof HTMLInputElement) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+
+        syncSelectionState();
+    });
+
+    syncSelectionState();
+};
+
 const adminUsersPage = document.querySelector('[data-admin-users-page]');
 
 if (adminUsersPage) {
     const userCards = Array.from(adminUsersPage.querySelectorAll('[data-user-card]'));
-    const selectableCheckboxes = Array.from(adminUsersPage.querySelectorAll('[data-bulk-select-item]'));
-    const selectAllCheckbox = adminUsersPage.querySelector('[data-bulk-select-all]');
-    const selectedCount = adminUsersPage.querySelector('[data-bulk-selected-count]');
-    const bulkDeleteButton = adminUsersPage.querySelector('[data-bulk-delete-submit]');
-    const clearSelectionButton = adminUsersPage.querySelector('[data-bulk-clear-selection]');
 
     const syncCardExpansion = (card, expanded) => {
         const panel = card.querySelector('[data-user-card-panel]');
@@ -326,30 +396,6 @@ if (adminUsersPage) {
         }
     };
 
-    const syncSelectionState = () => {
-        const checkedItems = selectableCheckboxes.filter((checkbox) => checkbox.checked);
-        const selectableItems = selectableCheckboxes.filter((checkbox) => ! checkbox.disabled);
-        const checkedCount = checkedItems.length;
-
-        if (selectedCount) {
-            selectedCount.textContent = String(checkedCount);
-        }
-
-        if (selectAllCheckbox instanceof HTMLInputElement) {
-            selectAllCheckbox.checked = selectableItems.length > 0 && checkedCount === selectableItems.length;
-            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < selectableItems.length;
-        }
-
-        if (bulkDeleteButton instanceof HTMLButtonElement) {
-            bulkDeleteButton.disabled = checkedCount === 0;
-        }
-
-        userCards.forEach((card) => {
-            const checkbox = card.querySelector('[data-bulk-select-item]');
-            card.classList.toggle('user-management-card-selected', checkbox instanceof HTMLInputElement && checkbox.checked);
-        });
-    };
-
     userCards.forEach((card) => {
         syncCardExpansion(card, card.getAttribute('data-initial-expanded') === 'true');
     });
@@ -366,34 +412,10 @@ if (adminUsersPage) {
         });
     });
 
-    selectableCheckboxes.forEach((checkbox) => {
-        checkbox.addEventListener('change', syncSelectionState);
+    initializeBulkSelection(adminUsersPage, {
+        cardSelector: '[data-user-card]',
+        selectedClass: 'user-management-card-selected',
     });
-
-    if (selectAllCheckbox instanceof HTMLInputElement) {
-        selectAllCheckbox.addEventListener('change', () => {
-            selectableCheckboxes
-                .filter((checkbox) => ! checkbox.disabled)
-                .forEach((checkbox) => {
-                    checkbox.checked = selectAllCheckbox.checked;
-                });
-
-            syncSelectionState();
-        });
-    }
-
-    clearSelectionButton?.addEventListener('click', () => {
-        selectableCheckboxes.forEach((checkbox) => {
-            checkbox.checked = false;
-        });
-
-        if (selectAllCheckbox instanceof HTMLInputElement) {
-            selectAllCheckbox.checked = false;
-            selectAllCheckbox.indeterminate = false;
-        }
-
-        syncSelectionState();
-    });
-
-    syncSelectionState();
 }
+
+initializeBulkSelection(document.querySelector('[data-admin-articles-page]'));

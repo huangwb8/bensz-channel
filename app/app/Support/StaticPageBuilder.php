@@ -77,6 +77,14 @@ class StaticPageBuilder
         $this->dispatchOrBuild($this->payloadForDeletedArticle($before));
     }
 
+    /**
+     * @param  array<int, array<string, mixed>>  $beforeStates
+     */
+    public function rebuildDeletedArticles(array $beforeStates): void
+    {
+        $this->dispatchOrBuild($this->payloadForDeletedArticles($beforeStates));
+    }
+
     public function rebuildAfterComment(Article $article): void
     {
         $this->dispatchOrBuild($this->payloadForCommentedArticle($article));
@@ -145,6 +153,34 @@ class StaticPageBuilder
             'preview_channel_ids' => array_values(array_unique(array_filter(array_map(fn ($value) => $value === null ? null : (int) $value, [
                 $before['channel_id'] ?? null,
             ])))),
+            'delete_paths' => array_values(array_unique(array_filter($deletePaths))),
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $beforeStates
+     */
+    public function payloadForDeletedArticles(array $beforeStates): array
+    {
+        $channelIds = [];
+        $previewChannelIds = [];
+        $deletePaths = [];
+
+        foreach ($beforeStates as $before) {
+            if (! is_array($before) || $before === []) {
+                continue;
+            }
+
+            $payload = $this->payloadForDeletedArticle($before);
+            $channelIds = [...$channelIds, ...($payload['channel_ids'] ?? [])];
+            $previewChannelIds = [...$previewChannelIds, ...($payload['preview_channel_ids'] ?? [])];
+            $deletePaths = [...$deletePaths, ...($payload['delete_paths'] ?? [])];
+        }
+
+        return [
+            'home' => $beforeStates !== [],
+            'channel_ids' => array_values(array_unique(array_filter(array_map(fn ($value) => $value === null ? null : (int) $value, $channelIds)))),
+            'preview_channel_ids' => array_values(array_unique(array_filter(array_map(fn ($value) => $value === null ? null : (int) $value, $previewChannelIds)))),
             'delete_paths' => array_values(array_unique(array_filter($deletePaths))),
         ];
     }

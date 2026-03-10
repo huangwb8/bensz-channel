@@ -68,6 +68,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/articles', [AdminArticleController::class, 'index'])->name('articles.index');
     Route::get('/articles/create', [AdminArticleController::class, 'create'])->name('articles.create');
     Route::post('/articles', [AdminArticleController::class, 'store'])->name('articles.store');
+    Route::delete('/articles', [AdminArticleController::class, 'bulkDestroy'])->name('articles.bulk-destroy');
     Route::get('/articles/{article}/edit', [AdminArticleController::class, 'edit'])->name('articles.edit');
     Route::put('/articles/{article}', [AdminArticleController::class, 'update'])->name('articles.update');
     Route::patch('/articles/{article}/pin', [AdminArticleController::class, 'togglePin'])->name('articles.pin');

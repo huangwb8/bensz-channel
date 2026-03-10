@@ -375,6 +375,10 @@
         @apply border-red-200 ring-4 ring-red-500/10;
     }
 
+    .bulk-select-card-selected {
+        @apply border-red-200 ring-4 ring-red-500/10;
+    }
+
     .user-management-card-collapsed {
         @apply bg-gray-50/70;
     }

@@ -11,6 +11,7 @@ use App\Support\StaticPageBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -139,6 +140,42 @@ class ArticleController extends Controller
         $staticPageBuilder->rebuildDeletedArticle($before);
 
         return to_route('admin.articles.index')->with('status', '文章已删除。');
+    }
+
+    public function bulkDestroy(Request $request, StaticPageBuilder $staticPageBuilder): RedirectResponse
+    {
+        $selectedArticleIds = collect($request->input('selected_article_ids', []))
+            ->map(fn (mixed $value): int => (int) $value)
+            ->filter(fn (int $value): bool => $value > 0)
+            ->unique()
+            ->values();
+
+        if ($selectedArticleIds->isEmpty()) {
+            return to_route('admin.articles.index')->with('status', '请先选择要删除的文章。');
+        }
+
+        $articles = Article::query()
+            ->with('channel')
+            ->whereIn('id', $selectedArticleIds->all())
+            ->get();
+
+        if ($articles->isEmpty()) {
+            return to_route('admin.articles.index')->with('status', '未删除任何文章：所选文章不存在或已删除。');
+        }
+
+        $beforeStates = $articles
+            ->map(fn (Article $article): array => $staticPageBuilder->captureArticleState($article))
+            ->all();
+
+        DB::transaction(function () use ($articles): void {
+            Article::query()
+                ->whereIn('id', $articles->modelKeys())
+                ->delete();
+        });
+
+        $staticPageBuilder->rebuildDeletedArticles($beforeStates);
+
+        return to_route('admin.articles.index')->with('status', sprintf('已删除 %d 篇文章。', $articles->count()));
     }
 
     private function validateArticle(Request $request, ?Article $article = null): array

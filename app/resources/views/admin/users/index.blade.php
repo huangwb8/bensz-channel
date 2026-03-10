@@ -38,7 +38,7 @@
             <div class="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_280px]">
                 <div class="user-ops-dashboard-panel rounded-xl p-3">
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                        <h4 class="user-ops-dashboard-title text-sm font-semibold">7 天活跃趋势</h4>
+                        <h4 class="user-ops-dashboard-title text-sm font-semibold">最近 7 天登录 / 活跃分布</h4>
                         <div class="user-ops-dashboard-muted flex flex-wrap items-center gap-2.5 text-xs">
                             <span class="inline-flex items-center gap-1.5"><span class="dashboard-legend dashboard-legend-login"></span>登录</span>
                             <span class="inline-flex items-center gap-1.5"><span class="dashboard-legend dashboard-legend-comments"></span>评论</span>
