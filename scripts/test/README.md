@@ -4,14 +4,15 @@
 
 ## 判定标准
 
-- **正常（NORMAL）**：环境检查通过，`auth-service` 回归、Laravel 全量回归、前端构建验证与 Docker 冒烟检查全部通过
+- **正常（NORMAL）**：环境检查通过，DevTools skill 回归、`auth-service` 回归、Laravel 全量回归、前端构建验证与 Docker 冒烟检查全部通过
 - **稳定（STABLE）**：连续多轮检查 `web /up`、`auth /health` 与管理员登录链路都成功
 - **高效（EFFICIENT）**：首页、登录页、RSS 订阅源在默认预算内完成响应
 - **未破坏现有功能（SAFE_CHANGE）**：`NORMAL + STABLE + EFFICIENT` 全部通过
 
 ## 脚本说明
 
-- `scripts/test/doctor.sh`：检查 Docker、Node、PHP、依赖目录与基础运行环境
+- `scripts/test/doctor.sh`：检查 Docker、Node、PHP、Python、依赖目录与基础运行环境
+- `scripts/test/devtools-skill.sh`：统一托管 `skills/bensz-channel-devtools` 的 Python 回归测试入口
 - `scripts/test/auth-regression.sh`：统一托管 `auth-service` 现有 Node 单元测试入口
 - `scripts/test/app-regression.sh`：统一托管 Laravel 全量测试与前端构建验证
 - `scripts/test/docker-redeploy.sh`：通过 `scripts/compose.sh` 重新构建并部署 Docker 栈，再等待健康检查
@@ -27,6 +28,7 @@
 ./scripts/test/all.sh
 
 # 只跑某一类验证
+./scripts/test/devtools-skill.sh
 ./scripts/test/app-regression.sh
 ./scripts/test/docker-smoke.sh
 ./scripts/test/performance.sh

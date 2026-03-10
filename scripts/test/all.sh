@@ -20,6 +20,7 @@ run_stage() {
 }
 
 doctor_ok=0
+skill_ok=0
 auth_ok=0
 app_ok=0
 smoke_ok=0
@@ -29,6 +30,7 @@ performance_ok=0
 run_stage '环境检查' "$SCRIPT_DIR/doctor.sh" && doctor_ok=1
 
 if [ "$doctor_ok" -eq 1 ]; then
+    run_stage 'DevTools skill 回归' "$SCRIPT_DIR/devtools-skill.sh" && skill_ok=1
     run_stage 'auth-service 回归' "$SCRIPT_DIR/auth-regression.sh" && auth_ok=1
     run_stage 'Laravel 回归 + 前端构建' "$SCRIPT_DIR/app-regression.sh" && app_ok=1
     run_stage 'Docker 重部署' "$SCRIPT_DIR/docker-redeploy.sh"
@@ -42,7 +44,7 @@ stable='FAIL'
 efficient='FAIL'
 safe_change='FAIL'
 
-if [ "$doctor_ok" -eq 1 ] && [ "$auth_ok" -eq 1 ] && [ "$app_ok" -eq 1 ] && [ "$smoke_ok" -eq 1 ]; then
+if [ "$doctor_ok" -eq 1 ] && [ "$skill_ok" -eq 1 ] && [ "$auth_ok" -eq 1 ] && [ "$app_ok" -eq 1 ] && [ "$smoke_ok" -eq 1 ]; then
     normal='PASS'
 fi
 

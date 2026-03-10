@@ -20,20 +20,21 @@ metadata:
 
 ## 目标
 
-把"人类的管理意图"稳定翻译为对 `bensz-channel` **DevTools API** 的一组受限操作：
+把“人类的管理意图”稳定翻译为对 `bensz-channel` **DevTools API** 的一组受限操作：
 
-- 频道：列表 / 新增 / 修改 / 删除
-- 文章：列表 / 查看 / 发布 / 修改 / 删除
+- 频道：列表 / 新增 / 修改 / 删除 / 顶栏显隐
+- 文章：列表 / 查看 / 发布 / 修改 / 删除 / 发布状态 / 置顶 / 精华
 - 评论：列表 / 修改可见性 / 删除
-- 用户：列表 / 修改资料和角色
+- 用户：列表 / 修改资料和角色 / 删除普通用户
 
 ## 安全边界（强制）
 
 - 只调用 `{BENSZ_CHANNEL_URL}/api/vibe/*`
 - 不修改软件源代码，只操作数据（数据库层面）
 - 不输出完整 Key；日志中必须脱敏（仅显示前缀）
-- 所有变更类请求（POST/PUT/DELETE/PATCH）默认使用 `connect → 执行 → disconnect` 闭环
+- 所有变更类请求（POST / PUT / PATCH / DELETE）默认使用 `connect → 执行 → disconnect` 闭环
 - 若服务端 heartbeat 返回 `terminate: true`：立刻停止操作并 disconnect
+- `ping` 可无 KEY 执行；`doctor` 和所有鉴权接口必须带 KEY
 
 ## 环境变量
 
@@ -47,24 +48,31 @@ metadata:
 - URL：`bensz_channel_url`、`bdc_url`
 - KEY：`bensz_channel_key`、`bdc_key`
 
-**配置传递机制**：找到 .env 文件后，会将其路径记录在 `BdcEnv.env_file_path` 中，确保工作函数能够明确知道配置来源，便于调试和日志记录。
-
 ### 配置文件搜索顺序（优先级从高到低）
 
-1. **OS 环境变量**（最高优先级）
-   - 通过 `export` 命令设置的环境变量
-
-2. **当前工作目录及父目录的 .env 文件**
-   - 自动向上递归查找（最多 5 层）
-   - 支持 `.env` 和 `.env.local`
-
-3. **用户主目录配置文件**（fallback）
+1. **OS 环境变量**
+2. **当前工作目录及父目录的 `.env` / `.env.local`**（自动向上查找，最多 5 层）
+3. **用户主目录 fallback 配置**
    - `~/.bensz-channel.env`
    - `~/.config/bensz-channel/devtools.env`
 
-### 快速配置
+### 仓库内推荐用法
 
-使用配置向导快速生成 .env 文件：
+在本仓库根目录工作时，优先显式传入已有配置文件：
+
+```bash
+python3 skills/bensz-channel-devtools/scripts/env_check.py --env ./self/remote.env
+python3 skills/bensz-channel-devtools/scripts/client.py --env ./self/remote.env ping
+python3 skills/bensz-channel-devtools/scripts/client.py --env ./self/remote.env doctor
+```
+
+说明：
+
+- `./self/remote.env` 仅作为现成配置来源使用
+- **严禁修改 `./self` 内的任何文件**
+- 若不在本仓库内，可直接使用 `python3 scripts/env_init.py` 生成自己的 `.env`
+
+### 快速配置
 
 ```bash
 # 在当前目录创建 .env
@@ -81,18 +89,9 @@ python3 scripts/env_init.py --path /path/to/.env
 
 1. 登录 bensz-channel 管理界面，进入 **管理员 → DevTools 远程管理**
 2. 生成一个 API 密钥并复制（仅显示一次）
-3. 使用配置向导设置环境变量：
-   ```bash
-   python3 scripts/env_init.py
-   ```
-   或手动设置：
-   ```bash
-   export BENSZ_CHANNEL_URL=http://your-server:6542
-   export BENSZ_CHANNEL_KEY=bdc_xxxxxxxx...
-   ```
+3. 配置环境变量或 `.env`
 4. 验证连接：
    ```bash
-   # ping 可在未配置 KEY 时使用
    python3 scripts/env_check.py
    python3 scripts/client.py ping
    python3 scripts/client.py doctor
@@ -100,47 +99,55 @@ python3 scripts/env_init.py --path /path/to/.env
 
 ## 标准工作流
 
-1. **快速配置**（首次使用）
+1. **环境检查**
    ```bash
-   python3 scripts/env_init.py
+   python3 scripts/env_check.py
+   python3 scripts/env_check.py --verbose
    ```
 
-2. **环境检查**（不泄露 Key）
+2. **连通性验证**
    ```bash
-   python3 scripts/env_check.py           # 基本检查
-   python3 scripts/env_check.py --verbose # 显示详细搜索路径
-   ```
-
-3. **健康检查**
-   ```bash
-   # 仅检查服务是否可达，不要求 KEY
    python3 scripts/client.py ping
-   # 需要 KEY，会执行 connect → heartbeat → disconnect
    python3 scripts/client.py doctor
    ```
 
-4. **执行操作**（按需选择子命令）
+3. **执行管理命令**
    ```bash
-   # 使用默认配置（自动搜索 .env 文件）
    python3 scripts/client.py channels list
-
-   # 指定特定的 .env 文件
-   python3 scripts/client.py --env /path/to/.env channels list
+   python3 scripts/client.py --env /path/to/.env articles list --published true
    ```
+
+## 标识规则
+
+- `channels update/show/delete`：支持 **数值 ID / `public_id` / `slug`**
+- `articles show/update/delete`：支持 **数值 ID / `public_id` / `slug`**
+- `comments update/delete`：使用 **数值 ID**
+- `users update/delete`：使用 **数值 ID**
 
 ## 常见任务映射
 
 | 意图 | 命令 |
 |------|------|
 | 查看所有频道 | `channels list` |
-| 新增频道 | `channels create --name 公告 --icon 📢 --accent-color #3b82f6` |
-| 修改频道 | `channels update --id 1 --name 新名称` |
-| 查看文章列表 | `articles list` |
-| 发布文章 | `articles create --channel-id 1 --title 标题 --body 正文` |
+| 新增频道并隐藏顶栏入口 | `channels create --name 公告 --icon 📢 --accent-color '#3b82f6' --show-in-top-nav false` |
+| 修改频道顶栏显隐 | `channels update --id 1 --show-in-top-nav true` |
+| 查看文章列表 | `articles list --published true --featured true` |
+| 发布文章并置顶 | `articles create --channel-id 1 --title 标题 --body 正文 --published --pinned` |
+| 发布文章并设为精华 | `articles create --channel-id 1 --title 标题 --body 正文 --published --featured` |
+| 将文章切换频道 | `articles update --id 42 --channel-id 3` |
 | 隐藏评论 | `comments update --id 42 --visible false` |
 | 删除评论 | `comments delete --id 42` |
-| 查看用户 | `users list` |
-| 修改用户角色 | `users update --id 1 --role admin` |
+| 查看用户 | `users list --role member` |
+| 修改用户头像 | `users update --id 1 --avatar-url https://cdn.example.com/a.png` |
+| 删除普通用户 | `users delete --id 1` |
+
+## 服务端约束
+
+- `featured`（精华）频道只负责聚合展示，**不能**作为文章主频道
+- 用户更新时，邮箱与手机号至少保留一个
+- **最后一位管理员不可降级**
+- **管理员账号不可通过 DevTools 删除**
+- `doctor` 在 heartbeat 非 200 或 `terminate: true` 时会返回失败
 
 ## API 端点速查
 
@@ -154,17 +161,18 @@ python3 scripts/env_init.py --path /path/to/.env
 | POST | `/disconnect` | 断开连接 |
 | GET | `/channels` | 频道列表 |
 | POST | `/channels` | 创建频道 |
-| PUT | `/channels/{id}` | 更新频道 |
-| DELETE | `/channels/{id}` | 删除频道 |
-| GET | `/articles` | 文章列表（支持 channel_id/published 过滤） |
-| GET | `/articles/{id}` | 文章详情 |
+| PUT | `/channels/{channel}` | 更新频道 |
+| DELETE | `/channels/{channel}` | 删除频道 |
+| GET | `/articles` | 文章列表（支持 `channel_id` / `published` / `pinned` / `featured` 过滤） |
+| GET | `/articles/{article}` | 文章详情 |
 | POST | `/articles` | 创建文章 |
-| PUT | `/articles/{id}` | 更新文章 |
-| DELETE | `/articles/{id}` | 删除文章 |
-| GET | `/comments` | 评论列表（支持 article_id 过滤） |
-| PATCH | `/comments/{id}` | 更新评论（如修改可见性） |
-| DELETE | `/comments/{id}` | 删除评论 |
-| GET | `/users` | 用户列表（支持 q/role 过滤） |
-| PUT | `/users/{id}` | 更新用户 |
+| PUT | `/articles/{article}` | 更新文章 |
+| DELETE | `/articles/{article}` | 删除文章 |
+| GET | `/comments` | 评论列表（支持 `article_id` / `visible` 过滤） |
+| PATCH | `/comments/{comment}` | 更新评论（如修改可见性） |
+| DELETE | `/comments/{comment}` | 删除评论 |
+| GET | `/users` | 用户列表（支持 `q` / `role` 过滤） |
+| PUT | `/users/{user}` | 更新用户 |
+| DELETE | `/users/{user}` | 删除普通用户 |
 
 认证方式：请求头 `X-Devtools-Key: <你的密钥>`

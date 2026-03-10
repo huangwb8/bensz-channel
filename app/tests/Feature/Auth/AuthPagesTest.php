@@ -17,7 +17,7 @@ class AuthPagesTest extends TestCase
             ->assertOk()
             ->assertSee('登录 / 注册')
             ->assertSee('欢迎回来')
-            ->assertSee('Better Auth')
+            ->assertSee('选择一种登录方式继续访问社区内容')
             ->assertSee('选择登录方式')
             ->assertSeeInOrder(['邮箱 + 验证码', '邮箱 + 密码', '微信扫码', 'QQ扫码'])
             ->assertSee('生成微信演示二维码')

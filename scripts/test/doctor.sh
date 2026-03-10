@@ -7,7 +7,7 @@ set -eu
 print_runtime_context
 section '基础依赖检查'
 
-for command_name in docker curl git node npm php awk sed tr sort; do
+for command_name in docker curl git node npm php python3 awk sed tr sort; do
     need_cmd "$command_name"
 done
 

@@ -105,43 +105,69 @@ document.querySelectorAll('[data-copy-rss]').forEach((button) => {
         try {
             await navigator.clipboard.writeText(url);
 
-            // 保存原始内容
-            const originalHTML = button.innerHTML;
+            // 显示成功提示 Toast
+            showCopyToast(button, 'success', '已复制到剪贴板');
 
-            // 显示成功提示
-            button.innerHTML = `
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                <span>已复制</span>
-            `;
-            button.classList.remove('hover:bg-orange-100');
-            button.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
-
-            // 2秒后恢复原状
+            // 按钮状态变化
+            button.classList.add('rss-copy-success');
             setTimeout(() => {
-                button.innerHTML = originalHTML;
-                button.classList.remove('bg-green-100', 'text-green-700', 'border-green-300');
-                button.classList.add('hover:bg-orange-100');
+                button.classList.remove('rss-copy-success');
             }, 2000);
         } catch (error) {
-            // 复制失败时的提示
-            const originalHTML = button.innerHTML;
-            button.innerHTML = `
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-                <span>复制失败</span>
-            `;
-            button.classList.add('bg-red-100', 'text-red-700', 'border-red-300');
+            // 显示失败提示 Toast
+            showCopyToast(button, 'error', '复制失败，请重试');
 
+            // 按钮状态变化
+            button.classList.add('rss-copy-error');
             setTimeout(() => {
-                button.innerHTML = originalHTML;
-                button.classList.remove('bg-red-100', 'text-red-700', 'border-red-300');
+                button.classList.remove('rss-copy-error');
             }, 2000);
         }
     });
 });
+
+// Toast 提示函数
+function showCopyToast(button, type, message) {
+    // 创建 Toast 元素
+    const toast = document.createElement('div');
+    toast.className = `copy-toast copy-toast-${type}`;
+
+    // 图标 SVG
+    const icon = type === 'success'
+        ? `<svg class="copy-toast-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+           </svg>`
+        : `<svg class="copy-toast-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+           </svg>`;
+
+    toast.innerHTML = `
+        ${icon}
+        <span class="copy-toast-text">${message}</span>
+    `;
+
+    // 定位 Toast（相对于按钮）
+    const rect = button.getBoundingClientRect();
+    toast.style.position = 'fixed';
+    toast.style.left = `${rect.left + rect.width / 2}px`;
+    toast.style.top = `${rect.top - 10}px`;
+
+    // 添加到页面
+    document.body.appendChild(toast);
+
+    // 触发动画
+    requestAnimationFrame(() => {
+        toast.classList.add('copy-toast-show');
+    });
+
+    // 2秒后移除
+    setTimeout(() => {
+        toast.classList.remove('copy-toast-show');
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 300);
+    }, 2000);
+}
 
 document.querySelectorAll('[data-qr-value]').forEach(async (element) => {
     const value = element.getAttribute('data-qr-value');

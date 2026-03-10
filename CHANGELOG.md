@@ -6,7 +6,30 @@
 
 ## [Unreleased]
 
+### Changed（变更）
+
+- 优化了 RSS 按钮复制提示的样式：从直接替换按钮内容改为独立的 Toast 提示框，使用现代渐变背景、流畅动画和更清晰的视觉反馈，提升用户体验
+  - 修改文件：`app/resources/js/app.js`（重构复制逻辑，新增 `showCopyToast` 函数）
+  - 修改文件：`app/resources/css/app.css`（新增 `.copy-toast` 系列样式和 `.rss-copy-success`/`.rss-copy-error` 按钮状态样式）
+
+## [1.28.1] - 2026-03-10
+
+### Added（新增）
+
+- 新增了 `skills/bensz-channel-devtools` 的专用回归测试入口：`scripts/test/devtools-skill.sh` 与 `scripts/test/test_bensz_channel_devtools.py` 现会自动校验 DevTools CLI 的最新参数映射、用户删除命令与诊断失败返回码
+
+### Changed（变更）
+
+- 优化了 `skills/bensz-channel-devtools` 与当前代码对齐度：CLI 现支持频道顶栏显隐、文章置顶/精华/发布时间/主频道切换、用户头像更新与普通用户删除，并补齐仓库内 `--env ./self/remote.env` 的推荐用法说明
+- 更新了 `scripts/test/all.sh`、`scripts/test/doctor.sh` 与 `scripts/test/README.md`：将 DevTools skill 回归纳入统一自动化验证闭环，并显式检查 `python3` 运行环境
+
+### Fixed（修复）
+
+- 修复了 `skills/bensz-channel-devtools/scripts/client.py` 中 `doctor` 在 heartbeat 返回非 200 时仍然报成功的问题，现已正确返回失败，避免 Docker 重部署后的远程审查出现误判
+- 修复了 `app/tests/Feature/Auth/AuthPagesTest.php` 对旧登录页文案 `Better Auth` 的过时断言，现改为校验当前界面的稳定提示文案，恢复全量回归通过
+
 ## [1.28.0] - 2026-03-10
+
 
 ### Added（新增）
 
