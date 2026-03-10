@@ -34,6 +34,16 @@
     --color-text-secondary: #6b7280;
     --color-text-muted: #9ca3af;
     --top-nav-bg: rgba(255, 255, 255, 0.9);
+    --user-ops-dashboard-bg: linear-gradient(135deg, #eff6ff 0%, #f8fafc 48%, #eef2ff 100%);
+    --user-ops-dashboard-border: rgba(148, 163, 184, 0.28);
+    --user-ops-dashboard-panel-bg: rgba(255, 255, 255, 0.88);
+    --user-ops-dashboard-panel-border: rgba(148, 163, 184, 0.24);
+    --user-ops-dashboard-text: #0f172a;
+    --user-ops-dashboard-muted: #475569;
+    --user-ops-dashboard-soft: #64748b;
+    --user-ops-dashboard-kicker: #0369a1;
+    --user-ops-dashboard-badge-bg: rgba(255, 255, 255, 0.82);
+    --user-ops-dashboard-badge-border: rgba(148, 163, 184, 0.24);
 }
 
 [data-theme='dark'] {
@@ -45,6 +55,16 @@
     --color-text-secondary: #cbd5f5;
     --color-text-muted: #94a3b8;
     --top-nav-bg: rgba(15, 23, 42, 0.85);
+    --user-ops-dashboard-bg: linear-gradient(135deg, #020617 0%, #0f172a 52%, #111827 100%);
+    --user-ops-dashboard-border: rgba(148, 163, 184, 0.18);
+    --user-ops-dashboard-panel-bg: rgba(15, 23, 42, 0.74);
+    --user-ops-dashboard-panel-border: rgba(255, 255, 255, 0.08);
+    --user-ops-dashboard-text: #f8fafc;
+    --user-ops-dashboard-muted: #cbd5e1;
+    --user-ops-dashboard-soft: #94a3b8;
+    --user-ops-dashboard-kicker: rgba(186, 230, 253, 0.9);
+    --user-ops-dashboard-badge-bg: rgba(255, 255, 255, 0.06);
+    --user-ops-dashboard-badge-border: rgba(255, 255, 255, 0.1);
 }
 
 @layer base {
@@ -56,6 +76,15 @@
 
     html {
         scroll-behavior: smooth;
+        color-scheme: light;
+    }
+
+    [data-theme='light'] {
+        color-scheme: light;
+    }
+
+    [data-theme='dark'] {
+        color-scheme: dark;
     }
 
     a, button {
@@ -311,6 +340,44 @@
         @apply inline-flex h-2.5 w-2.5 rounded-full;
     }
 
+    .user-ops-dashboard {
+        border: 1px solid var(--user-ops-dashboard-border);
+        background: var(--user-ops-dashboard-bg);
+        color: var(--user-ops-dashboard-text);
+        box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+    }
+
+    .user-ops-dashboard-card,
+    .user-ops-dashboard-panel {
+        border: 1px solid var(--user-ops-dashboard-panel-border);
+        background: var(--user-ops-dashboard-panel-bg);
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    .user-ops-dashboard-kicker {
+        color: var(--user-ops-dashboard-kicker);
+    }
+
+    .user-ops-dashboard-badge {
+        border: 1px solid var(--user-ops-dashboard-badge-border);
+        background: var(--user-ops-dashboard-badge-bg);
+        color: var(--user-ops-dashboard-muted);
+    }
+
+    .user-ops-dashboard-title,
+    .user-ops-dashboard-value {
+        color: var(--user-ops-dashboard-text);
+    }
+
+    .user-ops-dashboard-muted {
+        color: var(--user-ops-dashboard-muted);
+    }
+
+    .user-ops-dashboard-soft,
+    .dashboard-chart-label {
+        color: var(--user-ops-dashboard-soft);
+    }
+
     .dashboard-legend-login,
     .dashboard-bar-login {
         background: linear-gradient(180deg, #38bdf8 0%, #2563eb 100%);
@@ -339,7 +406,9 @@
     }
 
     .dashboard-chart-bars {
-        @apply flex h-52 items-end justify-center gap-2 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-4;
+        @apply flex h-52 items-end justify-center gap-2 rounded-2xl px-3 py-4;
+        border: 1px solid var(--user-ops-dashboard-panel-border);
+        background: color-mix(in srgb, var(--user-ops-dashboard-panel-bg) 86%, transparent);
     }
 
     .dashboard-chart-bar-slot {

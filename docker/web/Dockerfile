@@ -6,7 +6,11 @@ WORKDIR /app
 COPY app/composer.json app/composer.lock ./
 
 # 安装依赖，使用 COMPOSER_VENDOR_DIR 环境变量覆盖本地配置
-RUN COMPOSER_VENDOR_DIR=/app/vendor composer install \
+# 支持本地缓存目录挂载（通过 --mount=type=bind）
+ARG COMPOSER_CACHE_DIR
+RUN --mount=type=cache,target=/tmp/composer-cache,sharing=locked \
+    COMPOSER_CACHE_DIR=${COMPOSER_CACHE_DIR:-/tmp/composer-cache} \
+    COMPOSER_VENDOR_DIR=/app/vendor composer install \
     --no-dev \
     --no-interaction \
     --no-progress \

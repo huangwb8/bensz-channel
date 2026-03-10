@@ -3,8 +3,8 @@
 set -eu
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-COMPOSE_ENV="$ROOT_DIR/config/.compose.env"
 DATA_DIR="$ROOT_DIR/data"
+COMPOSE_ENV=
 
 compose_project_name() {
     if [ -n "${COMPOSE_PROJECT_NAME:-}" ]; then
@@ -116,8 +116,13 @@ migrate_legacy_runtime_data() {
     copy_container_dir "$web_container" "/var/www/html/public/$(grep '^STATIC_SITE_OUTPUT_DIR=' "$COMPOSE_ENV" 2>/dev/null | tail -n 1 | cut -d= -f2- || printf 'static')" "$DATA_DIR/web/static"
 }
 
+cleanup_compose_env() {
+    [ -n "${COMPOSE_ENV:-}" ] && [ -f "$COMPOSE_ENV" ] && rm -f "$COMPOSE_ENV"
+}
+
 umask 077
-mkdir -p "$ROOT_DIR/config"
+COMPOSE_ENV=$(mktemp "${TMPDIR:-/tmp}/bensz-channel-compose.XXXXXX")
+trap cleanup_compose_env EXIT HUP INT TERM
 "$ROOT_DIR/scripts/load-config-env.sh" env-file > "$COMPOSE_ENV"
 ensure_data_dirs
 migrate_legacy_runtime_data "${1:-}"

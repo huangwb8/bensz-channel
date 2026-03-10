@@ -27,7 +27,6 @@ desktop.ini
 .env.local
 .env.*.local
 config/.env
-config/.compose.env
 *.pem
 *.key
 *.crt

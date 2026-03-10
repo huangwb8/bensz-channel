@@ -1,6 +1,20 @@
 import './bootstrap';
 import QRCode from 'qrcode';
 
+const syncInteractiveTitles = (root = document) => {
+    root.querySelectorAll('button[aria-label]:not([title]), a[aria-label]:not([title]), [role="button"][aria-label]:not([title])').forEach((element) => {
+        const label = element.getAttribute('aria-label')?.trim();
+
+        if (! label) {
+            return;
+        }
+
+        element.setAttribute('title', label);
+    });
+};
+
+syncInteractiveTitles();
+
 const mobileChannelTrigger = document.querySelector('[data-mobile-channel-trigger]');
 const mobileChannelDrawer = document.querySelector('[data-mobile-channel-drawer]');
 
@@ -203,7 +217,7 @@ if (statusNode) {
     }, 2000);
 }
 
-const themeRoot = document.body;
+const themeRoot = document.documentElement;
 const normalizeTimeValue = (value, fallback) => {
     if (! value) {
         return fallback;
@@ -251,10 +265,14 @@ const applyThemeSchedule = () => {
     const dayStart = normalizeTimeValue(themeRoot.dataset.themeDayStart, '07:00');
     const nightStart = normalizeTimeValue(themeRoot.dataset.themeNightStart, '19:00');
     const resolvedTheme = resolveTheme(mode, dayStart, nightStart, new Date());
+    const currentTheme = themeRoot.getAttribute('data-theme');
 
-    if (resolvedTheme !== themeRoot.dataset.themeApplied) {
-        themeRoot.dataset.themeApplied = resolvedTheme;
+    if (resolvedTheme !== currentTheme) {
         themeRoot.setAttribute('data-theme', resolvedTheme);
+    }
+
+    if (themeRoot.style.colorScheme !== resolvedTheme) {
+        themeRoot.style.colorScheme = resolvedTheme;
     }
 };
 

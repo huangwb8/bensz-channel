@@ -70,9 +70,27 @@ class AdminUserManagementTest extends TestCase
             ->assertSee('最近 7 天登录 / 活跃分布')
             ->assertSee('批量删除')
             ->assertSee('data-bulk-selected-count', false)
+            ->assertSee('title="保存用户"', false)
             ->assertSee('aria-label="保存用户：'.$member->name.'"', false)
             ->assertSee('title="删除用户"', false)
+            ->assertSee('title="展开用户"', false)
             ->assertSee('aria-label="展开用户：'.$member->name.'"', false);
+    }
+
+    public function test_admin_user_dashboard_uses_theme_aware_classes_instead_of_forced_dark_mode(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'last_seen_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('user-ops-dashboard-card', false)
+            ->assertSee('user-ops-dashboard-panel', false)
+            ->assertDontSee('bg-slate-950', false)
+            ->assertDontSee('bg-slate-900/70', false);
     }
 
     public function test_non_admin_cannot_access_user_management_routes(): void

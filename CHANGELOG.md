@@ -6,12 +6,24 @@
 
 ## [Unreleased]
 
+### Changed（变更）
+
+- 统一补齐了全站图标按钮的悬停提示：为布局中的移动端频道抽屉按钮等手写图标按钮补充 `title`，并在前端启动时自动为带 `aria-label` 但缺失 `title` 的交互元素兜底同步提示文案，避免用户仅看到图标却不知道按钮用途；同时补充频道页与后台用户管理页的回归测试
+- 精简了 Docker Compose 配置链路：`scripts/compose.sh` 不再在 `config/` 下持久化生成 `/.compose.env` 中间文件，现改为运行时临时文件；用户只需维护 `config/.env` 这一份覆盖配置，README 与忽略规则已同步更新
+- **重构了配置系统架构**：将 `config/config.toml` 移动到 `app/config.toml` 作为应用基础配置（包含在镜像中），`config/.env` 作为用户自定义配置层（运行时挂载，覆盖 toml），实现配置分层管理
+- **删除了 `config.yaml`**：项目元信息（name/version/description）迁移到 `app/config.toml` 的 `[project]` 部分，作为版本号的单一事实来源
+- **更新了配置加载代码**：修改 `auth-service/src/load-root-config.js`、`app/bootstrap/load-root-config.php`、`scripts/load-config-env.sh` 以支持新的配置路径
+- **更新了 Docker 构建配置**：修改 `docker/web/Dockerfile` 和 `auth-service/Dockerfile` 以正确复制 `app/config.toml`
+- **更新了 `AGENTS.md`**：新增"配置系统架构"章节，详细说明配置文件结构、层级优先级、加载机制、版本号管理和最佳实践
+
 ### Added（新增）
 
 - 新增了 `AGENTS.md` 的"测试规范"章节：明确 `scripts/test/` 目录用途、测试覆盖要求、执行时机和脚本规范，确保所有功能在交付前通过自动化测试验证
 - 新增了集中测试目录 `scripts/test/`：统一托管环境检查、Laravel 回归、auth-service 回归、Docker 重部署、冒烟、稳定性与性能验证脚本，供 AI 与人工复用
 
 ### Changed（变更）
+
+- 优化了前后台白天 / 夜间主题切换：将自动主题的首次判定前移到 `html` 级别启动脚本，避免后台设置页因服务端与浏览器重复计算时间而出现先黑后白的闪烁；同时将 `admin/users` 用户运营仪表盘改为真正跟随主题切换的自适应样式，并补充对应回归测试
 
 - 更新了 `README.md`：补充统一测试入口与 `NORMAL / STABLE / EFFICIENT / SAFE_CHANGE` 判定口径，方便改动后快速确认系统是否仍然可靠
 - 更新了 `config.yaml`：将项目版本推进到 `1.25.0`，用于记录本次自动化测试基础设施补齐

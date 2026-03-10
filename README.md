@@ -284,7 +284,7 @@ ASSET_URL=https://cdn.example.com
 
 **第一步：配置应用**
 
-编辑 `config/.compose.env`：
+编辑 `config/.env`：
 
 ```env
 APP_URL=https://community.example.com   # 公网访问域名（即 CDN 加速域名）
@@ -313,7 +313,7 @@ SESSION_SECURE_COOKIE=true
 
 **第一步：配置应用**
 
-编辑 `config/.compose.env`：
+编辑 `config/.env`：
 
 ```env
 APP_URL=https://community.example.com   # 主站域名，直连服务器
@@ -321,7 +321,7 @@ ASSET_URL=https://cdn.example.com       # 静态资源 CDN 域名
 SESSION_SECURE_COOKIE=true
 ```
 
-也可以不改 `config/.compose.env`，部署后在后台”站点设置 → 静态资源 CDN”填写 CDN 域名，效果相同。
+也可以不改 `config/.env`，部署后在后台”站点设置 → 静态资源 CDN”填写 CDN 域名，效果相同。
 
 **第二步：DogeCloud 控制台**
 

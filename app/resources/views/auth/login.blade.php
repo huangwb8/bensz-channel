@@ -59,7 +59,7 @@
 
         <div class="login-card">
             <header class="card-header">
-                <a href="{{ route('home') }}" class="brand-mark" aria-label="返回主页">
+                <a href="{{ route('home') }}" class="brand-mark" title="返回主页" aria-label="返回主页">
                     <span aria-hidden="true">💬</span>
                     <span class="brand-text">{{ $siteName ?? 'Bensz Channel' }}</span>
                 </a>

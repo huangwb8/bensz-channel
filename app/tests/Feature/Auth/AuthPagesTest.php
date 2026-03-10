@@ -43,6 +43,27 @@ class AuthPagesTest extends TestCase
             ->assertDontSee('微信扫码');
     }
 
+    public function test_login_page_bootstraps_theme_on_html_for_client_side_schedule_resolution(): void
+    {
+        config([
+            'community.theme.mode' => 'auto',
+            'community.theme.day_start' => '06:30',
+            'community.theme.night_start' => '20:30',
+        ]);
+
+        $response = $this->get(route('login'));
+
+        $response->assertOk();
+
+        $content = $response->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/<html\b[^>]*data-theme-mode="auto"[^>]*data-theme-day-start="06:30"[^>]*data-theme-night-start="20:30"[^>]*data-theme="light"/s',
+            $content,
+        );
+        $this->assertStringContainsString('document.documentElement', $content);
+    }
+
     public function test_qr_login_pages_can_be_rendered(): void
     {
         $this->post(route('auth.qr.start', 'wechat'))

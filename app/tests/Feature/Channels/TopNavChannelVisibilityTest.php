@@ -73,7 +73,10 @@ class TopNavChannelVisibilityTest extends TestCase
         $response->assertOk();
         $response->assertSee('aria-current="page"', false);
         $response->assertSee('打开频道列表');
+        $response->assertSee('title="打开频道列表"', false);
+        $response->assertSee('title="关闭频道列表"', false);
         $response->assertSee('移动端频道较多时，可在这里快速选择。');
+        $response->assertSee('title="点击复制 RSS 订阅链接"', false);
     }
 
     public function test_hidden_channel_remains_accessible_by_direct_route(): void
