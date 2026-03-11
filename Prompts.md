@@ -25,6 +25,13 @@ docker compose down; docker compose pull; docker compose up -d
 
 ---
 
+./AGENTS.md  里添加这2个规则：
+
+- 每次交付优化代码的结果前， 必须跑通 scripts/test 里预设的测试，保证各种功能是正常
+- 如果代码优化了，scripts/test 里预设的测试有变化了，那么需要优化 scripts/test 里的代码，保证测试流程和最新的代码相协调
+
+---
+
 登陆添加2fa功能，用户可以选择是否开启。 使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
 
 ---
