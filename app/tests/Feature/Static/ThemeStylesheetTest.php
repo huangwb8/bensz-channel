@@ -15,6 +15,8 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringContainsString("[data-theme='dark'] .bg-gray-50", $stylesheet);
         $this->assertStringContainsString("[data-theme='dark'] .text-gray-900", $stylesheet);
         $this->assertStringContainsString("[data-theme='dark'] .border-gray-200", $stylesheet);
+        $this->assertStringContainsString("[data-theme='dark'] .from-gray-50", $stylesheet);
+        $this->assertStringContainsString("[data-theme='dark'] .to-white", $stylesheet);
         $this->assertStringContainsString("[data-theme='dark'] .from-blue-50", $stylesheet);
         $this->assertStringContainsString("[data-theme='dark'] .bg-orange-50", $stylesheet);
     }

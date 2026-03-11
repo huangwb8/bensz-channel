@@ -49,6 +49,7 @@ class CdnSettingsTest extends TestCase
         $this->assertSame('https://cdn.example.com', $setting->cdn_asset_url);
         $this->assertFalse((bool) $setting->cdn_sync_enabled);
         $this->assertTrue((bool) $setting->cdn_sync_on_build);
+        $this->assertSame((int) config('community.uploads.article_image_max_mb', 50), $setting->article_image_max_mb);
     }
 
     public function test_admin_can_update_storage_cdn_settings_and_preserve_existing_credentials_when_left_blank(): void

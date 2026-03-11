@@ -131,7 +131,7 @@ class SiteSettingsManager
                 $validated,
                 'article_image_max_mb',
                 fn () => $this->normalizeImageMaxMb($validated['article_image_max_mb'] ?? null),
-                $setting->article_image_max_mb,
+                $setting->article_image_max_mb ?? $this->normalizeImageMaxMb(config('community.uploads.article_image_max_mb', 50)),
             ),
         ]);
         $setting->save();

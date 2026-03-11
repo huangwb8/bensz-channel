@@ -22,10 +22,13 @@
 - 重构了 README 结构以突出 AI 工具集成特色：将"AI 工具集成"移至"核心特性"列表首位，在"项目简介"中新增"核心亮点"段落强调 AI 驱动的社区运营能力；将"Agent Skill 安装"章节从文档部分提前到"快速开始"之后，扩展为"AI 工具集成（Agent Skill）"独立章节，详细介绍安装步骤和功能特性；同步更新了 README_EN.md
 - 新增了文档同步规范章节：在 `AGENTS.md` 中新增"文档同步规范"章节，明确规定 `README_EN.md` 必须与 `README.md` 保持内容对齐（后者变前者变），`docs/开发者文档.md` 必须与最新源代码保持协调，确保文档信息准确性；同时提供了同步检查清单，规范不同变更类型对应的文档更新要求
 - 重构了"本地构建镜像"文档位置：将 `README.md` 和 `README_EN.md` 中的"本地构建镜像"详细步骤转移到 `docs/开发者文档.md` 的"Docker 镜像构建"章节，README 中仅保留简短引用；开发者文档中补充了"克隆仓库"步骤，形成完整的构建流程；符合"README 面向普通用户，开发者文档面向开发者"的文档分层原则
+- 优化了暗色主题灰阶渐变支持：`app/resources/css/app.css` 现补充 `from-gray-50` 与 `to-white` 的夜间模式覆盖规则，确保后台创建表单等灰阶渐变容器在暗色主题下保持一致的深色视觉；`app/tests/Feature/Static/ThemeStylesheetTest.php` 同步增加回归断言
 
 ### Fixed（修复）
 
 - 修复了 README 快速开始部分引用不存在文件的问题：此前文档中引用了 `self/remote.env` 和 `self/docker-compose.yml`，但这些是私有配置文件不在 Git 仓库中；现在改为使用 `config/.env.example` 作为配置模板，并提供完整的配置说明，确保用户克隆仓库后能够正常部署
+- 修复了频道管理页夜间模式下新增频道表单发白的问题：此前 `from-gray-50 → to-white` 渐变未被暗色主题覆盖，导致表单背景保持浅色、白色标签对比度异常；现在暗色模式会自动映射到深色渐变，频道管理与同类后台表单显示恢复正常
+- 修复了首次仅保存 CDN 设置时站点配置写入失败的问题：`app/app/Support/SiteSettingsManager.php` 现会为未显式提交的 `article_image_max_mb` 回退到运行时默认值，避免 `site_settings` 首次插入时触发非空约束；`app/tests/Feature/Admin/CdnSettingsTest.php` 同步增加断言覆盖该回归
 
 ## [1.34.5] - 2026-03-11
 
