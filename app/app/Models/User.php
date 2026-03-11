@@ -59,6 +59,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'last_seen_at' => 'datetime',
+            'banned_at' => 'datetime',
+            'banned_until' => 'datetime',
             'password' => 'hashed',
             'two_factor_recovery_codes' => 'array',
             'two_factor_enabled_at' => 'datetime',
@@ -135,5 +137,50 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isBanned(): bool
+    {
+        if ($this->banned_at === null) {
+            return false;
+        }
+
+        if ($this->banned_until === null) {
+            return true;
+        }
+
+        return $this->banned_until->isFuture();
+    }
+
+    public function hasExpiredBan(): bool
+    {
+        return $this->banned_at !== null
+            && $this->banned_until !== null
+            && $this->banned_until->isPast();
+    }
+
+    public function activeBanMessage(): ?string
+    {
+        if (! $this->isBanned()) {
+            return null;
+        }
+
+        if ($this->banned_until === null) {
+            return '该账号已被永久封禁，请联系管理员。';
+        }
+
+        return '该账号已被封禁至 '.$this->banned_until->format('Y-m-d H:i').'，请联系管理员。';
+    }
+
+    public function banUntil(?\Illuminate\Support\Carbon $until): void
+    {
+        $this->banned_at = now();
+        $this->banned_until = $until;
+    }
+
+    public function clearBan(): void
+    {
+        $this->banned_at = null;
+        $this->banned_until = null;
     }
 }

@@ -132,6 +132,60 @@
         </form>
     </section>
 
+    <section class="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4 border-b border-gray-100 pb-4">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900">数据备份与恢复</h3>
+                <p class="mt-1 text-sm text-gray-500">备份会导出后台维护的核心设置与社区数据；恢复会覆盖当前核心数据并清理现有登录会话。</p>
+            </div>
+            <div class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">高风险操作</div>
+        </div>
+
+        <div class="mt-6 grid gap-6 lg:grid-cols-2">
+            <section class="rounded-xl border border-blue-100 bg-blue-50 p-5">
+                <h4 class="text-base font-semibold text-blue-900">备份核心数据</h4>
+                <p class="mt-2 text-sm leading-6 text-blue-800">生成一个可离线保存的 <code class="rounded bg-white/80 px-1 py-0.5 text-xs text-blue-900">tar.gz</code> 文件，并立即下载到本地。该文件包含站点设置、邮件配置、用户资料、文章、评论、频道结构以及 DevTools 密钥等敏感信息，请务必妥善保管。</p>
+
+                <div class="mt-4 rounded-lg border border-white/70 bg-white/80 p-4">
+                    <p class="text-sm font-medium text-blue-900">当前将备份以下核心表</p>
+                    <ul class="mt-3 space-y-2 text-sm text-blue-900">
+                        @foreach ($backupTableSummaries as $tableSummary)
+                            <li class="flex items-center justify-between gap-3">
+                                <span class="font-mono text-xs uppercase tracking-wide text-blue-700">{{ $tableSummary['name'] }}</span>
+                                <span class="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-800">{{ $tableSummary['count'] }} 条</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                <div class="mt-5">
+                    <a href="{{ route('admin.site-settings.backup.download') }}" class="btn-primary inline-flex items-center justify-center">下载 tar.gz 备份</a>
+                </div>
+            </section>
+
+            <section class="rounded-xl border border-red-100 bg-red-50 p-5">
+                <h4 class="text-base font-semibold text-red-900">从备份恢复</h4>
+                <p class="mt-2 text-sm leading-6 text-red-800">上传此前下载的 <code class="rounded bg-white/80 px-1 py-0.5 text-xs text-red-900">tar.gz</code> 备份文件即可恢复。恢复后，当前站点设置、邮件设置、用户、频道、文章、评论和 DevTools 密钥会被覆盖，所有登录会话也会被清理。</p>
+
+                <form action="{{ route('admin.site-settings.backup.restore') }}" method="POST" enctype="multipart/form-data" class="mt-5 space-y-4" onsubmit="return confirm('确认使用该备份恢复核心数据吗？当前站点设置、用户、频道、文章、评论和登录会话都会被覆盖，且此操作不可撤销。')">
+                    @csrf
+
+                    <div>
+                        <label for="backup_archive" class="mb-2 block text-sm font-medium text-red-900">备份文件</label>
+                        <input id="backup_archive" type="file" name="backup_archive" accept=".tar.gz,application/gzip,application/x-gzip" class="input-field h-11 bg-white" required>
+                        <p class="mt-2 text-xs text-red-700">请仅上传系统导出的 tar.gz 备份文件，避免使用手工修改过的压缩包。</p>
+                    </div>
+
+                    <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700">上传 tar.gz 恢复</button>
+                </form>
+            </section>
+        </div>
+
+        <div class="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            重要提醒：该备份文件包含敏感数据（例如密码哈希、双因子信息、SMTP 凭据与 API 密钥）。请仅在可信设备中保存，并避免通过不安全渠道传播。
+        </div>
+    </section>
+
     <script>
     (function() {
         const container = document.getElementById('auth-methods-sortable');

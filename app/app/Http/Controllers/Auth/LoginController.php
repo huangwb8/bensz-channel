@@ -8,8 +8,8 @@ use App\Models\LoginCode;
 use App\Models\QrLoginRequest;
 use App\Services\Auth\LoginUserResolver;
 use App\Services\Auth\SocialOAuthManager;
-use App\Support\QrLoginBroker;
 use App\Support\PendingTwoFactorLogin;
+use App\Support\QrLoginBroker;
 use App\Support\SiteSettingsManager;
 use App\Support\TwoFactorAuthenticationManager;
 use Illuminate\Contracts\View\View;
@@ -106,6 +106,7 @@ class LoginController extends Controller
         );
 
         $user = $resolver->resolve($identity);
+        $this->ensureNotBanned($user);
 
         if ($pendingTwoFactorLogin->start($request, $user, true)) {
             return to_route('auth.two-factor.challenge');
@@ -139,6 +140,8 @@ class LoginController extends Controller
             ]);
         }
 
+        $this->ensureNotBanned($user);
+
         if ($pendingTwoFactorLogin->start($request, $user, true)) {
             return to_route('auth.two-factor.challenge');
         }
@@ -152,9 +155,19 @@ class LoginController extends Controller
             return to_route('home');
         }
 
-        if ($pendingTwoFactorLogin->pendingUser($request) === null) {
+        $user = $pendingTwoFactorLogin->pendingUser($request);
+
+        if ($user === null) {
             return to_route('login')->withErrors([
                 'login_method' => '登录状态已失效，请重新登录。',
+            ]);
+        }
+
+        if ($user->isBanned()) {
+            $pendingTwoFactorLogin->clear($request);
+
+            return to_route('login')->withErrors([
+                'login_method' => $user->activeBanMessage() ?? '该账号已被封禁，请联系管理员。',
             ]);
         }
 
@@ -184,6 +197,14 @@ class LoginController extends Controller
         if ($user === null) {
             return to_route('login')->withErrors([
                 'login_method' => '登录状态已失效，请重新登录。',
+            ]);
+        }
+
+        if ($user->isBanned()) {
+            $pendingTwoFactorLogin->clear($request);
+
+            return to_route('login')->withErrors([
+                'login_method' => $user->activeBanMessage() ?? '该账号已被封禁，请联系管理员。',
             ]);
         }
 
@@ -226,6 +247,16 @@ class LoginController extends Controller
         }
 
         if ($qrLoginRequest->status === QrLoginRequest::STATUS_APPROVED && $qrLoginRequest->approvedBy !== null) {
+            if ($qrLoginRequest->approvedBy->isBanned()) {
+                $qrLoginRequest->update(['status' => QrLoginRequest::STATUS_CONSUMED]);
+                $request->session()->flash('status', $qrLoginRequest->approvedBy->activeBanMessage() ?? '该账号已被封禁，请联系管理员。');
+
+                return response()->json([
+                    'status' => QrLoginRequest::STATUS_CONSUMED,
+                    'redirect' => route('login'),
+                ]);
+            }
+
             $requiresTwoFactorChallenge = $pendingTwoFactorLogin->start($request, $qrLoginRequest->approvedBy, true);
 
             $qrLoginRequest->update(['status' => QrLoginRequest::STATUS_CONSUMED]);
@@ -304,6 +335,17 @@ class LoginController extends Controller
 
         throw ValidationException::withMessages([
             'login_method' => '当前未开放该登录方式，请联系管理员。',
+        ]);
+    }
+
+    private function ensureNotBanned(\App\Models\User $user): void
+    {
+        if (! $user->isBanned()) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'login_method' => $user->activeBanMessage() ?? '该账号已被封禁，请联系管理员。',
         ]);
     }
 

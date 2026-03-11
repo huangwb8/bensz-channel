@@ -24,6 +24,21 @@ class AccountSettingsTest extends TestCase
             ->assertSee('两步验证');
     }
 
+    public function test_banned_user_is_redirected_from_account_settings(): void
+    {
+        $user = User::factory()->create([
+            'banned_at' => now()->subHour(),
+            'banned_until' => now()->addDay(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('settings.account.edit'))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors(['login_method']);
+
+        $this->assertGuest();
+    }
+
     public function test_home_menu_exposes_account_settings_entry_for_authenticated_user(): void
     {
         $user = User::factory()->create();

@@ -65,4 +65,44 @@ class OtpLoginTest extends TestCase
                 && $request['code'] === '123456';
         });
     }
+
+    public function test_banned_user_cannot_login_with_email_code(): void
+    {
+        Config::set('community.auth.driver', 'better_auth');
+        Config::set('community.auth.preview_codes', true);
+        Config::set('services.better_auth.base_url', 'http://auth:3001');
+        Config::set('services.better_auth.internal_secret', 'test-secret');
+
+        User::factory()->create([
+            'email' => 'banned@example.com',
+            'banned_at' => now()->subHour(),
+            'banned_until' => now()->addDays(3),
+        ]);
+
+        Http::fake([
+            'http://auth:3001/internal/otp/verify' => Http::response([
+                'user' => [
+                    'id' => 'auth-user-banned',
+                    'email' => 'banned@example.com',
+                    'phone' => null,
+                    'name' => '封禁成员',
+                    'image' => null,
+                    'emailVerified' => true,
+                    'phoneVerified' => false,
+                ],
+            ]),
+        ]);
+
+        $this->from(route('login'))
+            ->post(route('auth.code.verify'), [
+                'channel' => 'email',
+                'target' => 'banned@example.com',
+                'code' => '123456',
+                'name' => '封禁成员',
+            ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors(['login_method']);
+
+        $this->assertGuest();
+    }
 }

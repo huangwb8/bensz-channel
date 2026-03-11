@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\DataBackupManager;
 use App\Support\SiteSettingsManager;
 use App\Support\StaticPageBuilder;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Throwable;
 
 class SiteSettingsController extends Controller
 {
@@ -29,7 +34,53 @@ class SiteSettingsController extends Controller
                 'wechat_qr' => ['label' => '微信扫码', 'description' => '支持通过微信扫码登录/注册。'],
                 'qq_qr' => ['label' => 'QQ扫码', 'description' => '支持通过 QQ 扫码登录/注册。'],
             ],
+            'backupTableSummaries' => app(DataBackupManager::class)->backupTables(),
         ]);
+    }
+
+    public function downloadBackup(DataBackupManager $dataBackupManager): BinaryFileResponse|RedirectResponse
+    {
+        try {
+            $archivePath = $dataBackupManager->createBackupArchive();
+
+            return response()
+                ->download($archivePath, 'bensz-channel-backup-'.now()->format('Ymd-His').'.tar.gz', [
+                    'Content-Type' => 'application/gzip',
+                ])
+                ->deleteFileAfterSend(true);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return to_route('admin.site-settings.edit')->withErrors('备份文件生成失败，请稍后重试。');
+        }
+    }
+
+    public function restoreBackup(Request $request, DataBackupManager $dataBackupManager): RedirectResponse
+    {
+        $validated = $request->validate([
+            'backup_archive' => ['required', 'file'],
+        ]);
+
+        /** @var UploadedFile $backupArchive */
+        $backupArchive = $validated['backup_archive'];
+
+        if (! $backupArchive->isValid()) {
+            return to_route('admin.site-settings.edit')->withErrors('上传的备份文件无效，请重新选择后再试。');
+        }
+
+        try {
+            $dataBackupManager->restoreFromArchive($backupArchive->getRealPath());
+
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return to_route('login')->with('status', '核心数据已从备份恢复，请重新登录并尽快核对站点配置。');
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return to_route('admin.site-settings.edit')->withErrors('恢复失败：无法识别该备份文件，或恢复过程中出现错误。');
+        }
     }
 
     public function update(

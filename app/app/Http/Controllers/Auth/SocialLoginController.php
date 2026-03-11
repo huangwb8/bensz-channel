@@ -10,7 +10,6 @@ use App\Support\QrLoginBroker;
 use App\Support\SiteSettingsManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -91,6 +90,12 @@ class SocialLoginController extends Controller
 
             return to_route('login')->withErrors([
                 'login_method' => '登录服务暂时不可用，请稍后重试。',
+            ]);
+        }
+
+        if ($user->isBanned()) {
+            return to_route('login')->withErrors([
+                'login_method' => $user->activeBanMessage() ?? '该账号已被封禁，请联系管理员。',
             ]);
         }
 

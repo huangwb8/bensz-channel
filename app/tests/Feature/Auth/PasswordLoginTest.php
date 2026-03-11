@@ -46,4 +46,25 @@ class PasswordLoginTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_banned_user_cannot_login_with_password(): void
+    {
+        User::factory()->create([
+            'email' => 'banned@example.com',
+            'password' => 'secret123456',
+            'banned_at' => now()->subHour(),
+            'banned_until' => now()->addDay(),
+        ]);
+
+        $this->from(route('login'))
+            ->post(route('auth.password.login'), [
+                'login_method' => 'email-password',
+                'email' => 'banned@example.com',
+                'password' => 'secret123456',
+            ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors(['login_method']);
+
+        $this->assertGuest();
+    }
 }

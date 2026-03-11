@@ -5,9 +5,11 @@ namespace Tests\Feature\Admin;
 use App\Models\Article;
 use App\Models\Channel;
 use App\Models\Comment;
+use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AdminUserManagementTest extends TestCase
@@ -67,6 +69,10 @@ class AdminUserManagementTest extends TestCase
             ->get(route('admin.users.index'))
             ->assertOk()
             ->assertSee('用户运营仪表盘')
+            ->assertSee('手动添加用户')
+            ->assertSee('新增用户')
+            ->assertSee('封禁设置')
+            ->assertSee('永久封禁')
             ->assertSee('最近 7 天登录 / 活跃分布')
             ->assertSee('批量删除')
             ->assertSee('data-bulk-selected-count', false)
@@ -75,6 +81,114 @@ class AdminUserManagementTest extends TestCase
             ->assertSee('title="删除用户"', false)
             ->assertSee('title="展开用户"', false)
             ->assertSee('aria-label="展开用户：'.$member->name.'"', false);
+    }
+
+    public function test_admin_can_create_user_from_user_management(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.store'), [
+                'name' => '新建运营成员',
+                'email' => 'ops-new@example.com',
+                'phone' => '139 0000 0001',
+                'role' => User::ROLE_MEMBER,
+                'avatar_url' => 'https://cdn.example.com/new-user.png',
+                'bio' => '负责新用户 onboarding',
+                'password' => 'welcome-pass-123',
+                'password_confirmation' => 'welcome-pass-123',
+            ])
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHas('status', '用户已创建，可使用邮箱和初始密码登录。');
+
+        $user = User::query()->where('email', 'ops-new@example.com')->first();
+
+        $this->assertNotNull($user);
+        $this->assertSame(User::ROLE_MEMBER, $user->role);
+        $this->assertSame('13900000001', $user->phone);
+        $this->assertSame('https://cdn.example.com/new-user.png', $user->avatar_url);
+        $this->assertSame('负责新用户 onboarding', $user->bio);
+        $this->assertNull($user->email_verified_at);
+        $this->assertNull($user->phone_verified_at);
+        $this->assertNull($user->last_seen_at);
+        $this->assertIsInt($user->user_id);
+        $this->assertGreaterThanOrEqual(101, $user->user_id);
+        $this->assertTrue(Hash::check('welcome-pass-123', (string) $user->password));
+        $this->assertDatabaseHas('user_notification_preferences', [
+            'user_id' => $user->id,
+        ]);
+    }
+
+    public function test_admin_can_ban_and_unban_member_with_duration(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $member = User::factory()->create(['role' => User::ROLE_MEMBER]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.ban', $member), [
+                'ban_duration' => '7d',
+            ])
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHas('status');
+
+        $member->refresh();
+
+        $this->assertNotNull($member->banned_at);
+        $this->assertNotNull($member->banned_until);
+        $this->assertTrue($member->banned_until->isFuture());
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.unban', $member))
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHas('status', "用户 {$member->name} 已解除封禁。");
+
+        $member->refresh();
+
+        $this->assertNull($member->banned_at);
+        $this->assertNull($member->banned_until);
+    }
+
+    public function test_admin_cannot_ban_admin_account(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.users.index'))
+            ->post(route('admin.users.ban', $admin), [
+                'ban_duration' => 'permanent',
+            ])
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHasErrors(['ban_duration']);
+
+        $admin->refresh();
+
+        $this->assertNull($admin->banned_at);
+        $this->assertNull($admin->banned_until);
+    }
+
+    public function test_admin_cannot_create_user_without_password_when_email_code_login_is_disabled(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        SiteSetting::query()->create([
+            'auth_enabled_methods' => ['email_password'],
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.users.index'))
+            ->post(route('admin.users.store'), [
+                'creating_user' => '1',
+                'name' => '仅密码站点用户',
+                'email' => 'password-only@example.com',
+                'role' => User::ROLE_MEMBER,
+                'password' => '',
+                'password_confirmation' => '',
+            ])
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHasErrors(['password']);
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'password-only@example.com',
+        ]);
     }
 
     public function test_admin_user_dashboard_uses_theme_aware_classes_instead_of_forced_dark_mode(): void

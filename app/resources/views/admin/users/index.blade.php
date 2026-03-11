@@ -1,6 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $isCreatingUser = old('creating_user') === '1';
+        $emailCodeEnabled = (bool) ($createUserOptions['email_code_enabled'] ?? false);
+        $emailPasswordEnabled = (bool) ($createUserOptions['email_password_enabled'] ?? false);
+        $passwordRequired = ! $emailCodeEnabled;
+    @endphp
+
     <div data-admin-users-page>
     <section class="rounded-xl border border-gray-200 bg-white p-6">
         <div class="flex flex-wrap items-start justify-between gap-4">
@@ -101,6 +108,89 @@
             </div>
         </section>
 
+        <form action="{{ route('admin.users.store') }}" method="POST" class="mt-6 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm">
+            @csrf
+            <input type="hidden" name="creating_user" value="1">
+
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <div class="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">手动添加用户</div>
+                    <h3 class="mt-3 text-lg font-semibold text-gray-900">新增用户</h3>
+                    <p class="mt-1 text-sm text-gray-500">管理员可直接创建账号、设置角色，并补齐邮箱、手机号与头像资料。</p>
+                </div>
+                <div class="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-3 text-xs text-gray-500">
+                    <p>登录建议：必须填写邮箱。</p>
+                    @if($passwordRequired)
+                        <p class="mt-1 text-amber-600">当前站点未启用邮箱验证码，新用户必须设置初始密码。</p>
+                    @elseif($emailPasswordEnabled)
+                        <p class="mt-1">可选设置初始密码，便于用户首次通过邮箱密码登录。</p>
+                    @else
+                        <p class="mt-1">新用户可通过邮箱验证码完成首次登录。</p>
+                    @endif
+                </div>
+            </div>
+
+            @if($isCreatingUser && $errors->any())
+                <div class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    新增用户失败，请检查资料后重试。
+                </div>
+            @endif
+
+            <div class="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_180px_minmax(0,1.15fr)_180px]">
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700">昵称 <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" value="{{ old('name') }}" class="input-field h-11" placeholder="例如：社区运营小助手" required>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700">角色 <span class="text-red-500">*</span></label>
+                    <select name="role" class="input-field h-11" required>
+                        <option value="{{ \App\Models\User::ROLE_MEMBER }}" @selected(old('role', \App\Models\User::ROLE_MEMBER) === \App\Models\User::ROLE_MEMBER)>成员</option>
+                        <option value="{{ \App\Models\User::ROLE_ADMIN }}" @selected(old('role') === \App\Models\User::ROLE_ADMIN)>管理员</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700">邮箱 <span class="text-red-500">*</span></label>
+                    <input type="email" name="email" value="{{ old('email') }}" class="input-field h-11" placeholder="name@example.com" required>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700">手机号</label>
+                    <input type="text" name="phone" value="{{ old('phone') }}" class="input-field h-11" placeholder="选填，支持自动去除空格与符号">
+                </div>
+            </div>
+
+            <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700">头像链接</label>
+                    <input type="url" name="avatar_url" value="{{ old('avatar_url') }}" class="input-field h-11" placeholder="https://cdn.example.com/avatar.png">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700">简介 / 职责</label>
+                    <input type="text" name="bio" value="{{ old('bio') }}" class="input-field h-11" placeholder="例如：负责频道运营与用户支持">
+                </div>
+            </div>
+
+            <div class="mt-4 grid gap-4 xl:grid-cols-2">
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                        初始密码
+                        @if($passwordRequired)
+                            <span class="text-red-500">*</span>
+                        @endif
+                    </label>
+                    <input type="password" name="password" class="input-field h-11" placeholder="至少 8 位" autocomplete="new-password" @if($passwordRequired) required @endif>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700">确认初始密码</label>
+                    <input type="password" name="password_confirmation" class="input-field h-11" placeholder="再次输入初始密码" autocomplete="new-password" @if($passwordRequired) required @endif>
+                </div>
+            </div>
+
+            <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
+                <p class="text-xs text-gray-500">创建后会自动分配稳定用户 ID，并初始化默认通知偏好。</p>
+                <button type="submit" class="btn-primary">创建用户</button>
+            </div>
+        </form>
+
         <form action="{{ route('admin.users.index') }}" method="GET" class="mt-6 grid gap-4 rounded-lg border border-gray-200 bg-gray-50 p-5 lg:grid-cols-[minmax(0,2fr)_180px_auto]">
             <input
                 type="text"
@@ -158,7 +248,19 @@
     <section class="mt-6 space-y-3">
         @forelse($users as $managedUser)
             @php
-                $isEditingRow = (int) old('editing_user_id', 0) === $managedUser->id;
+                $isEditingRow = in_array($managedUser->id, [
+                    (int) old('editing_user_id', 0),
+                    (int) old('ban_user_id', 0),
+                ], true);
+                $isBanned = $managedUser->isBanned();
+                $banUntilValue = old('ban_until', optional($managedUser->banned_until)->format('Y-m-d\\TH:i'));
+                $banDuration = old('ban_duration');
+
+                if (! is_string($banDuration) || $banDuration === '') {
+                    $banDuration = $isBanned
+                        ? ($managedUser->banned_until === null ? 'permanent' : 'custom')
+                        : '7d';
+                }
                 $formName = $isEditingRow ? old('name', $managedUser->name) : $managedUser->name;
                 $formRole = $isEditingRow ? old('role', $managedUser->role) : $managedUser->role;
                 $formEmail = $isEditingRow ? old('email', $managedUser->email) : $managedUser->email;
@@ -208,6 +310,11 @@
                                     <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs {{ $managedUser->isAdmin() ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-600' }}">
                                         {{ $managedUser->isAdmin() ? '管理员' : '成员' }}
                                     </span>
+                                    @if($isBanned)
+                                        <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
+                                            已封禁{{ $managedUser->banned_until ? '至 '.$managedUser->banned_until->format('Y-m-d H:i') : '（永久）' }}
+                                        </span>
+                                    @endif
                                     @if(auth()->id() === $managedUser->id)
                                         <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">当前登录</span>
                                     @endif
@@ -340,6 +447,65 @@
                                 aria-label="简介"
                             >
                         </div>
+                    </form>
+
+                    <form action="{{ route('admin.users.ban', $managedUser) }}" method="POST" class="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                        @csrf
+                        <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                        <input type="hidden" name="role_filter" value="{{ $filters['role'] }}">
+                        <input type="hidden" name="ban_user_id" value="{{ $managedUser->id }}">
+
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">封禁设置</p>
+                                <p class="mt-1 text-xs text-gray-500">选择封禁时长或自定义截止时间，永久封禁需显式选择。</p>
+                            </div>
+                            @if($isBanned)
+                                <button type="submit" class="btn-secondary" form="unban-form-{{ $managedUser->id }}">解除封禁</button>
+                            @endif
+                        </div>
+
+                        @if(old('ban_user_id') == $managedUser->id && $errors->any())
+                            <div class="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                                封禁设置未生效，请检查输入。
+                            </div>
+                        @endif
+
+                        <div class="mt-3 grid gap-3 lg:grid-cols-[200px_minmax(0,1fr)_200px]">
+                            <select name="ban_duration" class="input-field h-10" aria-label="封禁时长" @disabled($managedUser->isAdmin())>
+                                <option value="1d" @selected($banDuration === '1d')>封禁 1 天</option>
+                                <option value="3d" @selected($banDuration === '3d')>封禁 3 天</option>
+                                <option value="7d" @selected($banDuration === '7d')>封禁 7 天</option>
+                                <option value="30d" @selected($banDuration === '30d')>封禁 30 天</option>
+                                <option value="custom" @selected($banDuration === 'custom')>自定义截止时间</option>
+                                <option value="permanent" @selected($banDuration === 'permanent')>永久封禁</option>
+                            </select>
+                            <input
+                                type="datetime-local"
+                                name="ban_until"
+                                value="{{ $banUntilValue }}"
+                                class="input-field h-10"
+                                placeholder="选择封禁截止时间"
+                                @disabled($managedUser->isAdmin())
+                            >
+                            <button
+                                type="submit"
+                                class="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-200 disabled:text-red-50"
+                                @disabled($managedUser->isAdmin())
+                            >
+                                执行封禁
+                            </button>
+                        </div>
+
+                        @if($managedUser->isAdmin())
+                            <p class="mt-2 text-xs text-gray-400">管理员账号不可封禁。</p>
+                        @endif
+                    </form>
+
+                    <form id="unban-form-{{ $managedUser->id }}" action="{{ route('admin.users.unban', $managedUser) }}" method="POST" class="hidden">
+                        @csrf
+                        <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                        <input type="hidden" name="role_filter" value="{{ $filters['role'] }}">
                     </form>
                 </div>
 

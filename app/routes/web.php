@@ -41,7 +41,7 @@ Route::get('/channels/{channel}/articles/{article}', [ArticleController::class, 
 Route::get('/feeds/articles.xml', [RssFeedController::class, 'all'])->name('feeds.articles');
 Route::get('/feeds/channels/{channel}.xml', [RssFeedController::class, 'channel'])->name('feeds.channels.show');
 
-Route::middleware('auth')->group(function (): void {
+Route::middleware(['auth', 'not-banned'])->group(function (): void {
     Route::post('/articles/{article}/comments', [CommentController::class, 'store'])->name('articles.comments.store');
     Route::post('/uploads/images', [ImageUploadController::class, 'store'])
         ->middleware('throttle:30,1')
@@ -63,7 +63,7 @@ Route::middleware('auth')->group(function (): void {
         ->name('settings.subscriptions.mail.test');
 });
 
-Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function (): void {
+Route::prefix('admin')->middleware(['auth', 'not-banned', 'admin'])->name('admin.')->group(function (): void {
     Route::redirect('/', '/admin/site-settings');
 
     Route::get('/channels', [AdminChannelController::class, 'index'])->name('channels.index');
@@ -73,8 +73,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::delete('/channels/{channel}', [AdminChannelController::class, 'destroy'])->name('channels.destroy');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
     Route::delete('/users', [AdminUserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+    Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->name('users.ban');
+    Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
     Route::get('/articles', [AdminArticleController::class, 'index'])->name('articles.index');
@@ -95,4 +98,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     Route::get('/site-settings', [AdminSiteSettingsController::class, 'edit'])->name('site-settings.edit');
     Route::put('/site-settings', [AdminSiteSettingsController::class, 'update'])->name('site-settings.update');
+    Route::get('/site-settings/backup', [AdminSiteSettingsController::class, 'downloadBackup'])->name('site-settings.backup.download');
+    Route::post('/site-settings/backup/restore', [AdminSiteSettingsController::class, 'restoreBackup'])->name('site-settings.backup.restore');
 });

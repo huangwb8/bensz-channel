@@ -240,6 +240,9 @@ if (userMenuShells.length > 0) {
             trigger.setAttribute('aria-controls', panel.id);
         }
 
+        // 延迟关闭定时器
+        let closeTimer = null;
+
         const setMenuState = (isOpen) => {
             panel.hidden = ! isOpen;
             panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
@@ -247,12 +250,40 @@ if (userMenuShells.length > 0) {
         };
 
         const closeMenu = () => {
+            // 清除任何待处理的关闭定时器
+            if (closeTimer) {
+                clearTimeout(closeTimer);
+                closeTimer = null;
+            }
             setMenuState(false);
         };
 
         const openMenu = () => {
+            // 清除任何待处理的关闭定时器
+            if (closeTimer) {
+                clearTimeout(closeTimer);
+                closeTimer = null;
+            }
             closeAllUserMenus(shell);
             setMenuState(true);
+        };
+
+        const scheduleClose = () => {
+            // 清除之前的定时器
+            if (closeTimer) {
+                clearTimeout(closeTimer);
+            }
+            // 延迟 300ms 关闭，给用户足够时间移动鼠标
+            closeTimer = setTimeout(() => {
+                closeMenu();
+            }, 300);
+        };
+
+        const cancelScheduledClose = () => {
+            if (closeTimer) {
+                clearTimeout(closeTimer);
+                closeTimer = null;
+            }
         };
 
         trigger.addEventListener('click', (event) => {
@@ -306,11 +337,14 @@ if (userMenuShells.length > 0) {
 
         if (hoverCapableMediaQuery.matches) {
             shell.addEventListener('mouseenter', () => {
+                // 取消任何待处理的关闭操作
+                cancelScheduledClose();
                 openMenu();
             });
 
             shell.addEventListener('mouseleave', () => {
-                closeMenu();
+                // 延迟关闭，而不是立即关闭
+                scheduleClose();
             });
         }
 

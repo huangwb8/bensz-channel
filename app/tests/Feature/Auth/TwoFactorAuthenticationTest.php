@@ -158,6 +158,32 @@ class TwoFactorAuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_banned_user_cannot_complete_two_factor_challenge(): void
+    {
+        $user = $this->createTwoFactorUser([
+            'email' => 'member@example.com',
+            'password' => 'secret123456',
+        ]);
+
+        $this->post(route('auth.password.login'), [
+            'login_method' => 'email-password',
+            'email' => 'member@example.com',
+            'password' => 'secret123456',
+        ])->assertRedirect(route('auth.two-factor.challenge'));
+
+        $user->forceFill([
+            'banned_at' => now()->subMinute(),
+            'banned_until' => now()->addDay(),
+        ])->save();
+
+        $this->post(route('auth.two-factor.verify'), [
+            'code' => $this->currentTotp($this->twoFactorSecret()),
+        ])->assertRedirect(route('login'))
+            ->assertSessionHasErrors(['login_method']);
+
+        $this->assertGuest();
+    }
+
     public function test_social_identity_resolution_can_start_two_factor_challenge_for_enabled_user(): void
     {
         $user = $this->createTwoFactorUser([
@@ -224,6 +250,31 @@ class TwoFactorAuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_qr_login_status_redirects_banned_user_back_to_login(): void
+    {
+        $user = User::factory()->create([
+            'banned_at' => now()->subMinute(),
+            'banned_until' => now()->addDays(7),
+        ]);
+
+        $request = QrLoginRequest::query()->create([
+            'provider' => 'wechat',
+            'token' => 'qr-token-banned',
+            'status' => QrLoginRequest::STATUS_APPROVED,
+            'approved_user_id' => $user->id,
+            'expires_at' => now()->addMinutes(5),
+        ]);
+
+        $this->getJson(route('auth.qr.status', $request))
+            ->assertOk()
+            ->assertJson([
+                'status' => QrLoginRequest::STATUS_CONSUMED,
+                'redirect' => route('login'),
+            ]);
+
+        $this->assertGuest();
+    }
+
     private function createTwoFactorUser(array $attributes = [], ?string $secret = null, array $recoveryCodes = ['ZXCV-ASDF']): User
     {
         $secret ??= $this->twoFactorSecret();
@@ -251,11 +302,11 @@ class TwoFactorAuthenticationTest extends TestCase
     {
         $timestamp ??= time();
         $counter = intdiv($timestamp, 30);
-        $binaryCounter = pack('N2', $counter >> 32, $counter & 0xffffffff);
+        $binaryCounter = pack('N2', $counter >> 32, $counter & 0xFFFFFFFF);
         $hash = hash_hmac('sha1', $binaryCounter, $this->decodeBase32($secret), true);
-        $offset = ord(substr($hash, -1)) & 0x0f;
+        $offset = ord(substr($hash, -1)) & 0x0F;
         $chunk = substr($hash, $offset, 4);
-        $value = unpack('N', $chunk)[1] & 0x7fffffff;
+        $value = unpack('N', $chunk)[1] & 0x7FFFFFFF;
 
         return str_pad((string) ($value % 1000000), 6, '0', STR_PAD_LEFT);
     }

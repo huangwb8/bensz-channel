@@ -72,6 +72,20 @@ class UserAccountManager
     /**
      * @return array<string, mixed>
      */
+    public function createUserValidationRules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'max:40'],
+            'email' => ['required', 'email', 'max:120', Rule::unique('users', 'email')],
+            'phone' => ['nullable', 'string', 'max:32', Rule::unique('users', 'phone')],
+            'avatar_url' => ['nullable', 'url', 'max:2048'],
+            'bio' => ['nullable', 'string', 'max:500'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public function partialProfileValidationRules(User $user): array
     {
         return [

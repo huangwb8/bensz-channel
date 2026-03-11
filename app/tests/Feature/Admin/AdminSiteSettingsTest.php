@@ -44,6 +44,36 @@ class AdminSiteSettingsTest extends TestCase
             ->assertDontSee('<a href="'.route('admin.users.index').'" class="btn-secondary">用户管理</a>', false);
     }
 
+    public function test_admin_site_settings_page_renders_backup_and_restore_section(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.site-settings.edit'))
+            ->assertOk()
+            ->assertSee('数据备份与恢复')
+            ->assertSee('下载 tar.gz 备份')
+            ->assertSee('上传 tar.gz 恢复')
+            ->assertSee('该备份文件包含敏感数据')
+            ->assertSee(route('admin.site-settings.backup.download'), false)
+            ->assertSee(route('admin.site-settings.backup.restore'), false);
+    }
+
+    public function test_admin_can_download_site_backup_archive(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.site-settings.backup.download'));
+
+        $response->assertOk();
+
+        $contentDisposition = (string) $response->headers->get('content-disposition');
+
+        $this->assertStringContainsString('attachment;', $contentDisposition);
+        $this->assertStringContainsString('.tar.gz', $contentDisposition);
+    }
+
     public function test_admin_can_update_site_settings(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
