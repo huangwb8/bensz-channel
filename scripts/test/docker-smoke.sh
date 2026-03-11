@@ -27,4 +27,50 @@ section '认证与后台冒烟检查'
 auth_health_smoke
 admin_login_smoke
 
+section '图片上传冒烟检查'
+cookie_jar="$TEST_TMP_DIR/upload.cookies.txt"
+login_page="$TEST_TMP_DIR/upload-login.html"
+article_create_page="$TEST_TMP_DIR/article-create.html"
+upload_response="$TEST_TMP_DIR/upload-response.json"
+upload_image="$TEST_TMP_DIR/paste-large.jpg"
+
+curl -fsSL -c "$cookie_jar" "$WEB_BASE_URL/login" > "$login_page"
+csrf_token=$(require_login_form_token "$login_page")
+
+curl -fsSL \
+    -b "$cookie_jar" \
+    -c "$cookie_jar" \
+    --data-urlencode "_token=$csrf_token" \
+    --data-urlencode 'login_method=email-password' \
+    --data-urlencode "email=$ADMIN_EMAIL" \
+    --data-urlencode "password=$ADMIN_PASSWORD" \
+    "$WEB_BASE_URL/auth/password" \
+    > /dev/null
+
+curl -fsSL -b "$cookie_jar" "$WEB_BASE_URL/admin/articles/create" > "$article_create_page"
+
+page_csrf_token=$(tr '\n' ' ' < "$article_create_page" | sed -n 's/.*meta name="csrf-token" content="\([^"]*\)".*/\1/p' | head -n 1)
+[ -n "$page_csrf_token" ] || fail '未能从文章编辑页提取 CSRF token'
+
+python3 - <<'PY' > "$upload_image"
+import base64
+import sys
+
+payload = base64.b64decode('/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxAQEBAQEBAPDw8PDw8PDw8PDw8PDw8QFREWFhURFRUYHSggGBolGxUVITEhJSkrLi4uFx8zODMsNygtLisBCgoKDg0OGhAQGi0fHyUtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAAEAAgMBIgACEQEDEQH/xAAXAAADAQAAAAAAAAAAAAAAAAAAAQID/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEAMQAAAB6gD/xAAZEAEAAgMAAAAAAAAAAAAAAAABABEhMUH/2gAIAQEAAT8AuM0n/8QAFBEBAAAAAAAAAAAAAAAAAAAAEP/aAAgBAgEBPwCf/8QAFBEBAAAAAAAAAAAAAAAAAAAAEP/aAAgBAwEBPwCf/9k=')
+sys.stdout.buffer.write(payload)
+sys.stdout.buffer.write(b'\0' * (2 * 1024 * 1024))
+PY
+
+curl -fsSL \
+    -b "$cookie_jar" \
+    -H "X-CSRF-TOKEN: $page_csrf_token" \
+    -F "image=@$upload_image;type=image/jpeg;filename=clipboard-large.jpg" \
+    -F 'context=article' \
+    "$WEB_BASE_URL/uploads/images" \
+    > "$upload_response"
+
+grep -q '"context":"article"' "$upload_response" || fail '文章图片上传未返回预期上下文'
+grep -q '"markdown":"!\[' "$upload_response" || fail '文章图片上传未返回 Markdown 链接'
+success '大体积文章图片上传正常'
+
 success 'Docker 冒烟测试通过'

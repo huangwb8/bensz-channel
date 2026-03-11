@@ -68,6 +68,7 @@ COPY --from=frontend /app/public/build ./public/build
 
 # 复制 Docker 配置
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
+COPY docker/web/php-upload.ini /usr/local/etc/php/conf.d/zz-upload.ini
 COPY docker/web/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY docker/web/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
