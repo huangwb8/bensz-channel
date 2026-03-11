@@ -2,7 +2,7 @@
 
 # 🌐 Bensz Channel
 
-**类似 QQ 频道的现代化 Web 社区平台**
+**现代化 Web 社区平台 - 频道管理、实时互动、内容沉淀一体化解决方案**
 
 [![Version](https://img.shields.io/badge/version-1.32.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
 [![Platform](https://img.shields.io/badge/platform-Docker-lightgrey.svg)](https://www.docker.com/)
@@ -16,7 +16,7 @@
 
 ## ✨ 项目简介
 
-Bensz Channel 是一个基于 **Laravel + Better Auth + PostgreSQL + Redis + Docker** 构建的 Web 社区平台，交互形态参考 **QQ 频道**：左侧频道导航，中间内容流，右侧用户与社区信息。
+Bensz Channel 是一个基于 **Laravel + Better Auth + PostgreSQL + Redis + Docker** 构建的 Web 社区平台，采用三栏式布局设计（左侧频道导航、中间内容流、右侧社区信息），适合团队协作、知识分享与内容沉淀。
 
 ### 核心特性
 
@@ -38,25 +38,179 @@ Bensz Channel 是一个基于 **Laravel + Better Auth + PostgreSQL + Redis + Doc
 
 ### 使用 Docker Hub 镜像（推荐）
 
-最快的部署方式，直接使用已构建的镜像：
+最快的部署方式，直接使用已构建的镜像，无需克隆仓库：
+
+**1. 创建 `docker-compose.yml`**
+
+```yaml
+services:
+  channel-web:
+    image: huangwb8/bensz-channel-web:latest
+    container_name: channel-web
+    ports:
+      - "${WEB_PORT:-6542}:80"
+    env_file:
+      - config/.env
+    depends_on:
+      channel-auth:
+        condition: service_healthy
+      channel-postgres:
+        condition: service_healthy
+      channel-redis:
+        condition: service_started
+      channel-mailpit:
+        condition: service_started
+    volumes:
+      - ./data/web/storage:/var/www/html/storage
+      - ./data/web/bootstrap-cache:/var/www/html/bootstrap/cache
+      - ./data/web/static:/var/www/html/public/${STATIC_SITE_OUTPUT_DIR:-static}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/up || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  channel-worker:
+    image: huangwb8/bensz-channel-web:latest
+    container_name: channel-worker
+    entrypoint:
+      - php
+      - /var/www/html/artisan
+      - queue:work
+      - --queue=static-builds,default
+      - --sleep=1
+      - --tries=3
+      - --timeout=900
+    env_file:
+      - config/.env
+    depends_on:
+      channel-web:
+        condition: service_healthy
+      channel-postgres:
+        condition: service_healthy
+      channel-redis:
+        condition: service_started
+    volumes:
+      - ./data/web/storage:/var/www/html/storage
+      - ./data/web/bootstrap-cache:/var/www/html/bootstrap/cache
+      - ./data/web/static:/var/www/html/public/${STATIC_SITE_OUTPUT_DIR:-static}
+    restart: unless-stopped
+
+  channel-auth:
+    image: huangwb8/bensz-channel-auth:latest
+    container_name: channel-auth
+    env_file:
+      - config/.env
+    depends_on:
+      channel-postgres:
+        condition: service_healthy
+      channel-mailpit:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
+  channel-postgres:
+    image: postgres:17-alpine
+    container_name: channel-postgres
+    env_file:
+      - config/.env
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bensz} -d ${POSTGRES_DB:-bensz_channel}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  channel-redis:
+    image: redis:7-alpine
+    container_name: channel-redis
+    command: redis-server --appendonly yes --dir /data
+    volumes:
+      - ./data/redis:/data
+
+  channel-mailpit:
+    image: axllent/mailpit:latest
+    container_name: channel-mailpit
+    command: ["--database", "/data/mailpit.db"]
+    ports:
+      - "${MAILPIT_PORT:-8025}:8025"
+    volumes:
+      - ./data/mailpit:/data
+```
+
+**2. 创建 `config/.env`**
 
 ```bash
-# 1. 克隆仓库
-git clone https://github.com/huangwb8/bensz-channel.git
-cd bensz-channel
+# ============================================
+# Docker Compose 直接引用的公开配置
+# ============================================
 
-# 2. 复制生产环境配置示例
-cp self/remote.env config/.env
-cp self/docker-compose.yml docker-compose.yml
+# 端口映射
+WEB_PORT=6542
+MAILPIT_PORT=8025
 
-# 3. 编辑配置文件（可选）
-# 修改 config/.env 中的域名、端口等配置
+# 静态站点配置
+STATIC_SITE_OUTPUT_DIR=static
 
-# 4. 启动服务
-./scripts/compose.sh up -d
+# PostgreSQL 配置
+DB_HOST=postgres
+POSTGRES_DB=bensz_channel
+POSTGRES_USER=bensz
 
-# 5. 查看日志
-./scripts/compose.sh logs -f
+# Laravel 数据库连接配置
+DB_CONNECTION=pgsql
+DB_HOST=postgres
+DB_PORT=5432
+DB_DATABASE=bensz_channel
+DB_USERNAME=bensz
+
+# ============================================
+# 密钥类配置（敏感信息 - 必须修改）
+# ============================================
+
+# Laravel 应用密钥（运行下面命令生成）
+# docker run --rm huangwb8/bensz-channel-web:latest php artisan key:generate --show
+APP_KEY=base64:your_generated_app_key_here
+
+# 数据库密码（修改为强密码）
+DB_PASSWORD=your_secure_db_password_here
+POSTGRES_PASSWORD=your_secure_db_password_here
+
+# Better Auth 密钥（修改为强随机字符串）
+BETTER_AUTH_SECRET=your_secure_auth_secret_here
+BETTER_AUTH_INTERNAL_SECRET=your_secure_internal_secret_here
+
+# 管理员密码
+ADMIN_PASSWORD=your_admin_password_here
+
+# 邮件服务凭证（可选）
+MAIL_USERNAME=
+MAIL_PASSWORD=
+
+# AWS 凭证（可选）
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+
+# 第三方登录凭证（可选）
+WECHAT_CLIENT_ID=
+QQ_CLIENT_ID=
+```
+
+**3. 启动服务**
+
+```bash
+docker compose up -d
+```
+
+**4. 查看日志**
+
+```bash
+docker compose logs -f
 ```
 
 启动后访问：

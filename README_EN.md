@@ -2,7 +2,7 @@
 
 # 🌐 Bensz Channel
 
-**A Modern Web Community Platform Inspired by QQ Channel**
+**Modern Web Community Platform - Integrated Solution for Channel Management, Real-time Interaction, and Content Curation**
 
 [![Version](https://img.shields.io/badge/version-1.32.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
 [![Platform](https://img.shields.io/badge/platform-Docker-lightgrey.svg)](https://www.docker.com/)
@@ -16,7 +16,7 @@
 
 ## ✨ Introduction
 
-Bensz Channel is a web community platform built with **Laravel + Better Auth + PostgreSQL + Redis + Docker**, featuring a UI layout inspired by **QQ Channel**: left sidebar for channel navigation, center content stream, and right sidebar for user and community information.
+Bensz Channel is a web community platform built with **Laravel + Better Auth + PostgreSQL + Redis + Docker**, featuring a three-column layout design (left channel navigation, center content stream, right community info), ideal for team collaboration, knowledge sharing, and content curation.
 
 ### Key Features
 
@@ -38,25 +38,179 @@ Bensz Channel is a web community platform built with **Laravel + Better Auth + P
 
 ### Using Docker Hub Images (Recommended)
 
-The fastest deployment method using pre-built images:
+The fastest deployment method using pre-built images, no need to clone the repository:
+
+**1. Create `docker-compose.yml`**
+
+```yaml
+services:
+  channel-web:
+    image: huangwb8/bensz-channel-web:latest
+    container_name: channel-web
+    ports:
+      - "${WEB_PORT:-6542}:80"
+    env_file:
+      - config/.env
+    depends_on:
+      channel-auth:
+        condition: service_healthy
+      channel-postgres:
+        condition: service_healthy
+      channel-redis:
+        condition: service_started
+      channel-mailpit:
+        condition: service_started
+    volumes:
+      - ./data/web/storage:/var/www/html/storage
+      - ./data/web/bootstrap-cache:/var/www/html/bootstrap/cache
+      - ./data/web/static:/var/www/html/public/${STATIC_SITE_OUTPUT_DIR:-static}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/up || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  channel-worker:
+    image: huangwb8/bensz-channel-web:latest
+    container_name: channel-worker
+    entrypoint:
+      - php
+      - /var/www/html/artisan
+      - queue:work
+      - --queue=static-builds,default
+      - --sleep=1
+      - --tries=3
+      - --timeout=900
+    env_file:
+      - config/.env
+    depends_on:
+      channel-web:
+        condition: service_healthy
+      channel-postgres:
+        condition: service_healthy
+      channel-redis:
+        condition: service_started
+    volumes:
+      - ./data/web/storage:/var/www/html/storage
+      - ./data/web/bootstrap-cache:/var/www/html/bootstrap/cache
+      - ./data/web/static:/var/www/html/public/${STATIC_SITE_OUTPUT_DIR:-static}
+    restart: unless-stopped
+
+  channel-auth:
+    image: huangwb8/bensz-channel-auth:latest
+    container_name: channel-auth
+    env_file:
+      - config/.env
+    depends_on:
+      channel-postgres:
+        condition: service_healthy
+      channel-mailpit:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
+  channel-postgres:
+    image: postgres:17-alpine
+    container_name: channel-postgres
+    env_file:
+      - config/.env
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bensz} -d ${POSTGRES_DB:-bensz_channel}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  channel-redis:
+    image: redis:7-alpine
+    container_name: channel-redis
+    command: redis-server --appendonly yes --dir /data
+    volumes:
+      - ./data/redis:/data
+
+  channel-mailpit:
+    image: axllent/mailpit:latest
+    container_name: channel-mailpit
+    command: ["--database", "/data/mailpit.db"]
+    ports:
+      - "${MAILPIT_PORT:-8025}:8025"
+    volumes:
+      - ./data/mailpit:/data
+```
+
+**2. Create `config/.env`**
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/huangwb8/bensz-channel.git
-cd bensz-channel
+# ============================================
+# Public configurations referenced by Docker Compose
+# ============================================
 
-# 2. Copy production environment configuration example
-cp self/remote.env config/.env
-cp self/docker-compose.yml docker-compose.yml
+# Port mapping
+WEB_PORT=6542
+MAILPIT_PORT=8025
 
-# 3. Edit configuration file (optional)
-# Modify domain, port, and other settings in config/.env
+# Static site configuration
+STATIC_SITE_OUTPUT_DIR=static
 
-# 4. Start services
-./scripts/compose.sh up -d
+# PostgreSQL configuration
+DB_HOST=postgres
+POSTGRES_DB=bensz_channel
+POSTGRES_USER=bensz
 
-# 5. View logs
-./scripts/compose.sh logs -f
+# Laravel database connection configuration
+DB_CONNECTION=pgsql
+DB_HOST=postgres
+DB_PORT=5432
+DB_DATABASE=bensz_channel
+DB_USERNAME=bensz
+
+# ============================================
+# Secret configurations (sensitive - must modify)
+# ============================================
+
+# Laravel application key (generate with command below)
+# docker run --rm huangwb8/bensz-channel-web:latest php artisan key:generate --show
+APP_KEY=base64:your_generated_app_key_here
+
+# Database password (change to strong password)
+DB_PASSWORD=your_secure_db_password_here
+POSTGRES_PASSWORD=your_secure_db_password_here
+
+# Better Auth secrets (change to strong random strings)
+BETTER_AUTH_SECRET=your_secure_auth_secret_here
+BETTER_AUTH_INTERNAL_SECRET=your_secure_internal_secret_here
+
+# Admin password
+ADMIN_PASSWORD=your_admin_password_here
+
+# Mail service credentials (optional)
+MAIL_USERNAME=
+MAIL_PASSWORD=
+
+# AWS credentials (optional)
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+
+# Third-party login credentials (optional)
+WECHAT_CLIENT_ID=
+QQ_CLIENT_ID=
+```
+
+**3. Start services**
+
+```bash
+docker compose up -d
+```
+
+**4. View logs**
+
+```bash
+docker compose logs -f
 ```
 
 After startup, visit:
