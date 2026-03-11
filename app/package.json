@@ -6,7 +6,8 @@
         "postinstall": "sh ./scripts/ensure-managed-node-modules.sh",
         "deps:sync": "sh ./scripts/ensure-managed-node-modules.sh",
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "test:js": "node --test resources/js/*.test.js"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

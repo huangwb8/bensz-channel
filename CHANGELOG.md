@@ -27,6 +27,22 @@
 
 - 修复了 README 快速开始部分引用不存在文件的问题：此前文档中引用了 `self/remote.env` 和 `self/docker-compose.yml`，但这些是私有配置文件不在 Git 仓库中；现在改为使用 `config/.env.example` 作为配置模板，并提供完整的配置说明，确保用户克隆仓库后能够正常部署
 
+## [1.34.1] - 2026-03-11
+
+### Added（新增）
+
+- 新增了文章详情页快捷编辑回归测试与前端粘贴上传单测：`app/tests/Feature/Admin/AdminArticleManagementTest.php` 现锁定管理员在文章查看页必须可直接进入编辑，`app/resources/js/markdown-image-upload.test.js` 现校验剪贴板图片回退提取、JPG 文件名补全与上传请求格式
+
+### Changed（变更）
+
+- 优化了 Markdown 图片粘贴上传实现：`app/resources/js/markdown-image-upload.js` 现独立封装粘贴逻辑，优先读取 `clipboardData.items`，必要时回退到 `clipboardData.files`，并为剪贴板产生的无扩展名图片自动补齐稳定文件名；同时移除了手工指定 multipart 请求头，改由浏览器自动附带 boundary，提升 Ctrl+V 粘贴图片兼容性
+- 优化了文章详情页管理员操作路径：`app/resources/views/articles/show.blade.php` 现在为管理员直接显示“编辑文章”入口，无需再回到文章管理页跳转
+- 更新了 `app/config.toml`：将项目版本推进到 `1.34.1`
+
+### Fixed（修复）
+
+- 修复了文章编辑器中 Ctrl+V 粘贴图片偶发上传失败的问题：根因是部分浏览器/剪贴板场景只暴露 `clipboardData.files`，且对 `FormData` 手工指定 `multipart/form-data` 头会破坏 boundary；现在 JPG 等剪贴板图片可稳定上传并自动插入 Markdown 链接
+
 ## [1.34.0] - 2026-03-11
 
 ### Added（新增）

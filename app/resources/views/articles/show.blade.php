@@ -29,8 +29,24 @@
                 <span>•</span>
                 <span>{{ optional($article->published_at)->format('Y-m-d H:i') }}</span>
             </div>
-            <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ $article->title }}</h1>
-            <p class="mt-3 text-gray-600">{{ $article->excerpt }}</p>
+            <div class="mt-3 flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                    <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ $article->title }}</h1>
+                    <p class="mt-3 text-gray-600">{{ $article->excerpt }}</p>
+                </div>
+
+                @if(auth()->user()?->isAdmin())
+                    <x-icon-button
+                        :href="route('admin.articles.edit', $article)"
+                        icon="pencil"
+                        label="编辑文章"
+                        title="编辑文章"
+                        :aria-label="'编辑文章：'.$article->title"
+                        variant="primary"
+                        class="shrink-0"
+                    />
+                @endif
+            </div>
             <!-- 作者信息 -->
             <div class="mt-4 flex items-center gap-3">
                 <span class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-sm font-semibold text-blue-700">

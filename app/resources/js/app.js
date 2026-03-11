@@ -1,5 +1,6 @@
 import './bootstrap';
 import QRCode from 'qrcode';
+import { initMarkdownImageUploads } from './markdown-image-upload';
 
 const syncInteractiveTitles = (root = document) => {
     root.querySelectorAll('button[aria-label]:not([title]), a[aria-label]:not([title]), [role="button"][aria-label]:not([title])').forEach((element) => {
@@ -19,89 +20,7 @@ const syncInteractiveTitles = (root = document) => {
 
 syncInteractiveTitles();
 
-const setMarkdownUploadStatus = (statusNode, state, message) => {
-    if (! statusNode) {
-        return;
-    }
-
-    statusNode.hidden = ! message;
-    statusNode.dataset.state = state;
-    statusNode.textContent = message;
-};
-
-const insertMarkdownAtCursor = (textarea, text) => {
-    const start = textarea.selectionStart ?? textarea.value.length;
-    const end = textarea.selectionEnd ?? textarea.value.length;
-    const prefix = start > 0 && ! textarea.value.slice(0, start).endsWith('\n') ? '\n' : '';
-    const suffix = end < textarea.value.length && ! textarea.value.slice(end).startsWith('\n') ? '\n' : '';
-    const snippet = `${prefix}${text}${suffix}`;
-
-    textarea.setRangeText(snippet, start, end, 'end');
-    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    textarea.focus();
-};
-
-const clipboardImageFiles = (event) => Array.from(event.clipboardData?.items ?? [])
-    .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
-    .map((item) => item.getAsFile())
-    .filter((file) => file instanceof File);
-
-const uploadPastedImages = async (textarea, files) => {
-    const uploadUrl = textarea.dataset.imageUploadUrl;
-    const context = textarea.dataset.uploadContext ?? 'comment';
-    const uploadLabel = textarea.dataset.uploadLabel ?? '图片';
-    const statusNode = textarea.closest('[data-markdown-upload-shell]')?.querySelector('[data-image-upload-status]');
-
-    if (! uploadUrl || files.length === 0) {
-        return;
-    }
-
-    const uploadedMarkdown = [];
-
-    for (const [index, file] of files.entries()) {
-        setMarkdownUploadStatus(statusNode, 'uploading', `正在上传${uploadLabel} ${index + 1}/${files.length}…`);
-
-        const formData = new FormData();
-        formData.append('image', file);
-        formData.append('context', context);
-
-        const response = await window.axios.post(uploadUrl, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-
-        uploadedMarkdown.push(response.data.markdown);
-    }
-
-    insertMarkdownAtCursor(textarea, uploadedMarkdown.join('\n\n'));
-    setMarkdownUploadStatus(statusNode, 'success', `${uploadLabel}上传完成，已插入 Markdown 链接。`);
-
-    window.setTimeout(() => {
-        setMarkdownUploadStatus(statusNode, 'idle', '');
-    }, 2400);
-};
-
-document.querySelectorAll('textarea[data-image-upload-url]').forEach((textarea) => {
-    textarea.addEventListener('paste', async (event) => {
-        const files = clipboardImageFiles(event);
-
-        if (files.length === 0) {
-            return;
-        }
-
-        event.preventDefault();
-
-        try {
-            await uploadPastedImages(textarea, files);
-        } catch (error) {
-            const statusNode = textarea.closest('[data-markdown-upload-shell]')?.querySelector('[data-image-upload-status]');
-            const responseMessage = error?.response?.data?.message;
-
-            setMarkdownUploadStatus(statusNode, 'error', responseMessage || '图片上传失败，请稍后重试。');
-        }
-    });
-});
+initMarkdownImageUploads();
 
 const mobileChannelTrigger = document.querySelector('[data-mobile-channel-trigger]');
 const mobileChannelDrawer = document.querySelector('[data-mobile-channel-drawer]');

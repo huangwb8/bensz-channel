@@ -212,6 +212,40 @@ class AdminArticleManagementTest extends TestCase
             ->assertSee('aria-label="编辑文章：'.$article->title.'"', false);
     }
 
+    public function test_article_show_renders_quick_edit_action_for_admin(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $channel = $this->createChannel();
+        $article = $this->createArticle($admin, $channel, [
+            'title' => '详情页快捷编辑文章',
+            'slug' => 'article-show-quick-edit',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('articles.show', [$channel, $article]))
+            ->assertOk()
+            ->assertSee(route('admin.articles.edit', $article), false)
+            ->assertSee('title="编辑文章"', false)
+            ->assertSee('aria-label="编辑文章：'.$article->title.'"', false);
+    }
+
+    public function test_article_show_hides_quick_edit_action_for_non_admin_user(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $member = User::factory()->create(['role' => User::ROLE_MEMBER]);
+        $channel = $this->createChannel();
+        $article = $this->createArticle($admin, $channel, [
+            'title' => '普通成员不可见快捷编辑',
+            'slug' => 'article-show-no-member-edit',
+        ]);
+
+        $this->actingAs($member)
+            ->get(route('articles.show', [$channel, $article]))
+            ->assertOk()
+            ->assertDontSee(route('admin.articles.edit', $article), false)
+            ->assertDontSee('aria-label="编辑文章：'.$article->title.'"', false);
+    }
+
     public function test_admin_article_index_renders_bulk_delete_controls(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
