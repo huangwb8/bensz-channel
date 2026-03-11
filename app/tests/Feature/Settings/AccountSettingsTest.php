@@ -21,7 +21,10 @@ class AccountSettingsTest extends TestCase
             ->assertSee('账户设置')
             ->assertSee('基本资料')
             ->assertSee('密码设置')
-            ->assertSee('两步验证');
+            ->assertSee('两步验证')
+            ->assertSee('two-factor-setup-shell', false)
+            ->assertSee('two-factor-secret-card', false)
+            ->assertSee('two-factor-verify-card', false);
     }
 
     public function test_banned_user_is_redirected_from_account_settings(): void

@@ -23,6 +23,8 @@
 - 新增了文档同步规范章节：在 `AGENTS.md` 中新增"文档同步规范"章节，明确规定 `README_EN.md` 必须与 `README.md` 保持内容对齐（后者变前者变），`docs/开发者文档.md` 必须与最新源代码保持协调，确保文档信息准确性；同时提供了同步检查清单，规范不同变更类型对应的文档更新要求
 - 重构了"本地构建镜像"文档位置：将 `README.md` 和 `README_EN.md` 中的"本地构建镜像"详细步骤转移到 `docs/开发者文档.md` 的"Docker 镜像构建"章节，README 中仅保留简短引用；开发者文档中补充了"克隆仓库"步骤，形成完整的构建流程；符合"README 面向普通用户，开发者文档面向开发者"的文档分层原则
 - 优化了暗色主题灰阶渐变支持：`app/resources/css/app.css` 现补充 `from-gray-50` 与 `to-white` 的夜间模式覆盖规则，确保后台创建表单等灰阶渐变容器在暗色主题下保持一致的深色视觉；`app/tests/Feature/Static/ThemeStylesheetTest.php` 同步增加回归断言
+- 补全了透明蓝色背景的暗色主题覆盖：`app/resources/css/app.css` 现新增 `bg-blue-50/50` 的夜间模式映射，确保管理员 SMTP 配置中的提示小栏在暗色主题下保持正确的强调底色；`app/tests/Feature/Static/ThemeStylesheetTest.php` 同步增加断言
+- 优化了账户设置页两步验证初始化区的暗色主题表现：`app/resources/views/settings/account.blade.php` 与 `app/resources/css/app.css` 现将二维码容器、手动密钥卡片与验证确认卡片改为主题感知样式，避免夜间模式下出现大面积浅底；相关回归已补到 `app/tests/Feature/Static/ThemeStylesheetTest.php` 与 `app/tests/Feature/Settings/AccountSettingsTest.php`
 
 ### Fixed（修复）
 

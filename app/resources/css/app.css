@@ -403,6 +403,35 @@
         box-shadow: inset 0 0 0 2px var(--color-accent-border), 0 10px 25px rgba(15, 23, 42, 0.14);
     }
 
+    .two-factor-setup-shell,
+    .two-factor-secret-card {
+        border: 1px solid var(--color-border);
+        background: var(--color-surface-soft);
+    }
+
+    .two-factor-setup-shell {
+        background: color-mix(in srgb, var(--color-surface-soft) 92%, var(--color-surface-elevated));
+    }
+
+    .two-factor-qr-frame {
+        border: 1px solid var(--color-border);
+        background: #ffffff;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16);
+    }
+
+    .two-factor-secret-label {
+        color: var(--color-text-muted);
+    }
+
+    .two-factor-secret-value {
+        color: var(--color-text-primary);
+    }
+
+    .two-factor-verify-card {
+        border: 1px solid var(--color-accent-border);
+        background: color-mix(in srgb, var(--color-accent-soft) 88%, var(--color-surface-elevated));
+    }
+
     .site-footer {
         border-color: var(--color-border);
         background: color-mix(in srgb, var(--color-surface-elevated) 92%, transparent);
@@ -1159,6 +1188,7 @@
 
     [data-theme='dark'] .bg-blue-50,
     [data-theme='dark'] .bg-blue-50\/40,
+    [data-theme='dark'] .bg-blue-50\/50,
     [data-theme='dark'] .bg-blue-100 {
         background-color: var(--color-accent-soft) !important;
     }

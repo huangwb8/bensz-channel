@@ -201,8 +201,8 @@
                 </div>
             @elseif ($twoFactorSetup)
                 <div class="mt-6 grid gap-6 lg:grid-cols-[280px,1fr]">
-                    <div class="flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div class="h-[240px] w-[240px] overflow-hidden rounded-2xl bg-white p-3 shadow-sm" data-qr-value="{{ $twoFactorSetup['provisioningUri'] }}"></div>
+                    <div class="two-factor-setup-shell flex items-center justify-center rounded-2xl p-4">
+                        <div class="two-factor-qr-frame h-[240px] w-[240px] overflow-hidden rounded-2xl p-3" data-qr-value="{{ $twoFactorSetup['provisioningUri'] }}"></div>
                     </div>
 
                     <div class="space-y-4">
@@ -211,12 +211,12 @@
                             <p class="mt-1 text-sm text-gray-500">使用 Google Authenticator、Microsoft Authenticator、1Password 等应用扫描二维码；若扫描不便，也可手动输入密钥。</p>
                         </div>
 
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">手动密钥</p>
-                            <code class="mt-2 block break-all text-sm font-semibold tracking-[0.25em] text-slate-900">{{ $twoFactorSetup['secret'] }}</code>
+                        <div class="two-factor-secret-card rounded-xl px-4 py-3">
+                            <p class="two-factor-secret-label text-xs font-medium uppercase tracking-[0.2em]">手动密钥</p>
+                            <code class="two-factor-secret-value mt-2 block break-all text-sm font-semibold tracking-[0.25em]">{{ $twoFactorSetup['secret'] }}</code>
                         </div>
 
-                        <form action="{{ route('settings.account.two-factor.enable') }}" method="POST" class="space-y-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
+                        <form action="{{ route('settings.account.two-factor.enable') }}" method="POST" class="two-factor-verify-card space-y-4 rounded-xl p-4">
                             @csrf
                             <div>
                                 <h3 class="text-sm font-semibold text-blue-900">第二步：输入动态验证码完成开启</h3>

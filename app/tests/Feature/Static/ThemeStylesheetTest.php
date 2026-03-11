@@ -15,6 +15,7 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringContainsString("[data-theme='dark'] .bg-gray-50", $stylesheet);
         $this->assertStringContainsString("[data-theme='dark'] .text-gray-900", $stylesheet);
         $this->assertStringContainsString("[data-theme='dark'] .border-gray-200", $stylesheet);
+        $this->assertStringContainsString("[data-theme='dark'] .bg-blue-50\\/50", $stylesheet);
         $this->assertStringContainsString("[data-theme='dark'] .from-gray-50", $stylesheet);
         $this->assertStringContainsString("[data-theme='dark'] .to-white", $stylesheet);
         $this->assertStringContainsString("[data-theme='dark'] .from-blue-50", $stylesheet);
@@ -40,6 +41,9 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringContainsString('.channel-admin-create-form', $stylesheet);
         $this->assertStringContainsString('.channel-admin-switch-track', $stylesheet);
         $this->assertStringContainsString('.channel-admin-card-dragging', $stylesheet);
+        $this->assertStringContainsString('.two-factor-setup-shell', $stylesheet);
+        $this->assertStringContainsString('.two-factor-secret-card', $stylesheet);
+        $this->assertStringContainsString('.two-factor-verify-card', $stylesheet);
         $this->assertStringContainsString('var(--color-surface-elevated)', $stylesheet);
     }
 
