@@ -27,6 +27,25 @@
 
 - 修复了 README 快速开始部分引用不存在文件的问题：此前文档中引用了 `self/remote.env` 和 `self/docker-compose.yml`，但这些是私有配置文件不在 Git 仓库中；现在改为使用 `config/.env.example` 作为配置模板，并提供完整的配置说明，确保用户克隆仓库后能够正常部署
 
+## [1.34.0] - 2026-03-11
+
+### Added（新增）
+
+- 新增了双模式 CDN 架构：`app/app/Enums/CdnMode.php`、`app/config/cdn.php`、`app/app/Support/Cdn/` 现支持回源型 CDN 与对象存储型 CDN 两种运行模式，并提供统一的配置校验、URL 生成与对象存储适配层
+- 新增了后台 `CDN 设置` 页面：`app/app/Http/Controllers/Admin/CdnSettingsController.php` 与 `app/resources/views/admin/cdn-settings/index.blade.php` 提供模式切换、对象存储凭证配置、连接测试、差异预览、立即同步、远程清空与同步日志查看能力
+- 新增了 CDN 同步链路：`app/app/Console/Commands/SyncCdnFiles.php`、`app/app/Jobs/SyncCdnFilesJob.php`、`app/app/Models/CdnSyncLog.php` 与相关迁移文件现支持手动同步、队列同步、构建后自动同步和持久化日志
+- 新增了 CDN 回归测试与使用文档：新增 `app/tests/Feature/Admin/CdnSettingsTest.php`、`app/tests/Feature/Static/CdnSyncTriggerTest.php`、`app/tests/Unit/Support/CdnSyncServiceTest.php` 与 `docs/CDN配置指南.md`
+
+### Changed（变更）
+
+- 优化了站点设置持久化逻辑：`app/app/Support/SiteSettingsManager.php` 现支持部分字段安全更新，避免独立 CDN 页面保存时误清空站点名称、认证方式等无关配置；同时新增对象存储相关字段与运行时配置覆盖
+- 优化了静态构建与资源分发链路：`app/app/Support/StaticPageBuilder.php` 在对象存储模式且启用自动同步时，会在构建完成后派发 CDN 同步任务，保证静态资源与公开域名输出保持一致
+- 更新了 `README.md`、`README_EN.md`、`docs/开发者文档.md`、`app/.env.example`、`config/.env.example` 与 `app/config.toml`：补充双模式 CDN、对象存储环境变量、后台入口与同步命令说明，并将项目版本推进到 `1.34.0`
+
+### Fixed（修复）
+
+- 修复了此前 CDN 仅支持单一 `cdn_asset_url` 覆盖的问题：现在既能保持现有回源型 CDN 行为不变，也能稳定支持对象存储同步、构建后自动推送、凭证加密存储与同步状态可观测性
+
 ## [1.32.0] - 2026-03-11
 
 ### Added（新增）

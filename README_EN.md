@@ -4,7 +4,7 @@
 
 **Modern Web Community Platform - Integrated Solution for Channel Management, Real-time Interaction, and Content Curation**
 
-[![Version](https://img.shields.io/badge/version-1.32.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
+[![Version](https://img.shields.io/badge/version-1.34.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
 [![Platform](https://img.shields.io/badge/platform-Docker-lightgrey.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -29,6 +29,7 @@ Bensz Channel is a web community platform built with **Laravel + Better Auth + P
 - 📝 **Markdown Support**: Articles and comments support Markdown rendering with paste-to-upload images
 - 📧 **Subscription Notifications**: SMTP email subscription and RSS feeds
 - ⚡ **Static Page Optimization**: Guest access automatically uses pre-built static HTML + Gzip compression
+- ☁️ **Dual-Mode CDN**: Supports both origin-pull CDN and object-storage CDN, with admin-side connection testing, diff preview, manual sync, and sync logs
 - 🎨 **Admin Dashboard**: Complete management for channels, articles, users, and site settings
 - 🚀 **One-Click Deployment**: Docker Compose launches all services with one command
 
@@ -315,6 +316,7 @@ install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/mai
 ## 📖 Documentation
 
 - 📘 [Developer Documentation](docs/开发者文档.md) - Detailed technical documentation and development guide
+- ☁️ [CDN Configuration Guide](docs/CDN配置指南.md) - Origin CDN / object-storage CDN setup and sync workflow
 - 🔧 [Build Instructions](scripts/BUILD.md) - Detailed Docker image build instructions
 - 🔐 [WeChat/QQ Login Configuration](docs/如何让本项目支持微信和QQ扫码登陆.md) - Third-party login configuration tutorial
 - 🤖 [Agent Skill Guide](skills/bensz-channel-devtools/README.md) - Remote content management via Claude Code/Codex CLI

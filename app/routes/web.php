@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\Admin\ArticleController as AdminArticleController;
 use App\Http\Controllers\Admin\ChannelController as AdminChannelController;
+use App\Http\Controllers\Admin\CdnSettingsController as AdminCdnSettingsController;
 use App\Http\Controllers\Admin\DevtoolsController as AdminDevtoolsController;
 use App\Http\Controllers\Admin\SiteSettingsController as AdminSiteSettingsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -100,4 +101,11 @@ Route::prefix('admin')->middleware(['auth', 'not-banned', 'admin'])->name('admin
     Route::put('/site-settings', [AdminSiteSettingsController::class, 'update'])->name('site-settings.update');
     Route::get('/site-settings/backup', [AdminSiteSettingsController::class, 'downloadBackup'])->name('site-settings.backup.download');
     Route::post('/site-settings/backup/restore', [AdminSiteSettingsController::class, 'restoreBackup'])->name('site-settings.backup.restore');
+
+    Route::get('/cdn-settings', [AdminCdnSettingsController::class, 'index'])->name('cdn-settings.index');
+    Route::put('/cdn-settings', [AdminCdnSettingsController::class, 'update'])->name('cdn-settings.update');
+    Route::post('/cdn-settings/test', [AdminCdnSettingsController::class, 'testConnection'])->name('cdn-settings.test');
+    Route::get('/cdn-settings/diff', [AdminCdnSettingsController::class, 'diff'])->name('cdn-settings.diff');
+    Route::post('/cdn-settings/sync', [AdminCdnSettingsController::class, 'sync'])->name('cdn-settings.sync');
+    Route::delete('/cdn-settings/remote', [AdminCdnSettingsController::class, 'clearRemote'])->name('cdn-settings.remote.clear');
 });

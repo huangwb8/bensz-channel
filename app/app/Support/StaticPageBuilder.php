@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Jobs\SyncCdnFilesJob;
 use App\Jobs\ProcessStaticSiteBuildJob;
 use App\Models\Article;
 use App\Models\Channel;
@@ -15,6 +16,7 @@ class StaticPageBuilder
     public function __construct(
         private readonly CommunityViewData $viewData,
         private readonly Filesystem $filesystem,
+        private readonly \App\Support\Cdn\CdnSyncService $cdnSyncService,
     ) {}
 
     public function buildAll(?callable $progress = null): array
@@ -299,6 +301,7 @@ class StaticPageBuilder
         }
 
         $this->saveManifest($manifest);
+        $this->dispatchCdnSyncIfNeeded();
         $this->notify($progress, $this->summaryMessage($summary));
 
         return $summary;
@@ -390,6 +393,7 @@ class StaticPageBuilder
         }
 
         $this->saveManifest($manifest);
+        $this->dispatchCdnSyncIfNeeded();
         $this->notify($progress, $this->summaryMessage($summary));
 
         return $summary;
@@ -414,6 +418,15 @@ class StaticPageBuilder
         }
 
         return $normalized;
+    }
+
+    private function dispatchCdnSyncIfNeeded(): void
+    {
+        if (! $this->cdnSyncService->shouldSyncOnBuild()) {
+            return;
+        }
+
+        SyncCdnFilesJob::dispatch('build');
     }
 
     private function normalizeIntegerList(mixed $values): array

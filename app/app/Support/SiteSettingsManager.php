@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\CdnMode;
 use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -44,6 +45,17 @@ class SiteSettingsManager
             'site_tagline' => $setting?->site_tagline ?? (string) config('community.site.tagline'),
             'auth_enabled_methods' => $this->normalizeAuthMethods($setting?->auth_enabled_methods),
             'cdn_asset_url' => $setting?->cdn_asset_url ?? (string) config('app.asset_url'),
+            'cdn_mode' => $setting?->cdn_mode?->value ?? (string) config('cdn.mode', CdnMode::ORIGIN->value),
+            'cdn_storage_provider' => $setting?->cdn_storage_provider ?? (string) config('cdn.storage.provider', 'dogecloud'),
+            'cdn_storage_access_key' => '',
+            'cdn_storage_secret_key' => '',
+            'cdn_storage_bucket' => $setting?->cdn_storage_bucket ?? (string) config('cdn.storage.bucket'),
+            'cdn_storage_region' => $setting?->cdn_storage_region ?? (string) config('cdn.storage.region', 'auto'),
+            'cdn_storage_endpoint' => $setting?->cdn_storage_endpoint ?? (string) config('cdn.storage.endpoint'),
+            'cdn_sync_enabled' => $setting?->cdn_sync_enabled ?? (bool) config('cdn.sync.enabled', false),
+            'cdn_sync_on_build' => $setting?->cdn_sync_on_build ?? (bool) config('cdn.sync.on_build', true),
+            'cdn_storage_access_key_masked' => $this->maskSecret($setting?->cdn_storage_access_key),
+            'cdn_storage_secret_key_masked' => $this->maskSecret($setting?->cdn_storage_secret_key),
             'theme_mode' => $setting?->theme_mode ?? (string) config('community.theme.mode', 'auto'),
             'theme_day_start' => $setting?->theme_day_start ?? (string) config('community.theme.day_start', '07:00'),
             'theme_night_start' => $setting?->theme_night_start ?? (string) config('community.theme.night_start', '19:00'),
@@ -61,6 +73,15 @@ class SiteSettingsManager
                 || filled($setting->site_tagline)
                 || $setting->auth_enabled_methods !== null
                 || filled($setting->cdn_asset_url)
+                || $setting->cdn_mode !== null
+                || filled($setting->cdn_storage_provider)
+                || filled($setting->cdn_storage_access_key)
+                || filled($setting->cdn_storage_secret_key)
+                || filled($setting->cdn_storage_bucket)
+                || filled($setting->cdn_storage_region)
+                || filled($setting->cdn_storage_endpoint)
+                || $setting->cdn_sync_enabled !== null
+                || $setting->cdn_sync_on_build !== null
                 || filled($setting->theme_mode)
                 || filled($setting->theme_day_start)
                 || filled($setting->theme_night_start)
@@ -86,14 +107,23 @@ class SiteSettingsManager
     {
         $setting = SiteSetting::query()->firstOrNew(['id' => 1]);
         $setting->fill([
-            'app_name' => $this->nullableString($validated['app_name'] ?? null),
-            'site_name' => $this->nullableString($validated['site_name'] ?? null),
-            'site_tagline' => $this->nullableString($validated['site_tagline'] ?? null),
-            'auth_enabled_methods' => $this->normalizeAuthMethods($validated['auth_enabled_methods'] ?? null),
-            'cdn_asset_url' => $this->normalizeUrl($validated['cdn_asset_url'] ?? null),
-            'theme_mode' => $this->normalizeThemeMode($validated['theme_mode'] ?? null),
-            'theme_day_start' => $this->normalizeThemeTime($validated['theme_day_start'] ?? null, '07:00'),
-            'theme_night_start' => $this->normalizeThemeTime($validated['theme_night_start'] ?? null, '19:00'),
+            'app_name' => $this->resolvedValue($validated, 'app_name', fn () => $this->nullableString($validated['app_name'] ?? null), $setting->app_name),
+            'site_name' => $this->resolvedValue($validated, 'site_name', fn () => $this->nullableString($validated['site_name'] ?? null), $setting->site_name),
+            'site_tagline' => $this->resolvedValue($validated, 'site_tagline', fn () => $this->nullableString($validated['site_tagline'] ?? null), $setting->site_tagline),
+            'auth_enabled_methods' => $this->resolvedValue($validated, 'auth_enabled_methods', fn () => $this->normalizeAuthMethods($validated['auth_enabled_methods'] ?? null), $setting->auth_enabled_methods),
+            'cdn_asset_url' => $this->resolvedValue($validated, 'cdn_asset_url', fn () => $this->normalizeUrl($validated['cdn_asset_url'] ?? null), $setting->cdn_asset_url),
+            'cdn_mode' => $this->resolvedValue($validated, 'cdn_mode', fn () => $this->normalizeCdnMode($validated['cdn_mode'] ?? null), $setting->cdn_mode?->value ?? CdnMode::ORIGIN->value),
+            'cdn_storage_provider' => $this->resolvedValue($validated, 'cdn_storage_provider', fn () => $this->nullableString($validated['cdn_storage_provider'] ?? null), $setting->cdn_storage_provider),
+            'cdn_storage_access_key' => $this->resolvedSecretValue($validated, 'cdn_storage_access_key', $setting->cdn_storage_access_key),
+            'cdn_storage_secret_key' => $this->resolvedSecretValue($validated, 'cdn_storage_secret_key', $setting->cdn_storage_secret_key),
+            'cdn_storage_bucket' => $this->resolvedValue($validated, 'cdn_storage_bucket', fn () => $this->nullableString($validated['cdn_storage_bucket'] ?? null), $setting->cdn_storage_bucket),
+            'cdn_storage_region' => $this->resolvedValue($validated, 'cdn_storage_region', fn () => $this->nullableString($validated['cdn_storage_region'] ?? null), $setting->cdn_storage_region),
+            'cdn_storage_endpoint' => $this->resolvedValue($validated, 'cdn_storage_endpoint', fn () => $this->normalizeUrl($validated['cdn_storage_endpoint'] ?? null), $setting->cdn_storage_endpoint),
+            'cdn_sync_enabled' => $this->resolvedValue($validated, 'cdn_sync_enabled', fn () => $this->normalizeBoolean($validated['cdn_sync_enabled'] ?? null, false), $setting->cdn_sync_enabled ?? false),
+            'cdn_sync_on_build' => $this->resolvedValue($validated, 'cdn_sync_on_build', fn () => $this->normalizeBoolean($validated['cdn_sync_on_build'] ?? null, true), $setting->cdn_sync_on_build ?? true),
+            'theme_mode' => $this->resolvedValue($validated, 'theme_mode', fn () => $this->normalizeThemeMode($validated['theme_mode'] ?? null), $setting->theme_mode),
+            'theme_day_start' => $this->resolvedValue($validated, 'theme_day_start', fn () => $this->normalizeThemeTime($validated['theme_day_start'] ?? null, '07:00'), $setting->theme_day_start),
+            'theme_night_start' => $this->resolvedValue($validated, 'theme_night_start', fn () => $this->normalizeThemeTime($validated['theme_night_start'] ?? null, '19:00'), $setting->theme_night_start),
         ]);
         $setting->save();
 
@@ -121,10 +151,24 @@ class SiteSettingsManager
 
             config(['community.auth.enabled_methods' => $this->normalizeAuthMethods($setting->auth_enabled_methods)]);
 
+            $cdnMode = $this->normalizeCdnMode($setting->cdn_mode?->value ?? null);
+            $cdnAssetUrl = filled($setting->cdn_asset_url)
+                ? rtrim((string) $setting->cdn_asset_url, '/')
+                : null;
+
             config([
-                'app.asset_url' => filled($setting->cdn_asset_url)
-                    ? rtrim($setting->cdn_asset_url, '/')
-                    : null,
+                'app.asset_url' => $cdnAssetUrl,
+                'cdn.mode' => $cdnMode,
+                'cdn.origin.asset_url' => $cdnMode === CdnMode::ORIGIN->value ? $cdnAssetUrl : config('cdn.origin.asset_url'),
+                'cdn.storage.provider' => $setting->cdn_storage_provider ?: config('cdn.storage.provider'),
+                'cdn.storage.access_key' => $setting->cdn_storage_access_key ?: config('cdn.storage.access_key'),
+                'cdn.storage.secret_key' => $setting->cdn_storage_secret_key ?: config('cdn.storage.secret_key'),
+                'cdn.storage.bucket' => $setting->cdn_storage_bucket ?: config('cdn.storage.bucket'),
+                'cdn.storage.region' => $setting->cdn_storage_region ?: config('cdn.storage.region'),
+                'cdn.storage.endpoint' => $setting->cdn_storage_endpoint ?: config('cdn.storage.endpoint'),
+                'cdn.storage.public_url' => $cdnMode === CdnMode::STORAGE->value ? $cdnAssetUrl : config('cdn.storage.public_url'),
+                'cdn.sync.enabled' => (bool) ($setting->cdn_sync_enabled ?? config('cdn.sync.enabled', false)),
+                'cdn.sync.on_build' => (bool) ($setting->cdn_sync_on_build ?? config('cdn.sync.on_build', true)),
             ]);
 
             config([
@@ -160,6 +204,63 @@ class SiteSettingsManager
         $trimmed = trim($value);
 
         return $trimmed !== '' ? $trimmed : null;
+    }
+
+    private function resolvedValue(array $validated, string $key, callable $resolver, mixed $fallback): mixed
+    {
+        return array_key_exists($key, $validated) ? $resolver() : $fallback;
+    }
+
+    private function resolvedSecretValue(array $validated, string $key, ?string $fallback): ?string
+    {
+        if (! array_key_exists($key, $validated)) {
+            return $fallback;
+        }
+
+        $resolved = $this->nullableString($validated[$key] ?? null);
+
+        return $resolved ?? $fallback;
+    }
+
+    private function normalizeBoolean(mixed $value, bool $fallback): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_string($value) || is_int($value)) {
+            return filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? $fallback;
+        }
+
+        return $fallback;
+    }
+
+    private function normalizeCdnMode(mixed $value): string
+    {
+        if ($value instanceof CdnMode) {
+            return $value->value;
+        }
+
+        if (! is_string($value)) {
+            return CdnMode::ORIGIN->value;
+        }
+
+        return CdnMode::tryFrom(trim($value))?->value ?? CdnMode::ORIGIN->value;
+    }
+
+    private function maskSecret(?string $value): ?string
+    {
+        if (! filled($value)) {
+            return null;
+        }
+
+        $length = mb_strlen($value);
+
+        if ($length <= 4) {
+            return str_repeat('*', $length);
+        }
+
+        return mb_substr($value, 0, 2).str_repeat('*', max(4, $length - 4)).mb_substr($value, -2);
     }
 
 
