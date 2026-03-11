@@ -12,6 +12,7 @@
 - 在 README 中新增"Agent Skill 安装"章节：引导用户通过 [Bensz Skills](https://github.com/huangwb8/skills) 项目安装本项目的 Agent Skill，提供完整的安装步骤，明确说明 `install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/main/skills` 命令是在 Claude Code/Codex CLI 中输入的（而非 shell 命令）；同步更新了 README_EN.md
 - 在 README 中新增 Star 呼吁章节：在"核心特性"之后、"快速开始"之前添加了友好的 Star 呼吁，说明开发维护不易，鼓励用户点 Star 支持项目；同时嵌入了 Star History Chart 可视化展示项目增长趋势；同步更新了 README_EN.md
 - 在 README 中新增"赞助"章节：参考 ChineseResearchLaTeX 项目，在"贡献"章节之后添加赞助说明，说明开发维护需要大量时间和精力，鼓励用户通过赞助支持项目持续发展；嵌入了赞助二维码图片；同步更新了 README_EN.md
+- 在 README 的"文档"章节新增项目介绍博客链接：添加了 https://blognas.hwb0307.com/linux/docker/7053 博客文章链接，提供详细的项目介绍与使用体验；同步更新了 README_EN.md
 
 ### Changed（变更）
 
