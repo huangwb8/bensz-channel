@@ -12,6 +12,7 @@
 
 ### Changed（变更）
 
+- 优化了 README 文档结构：创建了中英双语版本（`README.md` 和 `README_EN.md`），参考 https://github.com/huangwb8/skills 的现代化风格，使用 badges、emoji 和居中标题区增强视觉效果；将技术细节移至 `docs/开发者文档.md`，保持 README 精简并突出核心功能与快速开始
 - 优化了测试规范章节：在 `AGENTS.md` 的"测试规范"中新增"交付前强制要求"小节，明确规定每次交付前必须跑通 `scripts/test/` 里的测试，且代码优化后必须同步更新测试代码，确保测试流程与最新代码相协调
 
 ## [1.32.0] - 2026-03-11
