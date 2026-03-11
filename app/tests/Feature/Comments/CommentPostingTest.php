@@ -50,6 +50,19 @@ class CommentPostingTest extends TestCase
             ->assertDontSee('管理 SMTP 订阅');
     }
 
+    public function test_article_page_renders_clipboard_image_upload_hint_for_logged_in_member(): void
+    {
+        [$article] = $this->createArticleFixture();
+        $member = User::factory()->create(['role' => User::ROLE_MEMBER]);
+
+        $this->actingAs($member)
+            ->get(route('articles.show', [$article->channel, $article]))
+            ->assertOk()
+            ->assertSee(route('uploads.images.store'), false)
+            ->assertSee('Ctrl', false)
+            ->assertSee('图片会自动上传到站点托管目录');
+    }
+
     private function createArticleFixture(): array
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);

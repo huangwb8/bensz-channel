@@ -131,7 +131,22 @@
                 @csrf
                 <div>
                     <label for="body" class="mb-2 block text-sm font-medium text-gray-700">发表评论（支持 Markdown）</label>
-                    <textarea id="body" name="body" rows="4" class="input-field" placeholder="写下你的看法...">{{ old('body') }}</textarea>
+                    <div class="markdown-upload-shell" data-markdown-upload-shell>
+                        <textarea
+                            id="body"
+                            name="body"
+                            rows="4"
+                            class="input-field"
+                            placeholder="写下你的看法..."
+                            data-image-upload-url="{{ route('uploads.images.store') }}"
+                            data-upload-context="comment"
+                            data-upload-label="评论图片"
+                        >{{ old('body') }}</textarea>
+                        <div class="markdown-upload-meta">
+                            <p class="markdown-upload-hint">支持 Markdown；聚焦输入框后可直接按 <kbd>Ctrl</kbd> + <kbd>V</kbd> 粘贴图片，图片会自动上传到站点托管目录。</p>
+                            <p class="markdown-upload-status" data-image-upload-status aria-live="polite" hidden></p>
+                        </div>
+                    </div>
                     @error('body')
                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                     @enderror

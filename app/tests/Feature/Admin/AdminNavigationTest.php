@@ -59,4 +59,19 @@ class AdminNavigationTest extends TestCase
             ->get('/admin')
             ->assertRedirect(route('admin.site-settings.edit'));
     }
+
+    public function test_authenticated_user_menu_uses_clickable_dropdown_markup(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $response = $this->actingAs($admin)->get(route('home'));
+
+        $response->assertOk();
+        $response->assertSee('data-user-menu-shell', false);
+        $response->assertSee('data-user-menu-trigger', false);
+        $response->assertSee('data-user-menu-panel', false);
+        $response->assertSee('aria-haspopup="menu"', false);
+        $response->assertSee('aria-expanded="false"', false);
+        $response->assertSee('hidden aria-hidden="true"', false);
+    }
 }

@@ -19,6 +19,90 @@ const syncInteractiveTitles = (root = document) => {
 
 syncInteractiveTitles();
 
+const setMarkdownUploadStatus = (statusNode, state, message) => {
+    if (! statusNode) {
+        return;
+    }
+
+    statusNode.hidden = ! message;
+    statusNode.dataset.state = state;
+    statusNode.textContent = message;
+};
+
+const insertMarkdownAtCursor = (textarea, text) => {
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? textarea.value.length;
+    const prefix = start > 0 && ! textarea.value.slice(0, start).endsWith('\n') ? '\n' : '';
+    const suffix = end < textarea.value.length && ! textarea.value.slice(end).startsWith('\n') ? '\n' : '';
+    const snippet = `${prefix}${text}${suffix}`;
+
+    textarea.setRangeText(snippet, start, end, 'end');
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    textarea.focus();
+};
+
+const clipboardImageFiles = (event) => Array.from(event.clipboardData?.items ?? [])
+    .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
+    .map((item) => item.getAsFile())
+    .filter((file) => file instanceof File);
+
+const uploadPastedImages = async (textarea, files) => {
+    const uploadUrl = textarea.dataset.imageUploadUrl;
+    const context = textarea.dataset.uploadContext ?? 'comment';
+    const uploadLabel = textarea.dataset.uploadLabel ?? '图片';
+    const statusNode = textarea.closest('[data-markdown-upload-shell]')?.querySelector('[data-image-upload-status]');
+
+    if (! uploadUrl || files.length === 0) {
+        return;
+    }
+
+    const uploadedMarkdown = [];
+
+    for (const [index, file] of files.entries()) {
+        setMarkdownUploadStatus(statusNode, 'uploading', `正在上传${uploadLabel} ${index + 1}/${files.length}…`);
+
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('context', context);
+
+        const response = await window.axios.post(uploadUrl, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        uploadedMarkdown.push(response.data.markdown);
+    }
+
+    insertMarkdownAtCursor(textarea, uploadedMarkdown.join('\n\n'));
+    setMarkdownUploadStatus(statusNode, 'success', `${uploadLabel}上传完成，已插入 Markdown 链接。`);
+
+    window.setTimeout(() => {
+        setMarkdownUploadStatus(statusNode, 'idle', '');
+    }, 2400);
+};
+
+document.querySelectorAll('textarea[data-image-upload-url]').forEach((textarea) => {
+    textarea.addEventListener('paste', async (event) => {
+        const files = clipboardImageFiles(event);
+
+        if (files.length === 0) {
+            return;
+        }
+
+        event.preventDefault();
+
+        try {
+            await uploadPastedImages(textarea, files);
+        } catch (error) {
+            const statusNode = textarea.closest('[data-markdown-upload-shell]')?.querySelector('[data-image-upload-status]');
+            const responseMessage = error?.response?.data?.message;
+
+            setMarkdownUploadStatus(statusNode, 'error', responseMessage || '图片上传失败，请稍后重试。');
+        }
+    });
+});
+
 const mobileChannelTrigger = document.querySelector('[data-mobile-channel-trigger]');
 const mobileChannelDrawer = document.querySelector('[data-mobile-channel-drawer]');
 
@@ -116,6 +200,136 @@ if (mobileChannelTrigger && mobileChannelDrawer) {
     } else if (typeof desktopMediaQuery.addListener === 'function') {
         desktopMediaQuery.addListener(handleDesktopBreakpointChange);
     }
+}
+
+const userMenuShells = Array.from(document.querySelectorAll('[data-user-menu-shell]'));
+
+if (userMenuShells.length > 0) {
+    const hoverCapableMediaQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+    const closeAllUserMenus = (exceptShell = null) => {
+        userMenuShells.forEach((shell) => {
+            if (shell === exceptShell) {
+                return;
+            }
+
+            const trigger = shell.querySelector('[data-user-menu-trigger]');
+            const panel = shell.querySelector('[data-user-menu-panel]');
+
+            if (! trigger || ! panel) {
+                return;
+            }
+
+            panel.hidden = true;
+            panel.setAttribute('aria-hidden', 'true');
+            trigger.setAttribute('aria-expanded', 'false');
+        });
+    };
+
+    userMenuShells.forEach((shell, index) => {
+        const trigger = shell.querySelector('[data-user-menu-trigger]');
+        const panel = shell.querySelector('[data-user-menu-panel]');
+        const menuItems = Array.from(shell.querySelectorAll('[role="menuitem"]'));
+
+        if (! (trigger instanceof HTMLElement) || ! (panel instanceof HTMLElement)) {
+            return;
+        }
+
+        if (! panel.id) {
+            panel.id = `user-menu-panel-${index + 1}`;
+            trigger.setAttribute('aria-controls', panel.id);
+        }
+
+        const setMenuState = (isOpen) => {
+            panel.hidden = ! isOpen;
+            panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        };
+
+        const closeMenu = () => {
+            setMenuState(false);
+        };
+
+        const openMenu = () => {
+            closeAllUserMenus(shell);
+            setMenuState(true);
+        };
+
+        trigger.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (panel.hidden) {
+                openMenu();
+
+                return;
+            }
+
+            closeMenu();
+        });
+
+        trigger.addEventListener('keydown', (event) => {
+            if (event.key !== 'ArrowDown' && event.key !== 'Enter' && event.key !== ' ') {
+                return;
+            }
+
+            event.preventDefault();
+            openMenu();
+            menuItems[0]?.focus();
+        });
+
+        panel.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            event.preventDefault();
+            closeMenu();
+            trigger.focus();
+        });
+
+        menuItems.forEach((item) => {
+            item.addEventListener('click', () => {
+                closeMenu();
+            });
+        });
+
+        shell.addEventListener('focusout', (event) => {
+            const nextFocusedElement = event.relatedTarget;
+
+            if (nextFocusedElement instanceof Node && shell.contains(nextFocusedElement)) {
+                return;
+            }
+
+            closeMenu();
+        });
+
+        if (hoverCapableMediaQuery.matches) {
+            shell.addEventListener('mouseenter', () => {
+                openMenu();
+            });
+
+            shell.addEventListener('mouseleave', () => {
+                closeMenu();
+            });
+        }
+
+        setMenuState(false);
+    });
+
+    document.addEventListener('click', (event) => {
+        const clickedShell = event.target instanceof Element
+            ? event.target.closest('[data-user-menu-shell]')
+            : null;
+
+        closeAllUserMenus(clickedShell);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeAllUserMenus();
+        }
+    });
 }
 
 // RSS 复制功能

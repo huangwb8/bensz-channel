@@ -6,6 +6,35 @@
 
 ## [Unreleased]
 
+## [1.29.1] - 2026-03-10
+
+### Changed（变更）
+
+- 优化了顶部导航右上角的用户菜单交互：`app/resources/views/layouts/app.blade.php` 改为显式的可点击下拉菜单结构，补齐 `aria-haspopup`、`aria-expanded` 与 `role="menu"` / `role="menuitem"` 等无障碍语义，移动端与桌面端统一使用同一套交互模型
+
+### Fixed（修复）
+
+- 修复了移动模式下登录后右上角用户/管理按钮点击无反应的问题：`app/resources/js/app.js` 现负责菜单展开、收起、点击外部关闭与 `Escape` 关闭，管理员入口和普通用户入口在触屏设备上均可稳定使用
+- 修复了该问题缺少结构化回归保护的问题：新增 `app/tests/Feature/Admin/AdminNavigationTest.php` 断言，锁定用户菜单必须以可点击下拉结构渲染，避免后续再次退化为仅依赖 hover 的实现
+
+## [1.29.0] - 2026-03-10
+
+### Added（新增）
+
+- 新增了粘贴图片上传能力：后台文章编辑器与前台评论区现在都支持直接通过 `Ctrl+V` 粘贴图片，浏览器会自动上传图片并把 Markdown 图片链接插回输入框
+- 新增了图片上传接口与回归测试：`app/app/Http/Controllers/ImageUploadController.php`、`app/tests/Feature/Uploads/ImageUploadTest.php` 用于锁定登录鉴权、图片校验和 `/storage/media/...` 路径生成行为
+- 新增了实现计划 `docs/plans/2026-03-10-clipboard-image-upload.md`：沉淀文章/评论粘贴上传、卷托管与 Docker 验收步骤
+
+### Changed（变更）
+
+- 优化了文章编辑器与评论输入框交互：`app/resources/views/admin/articles/form.blade.php`、`app/resources/views/articles/show.blade.php` 现展示粘贴上传提示与上传状态，`app/resources/js/app.js` 新增统一的剪贴板图片上传与 Markdown 插入逻辑
+- 优化了内容展示稳定性：`app/resources/css/app.css` 为 Markdown 图片补齐响应式样式，并为上传状态增加成功 / 失败 / 上传中的视觉反馈
+- 更新了 `README.md` 与 `app/config.toml`：补充 Ctrl+V 粘贴图片能力、图片持久化备份路径说明，并将项目版本推进到 `1.29.0`
+
+### Fixed（修复）
+
+- 修复了文章正文和评论区只能手动贴外链图片、无法直接粘贴图片并持久化托管的问题；现在上传文件统一落到 `./data/web/storage/app/public/media/`，配合现有 Docker volume 可在重部署后继续正常访问
+
 ## [1.28.3] - 2026-03-10
 
 ### Added（新增）

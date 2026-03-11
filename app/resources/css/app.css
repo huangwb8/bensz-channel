@@ -316,6 +316,45 @@
         @apply flex flex-wrap items-center gap-2;
     }
 
+    .markdown-upload-shell {
+        @apply space-y-3;
+    }
+
+    .markdown-upload-meta {
+        @apply flex flex-col gap-2 text-xs sm:flex-row sm:items-start sm:justify-between;
+    }
+
+    .markdown-upload-hint {
+        color: var(--color-text-muted);
+    }
+
+    .markdown-upload-hint kbd {
+        @apply rounded-md border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[11px] font-semibold text-gray-700;
+    }
+
+    .markdown-upload-status {
+        @apply rounded-full px-3 py-1 text-xs font-medium;
+        width: fit-content;
+    }
+
+    .markdown-upload-status[data-state='uploading'] {
+        background: var(--color-warning-bg);
+        border: 1px solid var(--color-warning-border);
+        color: var(--color-warning-text);
+    }
+
+    .markdown-upload-status[data-state='success'] {
+        background: var(--color-success-bg);
+        border: 1px solid var(--color-success-border);
+        color: var(--color-success-text);
+    }
+
+    .markdown-upload-status[data-state='error'] {
+        background: var(--color-danger-bg);
+        border: 1px solid var(--color-danger-border);
+        color: var(--color-danger-text);
+    }
+
     .icon-action {
         position: relative;
         @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-sm;
@@ -683,6 +722,10 @@
 
     .markdown-body a {
         @apply text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline;
+    }
+
+    .markdown-body img {
+        @apply mt-4 block h-auto max-w-full rounded-2xl border border-gray-200 bg-gray-50 shadow-sm;
     }
 
     .markdown-body blockquote {

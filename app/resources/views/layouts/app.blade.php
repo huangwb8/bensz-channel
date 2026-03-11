@@ -22,6 +22,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ $pageTitle ? $pageTitle.' · '.$siteName : $siteName }}</title>
         <meta name="description" content="{{ $siteTagline }}">
         <meta name="color-scheme" content="light dark">
@@ -94,8 +95,16 @@
                 <!-- 右侧用户操作 -->
                 <div class="flex items-center gap-2">
                     @auth
-                        <div class="group relative">
-                            <button class="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <div class="relative" data-user-menu-shell>
+                            <button
+                                type="button"
+                                class="flex min-h-11 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                                data-user-menu-trigger
+                                aria-haspopup="menu"
+                                aria-expanded="false"
+                                aria-controls="user-menu-panel"
+                                title="打开用户菜单"
+                            >
                                 <span class="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-xs font-semibold text-blue-700">
                                     {{ mb_substr(auth()->user()->name, 0, 1) }}
                                 </span>
@@ -105,39 +114,46 @@
                                 </svg>
                             </button>
                             <!-- 下拉菜单 -->
-                            <div class="absolute right-0 top-full mt-1 w-48 rounded-xl border border-gray-200 bg-white py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all shadow-lg">
+                            <div
+                                id="user-menu-panel"
+                                class="absolute right-0 top-full z-[70] mt-2 w-48 rounded-xl border border-gray-200 bg-white py-1 shadow-lg"
+                                data-user-menu-panel
+                                role="menu"
+                                aria-hidden="true"
+                                hidden
+                            >
                                 <div class="border-b border-gray-100 px-4 py-2">
                                     <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
                                     <p class="text-xs text-gray-500">{{ auth()->user()->isAdmin() ? '管理员' : '成员' }}</p>
                                 </div>
-                                <a href="{{ route('settings.account.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <a href="{{ route('settings.account.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
                                     👤 账户设置
                                 </a>
                                 @if(auth()->user()->isAdmin())
-                                    <a href="{{ route('admin.site-settings.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <a href="{{ route('admin.site-settings.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
                                         ⚙️ 站点设置
                                     </a>
-                                    <a href="{{ route('admin.articles.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <a href="{{ route('admin.articles.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
                                         📝 管理文章
                                     </a>
-                                    <a href="{{ route('admin.channels.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <a href="{{ route('admin.channels.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
                                         📁 管理频道
                                     </a>
-                                    <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
                                         👥 管理用户
                                     </a>
                                 @endif
-                                <a href="{{ route('settings.subscriptions.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <a href="{{ route('settings.subscriptions.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
                                     📮 订阅设置
                                 </a>
                                 @if(auth()->user()->isAdmin())
-                                    <a href="{{ route('admin.devtools.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <a href="{{ route('admin.devtools.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
                                         🔧 DevTools
                                     </a>
                                 @endif
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50">
+                                    <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50" role="menuitem">
                                         🚪 退出登录
                                     </button>
                                 </form>

@@ -83,7 +83,20 @@
 
             <div>
                 <label class="mb-2 block text-sm font-medium text-gray-700">正文 <span class="text-gray-400">（支持 Markdown）</span></label>
-                <textarea name="markdown_body" rows="16" class="input-field font-mono text-sm">{{ old('markdown_body', $article->markdown_body) }}</textarea>
+                <div class="markdown-upload-shell" data-markdown-upload-shell>
+                    <textarea
+                        name="markdown_body"
+                        rows="16"
+                        class="input-field font-mono text-sm"
+                        data-image-upload-url="{{ route('uploads.images.store') }}"
+                        data-upload-context="article"
+                        data-upload-label="文章图片"
+                    >{{ old('markdown_body', $article->markdown_body) }}</textarea>
+                    <div class="markdown-upload-meta">
+                        <p class="markdown-upload-hint">支持 Markdown；聚焦正文后可直接按 <kbd>Ctrl</kbd> + <kbd>V</kbd> 粘贴图片，系统会自动上传并插入可访问的图片链接。</p>
+                        <p class="markdown-upload-status" data-image-upload-status aria-live="polite" hidden></p>
+                    </div>
+                </div>
             </div>
 
             <div class="flex gap-3">

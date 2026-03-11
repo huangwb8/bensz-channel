@@ -49,6 +49,18 @@ class AdminArticleManagementTest extends TestCase
         ]);
     }
 
+    public function test_admin_article_form_renders_clipboard_image_upload_hint(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $this->createChannel();
+
+        $this->actingAs($admin)
+            ->get(route('admin.articles.create'))
+            ->assertOk()
+            ->assertSee(route('uploads.images.store'), false)
+            ->assertSee('可直接按 <kbd>Ctrl</kbd> + <kbd>V</kbd> 粘贴图片', false);
+    }
+
     public function test_admin_cannot_use_featured_channel_as_article_primary_channel(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);

@@ -10,7 +10,7 @@
 - **账户自助维护**：登录用户现在可在“账户设置”页面自助修改昵称、邮箱、手机号、头像链接、个人简介与登录密码，并查看不会随资料变更而变化的稳定用户 ID
 - **订阅能力**：支持注册用户通过 SMTP 订阅全部/指定版块新文章、接收评论 @ 提醒，并提供公开 RSS 链接
 - **游客静态访问**：未登录用户优先命中预构建静态 HTML，并自动使用 Gzip 压缩版本；登录后回退到 PHP 动态界面
-- **Markdown 内容流**：文章与评论都支持 Markdown 渲染
+- **Markdown 内容流**：文章与评论都支持 Markdown 渲染，并且管理员写文章、登录用户发评论时都可直接 `Ctrl+V` 粘贴图片自动上传
 - **文章结构增强**：文章页现已为 Markdown 标题自动生成层级编号与目录 TOC，且 TOC 同时适配桌面端侧栏与移动端折叠面板
 - **Docker 一键部署**：应用、PostgreSQL、Redis、Mailpit 一起启动
 - **CDN 友好资源策略**：Vite 指纹资源 + `ASSET_URL` 预留 + Nginx 长缓存头
@@ -78,7 +78,7 @@
 ```toml
 [project]
 name = "bensz-channel"
-version = "1.28.3"
+version = "1.29.1"
 description = "类似 QQ 频道的 Web 社区平台，基于 PHP、PostgreSQL、Docker 构建"
 ```
 
@@ -200,6 +200,7 @@ bensz-channel/
 - Redis AOF 显式挂载到 `./data/redis`
 - Mailpit 数据库显式挂载到 `./data/mailpit`
 - Laravel 运行时存储与静态页面输出显式挂载到 `./data/web/`
+- 文章与评论里通过粘贴上传的图片统一存放在 `./data/web/storage/app/public/media/`，重部署后仍会继续保留，备份整个 `./data/` 目录即可连同数据库和图片资源一起保存
 - Web 容器启动时只执行 `migrate + SystemBootstrapSeeder`，避免重部署时反复写入 demo 内容
 - 仓库更新时只需执行 `git pull` 后依次运行 `./scripts/build.sh` 与 `./scripts/compose.sh up -d`
 
