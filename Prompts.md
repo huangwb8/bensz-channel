@@ -25,6 +25,10 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 
 ---
 
+根据计划 /Volumes/2T01/Github/bensz-channel/docs/plans/CDN-重构-202603111323.md ， 使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
+
+---
+
 README优化
 
 - 像 https://github.com/huangwb8/skills 一样有中英版本，非常酷炫、现代。
