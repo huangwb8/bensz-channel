@@ -25,6 +25,14 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 
 ---
 
+README优化
+
+- 像 https://github.com/huangwb8/skills 一样有中英版本，非常酷炫、现代。
+- README里更多地是介绍这个项目具体有哪些功能； 怎么迅速开始（参考 self 里的docker-compose.yml和.env，这是一个实际可用的实例设置）。 很多技术细节，请放在 docs/开发者文档.md 里
+- 保证README足够精简
+
+---
+
 admin/site-settings界面里，添加一个可供管理员对数据进行备份与恢复的入口。 它大致的行为是这样：
 
 - 如果管理员需要备份，那么应该可以把软件设置、各种用户数据、文章、频道等核心数据都备份
