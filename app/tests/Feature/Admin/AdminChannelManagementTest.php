@@ -43,6 +43,9 @@ class AdminChannelManagementTest extends TestCase
         $response->assertSee('title="删除频道"', false);
         $response->assertSee('aria-label="删除频道：'.$channel->name.'"', false);
         $response->assertSee('form="delete-channel-'.$channel->id.'"', false);
+        $response->assertSee('channel-admin-create-form', false);
+        $response->assertSee('channel-admin-switch-track', false);
+        $response->assertSee('channel-admin-card-dragging', false);
     }
 
     public function test_admin_channel_management_shows_uncategorized_nav_toggle_without_delete_action(): void
