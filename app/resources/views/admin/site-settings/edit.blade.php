@@ -50,6 +50,21 @@
             </div>
 
             <div>
+                <label for="article_image_max_mb" class="mb-2 block text-sm font-medium text-gray-700">文章图片上传上限（MB）</label>
+                <input
+                    id="article_image_max_mb"
+                    type="number"
+                    name="article_image_max_mb"
+                    value="{{ old('article_image_max_mb', $siteSettingsForm['article_image_max_mb']) }}"
+                    class="input-field h-11"
+                    min="1"
+                    max="100"
+                    step="1"
+                >
+                <p class="mt-2 text-xs text-gray-500">仅影响文章编辑器内粘贴/上传图片的大小限制，默认 50MB。</p>
+            </div>
+
+            <div>
                 <label for="cdn_asset_url" class="mb-2 block text-sm font-medium text-gray-700">静态资源 CDN</label>
                 <input id="cdn_asset_url" type="url" name="cdn_asset_url" value="{{ old('cdn_asset_url', $siteSettingsForm['cdn_asset_url']) }}" class="input-field h-11" placeholder="https://cdn.example.com">
                 <p class="mt-2 text-xs text-gray-500">用于加速 CSS、JS、图片和其它公开静态资源。页面主域名仍由 `APP_URL` 决定；这里建议填写 DogeCloud 等 CDN 加速域名。</p>

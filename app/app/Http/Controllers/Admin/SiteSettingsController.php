@@ -92,6 +92,7 @@ class SiteSettingsController extends Controller
             'app_name' => ['required', 'string', 'max:120'],
             'site_name' => ['required', 'string', 'max:120'],
             'site_tagline' => ['required', 'string', 'max:255'],
+            'article_image_max_mb' => ['required', 'integer', 'min:1', 'max:100'],
             'cdn_asset_url' => ['nullable', 'url', 'max:255'],
             'theme_mode' => ['required', Rule::in(['auto', 'light', 'dark'])],
             'theme_day_start' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],

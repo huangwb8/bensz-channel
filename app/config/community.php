@@ -25,6 +25,9 @@ return [
         'tagline' => env('SITE_TAGLINE', '像 QQ 频道一样清晰、快速、可扩展的 Web 社区'),
         'repository_url' => env('PROJECT_REPOSITORY_URL', 'https://github.com/huangwb8/bensz-channel'),
     ],
+    'uploads' => [
+        'article_image_max_mb' => (int) env('ARTICLE_IMAGE_MAX_MB', 50),
+    ],
 
     'auth' => [
         'driver' => env('AUTH_DRIVER', 'better_auth'),

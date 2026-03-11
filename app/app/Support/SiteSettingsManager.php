@@ -59,6 +59,8 @@ class SiteSettingsManager
             'theme_mode' => $setting?->theme_mode ?? (string) config('community.theme.mode', 'auto'),
             'theme_day_start' => $setting?->theme_day_start ?? (string) config('community.theme.day_start', '07:00'),
             'theme_night_start' => $setting?->theme_night_start ?? (string) config('community.theme.night_start', '19:00'),
+            'article_image_max_mb' => $setting?->article_image_max_mb
+                ?? (int) config('community.uploads.article_image_max_mb', 50),
         ];
     }
 
@@ -85,6 +87,7 @@ class SiteSettingsManager
                 || filled($setting->theme_mode)
                 || filled($setting->theme_day_start)
                 || filled($setting->theme_night_start)
+                || $setting->article_image_max_mb !== null
             );
     }
 
@@ -124,6 +127,12 @@ class SiteSettingsManager
             'theme_mode' => $this->resolvedValue($validated, 'theme_mode', fn () => $this->normalizeThemeMode($validated['theme_mode'] ?? null), $setting->theme_mode),
             'theme_day_start' => $this->resolvedValue($validated, 'theme_day_start', fn () => $this->normalizeThemeTime($validated['theme_day_start'] ?? null, '07:00'), $setting->theme_day_start),
             'theme_night_start' => $this->resolvedValue($validated, 'theme_night_start', fn () => $this->normalizeThemeTime($validated['theme_night_start'] ?? null, '19:00'), $setting->theme_night_start),
+            'article_image_max_mb' => $this->resolvedValue(
+                $validated,
+                'article_image_max_mb',
+                fn () => $this->normalizeImageMaxMb($validated['article_image_max_mb'] ?? null),
+                $setting->article_image_max_mb,
+            ),
         ]);
         $setting->save();
 
@@ -175,6 +184,7 @@ class SiteSettingsManager
                 'community.theme.mode' => $this->normalizeThemeMode($setting->theme_mode ?? null),
                 'community.theme.day_start' => $this->normalizeThemeTime($setting->theme_day_start ?? null, '07:00'),
                 'community.theme.night_start' => $this->normalizeThemeTime($setting->theme_night_start ?? null, '19:00'),
+                'community.uploads.article_image_max_mb' => $this->normalizeImageMaxMb($setting->article_image_max_mb),
             ]);
         }
 
@@ -311,6 +321,17 @@ class SiteSettingsManager
         }
 
         return $time;
+    }
+
+    private function normalizeImageMaxMb(mixed $value, int $fallback = 50): int
+    {
+        $normalized = (int) $value;
+
+        if ($normalized <= 0) {
+            return $fallback;
+        }
+
+        return max(1, min(100, $normalized));
     }
 
     private function enabledQrProvidersFromMethods(array $methods): array

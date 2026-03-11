@@ -175,6 +175,9 @@ MAILPIT_PORT=8025
 # Static site configuration
 STATIC_SITE_OUTPUT_DIR=static
 
+# Article image upload limit (MB)
+ARTICLE_IMAGE_MAX_MB=50
+
 # PostgreSQL configuration
 DB_HOST=postgres
 POSTGRES_DB=bensz_channel

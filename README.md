@@ -175,6 +175,9 @@ MAILPIT_PORT=8025
 # 静态站点配置
 STATIC_SITE_OUTPUT_DIR=static
 
+# 文章图片上传上限（MB）
+ARTICLE_IMAGE_MAX_MB=50
+
 # PostgreSQL 配置
 DB_HOST=postgres
 POSTGRES_DB=bensz_channel

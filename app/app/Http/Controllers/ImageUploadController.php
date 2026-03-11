@@ -14,8 +14,10 @@ class ImageUploadController extends Controller
     {
         abort_unless($request->user() !== null, 403);
 
+        $maxKilobytes = $this->resolveMaxKilobytes((string) $request->input('context', 'comment'));
+
         $validated = $request->validate([
-            'image' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp,avif', 'max:10240'],
+            'image' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp,avif', 'max:'.$maxKilobytes],
             'context' => ['nullable', 'string', Rule::in(['article', 'comment'])],
             'alt' => ['nullable', 'string', 'max:80'],
         ]);
@@ -44,6 +46,20 @@ class ImageUploadController extends Controller
             'url' => asset(ltrim($relativeUrl, '/')),
             'relative_url' => $relativeUrl,
         ], 201);
+    }
+
+    private function resolveMaxKilobytes(string $context): int
+    {
+        $normalized = strtolower(trim($context));
+
+        if ($normalized === 'article') {
+            $maxMb = (int) config('community.uploads.article_image_max_mb', 50);
+            $maxMb = max(1, min(100, $maxMb));
+
+            return $maxMb * 1024;
+        }
+
+        return 10240;
     }
 
     private function buildMarkdown(?string $alt, string $relativeUrl, UploadedFile $image): string

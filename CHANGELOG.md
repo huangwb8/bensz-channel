@@ -27,6 +27,23 @@
 
 - 修复了 README 快速开始部分引用不存在文件的问题：此前文档中引用了 `self/remote.env` 和 `self/docker-compose.yml`，但这些是私有配置文件不在 Git 仓库中；现在改为使用 `config/.env.example` 作为配置模板，并提供完整的配置说明，确保用户克隆仓库后能够正常部署
 
+## [1.34.5] - 2026-03-11
+
+### Added（新增）
+
+- 新增文章图片上传上限配置：`app/database/migrations/2026_03_11_150000_add_article_image_max_mb_to_site_settings_table.php` 新增可覆盖的站点参数，管理员可在站点设置中调整写文章时的图片大小限制（默认 50MB）
+- 新增文章图片上传上限回归测试：`app/tests/Feature/Uploads/ImageUploadTest.php` 现覆盖文章上传大小限制的可配置性
+
+### Changed（变更）
+
+- 优化站点设置表单与配置加载：`app/resources/views/admin/site-settings/edit.blade.php` 增加上传上限字段，`app/app/Support/SiteSettingsManager.php` 支持保存并注入运行时配置，`app/config/community.php` 与 `app/config.toml` 增加默认值
+- 调整 Web 容器上传限制：`docker/nginx/default.conf` 与 `docker/web/php-upload.ini` 现支持 100MB 上限，确保管理员配置不会被容器层拦截
+- 更新文档与版本号：同步更新 `README.md`、`README_EN.md`、`docs/开发者文档.md`，并将 `app/config.toml` 版本推进到 `1.34.5`
+
+### Fixed（修复）
+
+- 修复了文章图片上传上限无法在后台调整的问题：现在站点设置可直接控制文章编辑器图片上传大小，并在验证层严格执行
+
 ## [1.34.4] - 2026-03-11
 
 ### Added（新增）
