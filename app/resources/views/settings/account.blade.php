@@ -120,5 +120,121 @@
                 </div>
             </form>
         </section>
+
+        <section class="rounded-xl border border-gray-200 bg-white p-6">
+            <div class="flex flex-wrap items-start justify-between gap-4 border-b border-gray-100 pb-4">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900">两步验证</h2>
+                    <p class="mt-1 text-sm text-gray-500">开启后，任何登录方式在主验证通过后都需要再输入一次动态验证码或恢复码。</p>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs">
+                    <span class="rounded-full px-3 py-1 font-semibold {{ $twoFactorEnabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' }}">
+                        {{ $twoFactorEnabled ? '已开启两步验证' : '尚未开启两步验证' }}
+                    </span>
+                </div>
+            </div>
+
+            @if ($twoFactorRecoveryCodes !== [])
+                <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800">
+                    <p class="font-semibold">请立即保存以下恢复码</p>
+                    <p class="mt-1">每个恢复码只能使用一次。建议离线保存，避免手机丢失后无法登录。</p>
+                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                        @foreach ($twoFactorRecoveryCodes as $recoveryCode)
+                            <code class="rounded-lg bg-white px-3 py-2 text-center text-sm font-semibold tracking-[0.2em] text-slate-800">{{ $recoveryCode }}</code>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if ($twoFactorEnabled)
+                <div class="mt-6 space-y-6">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                        两步验证当前已启用。若更换设备，可先使用下方表单重新生成恢复码；若确定停用，请输入当前动态验证码或恢复码完成关闭。
+                    </div>
+
+                    <form action="{{ route('settings.account.two-factor.recovery-codes.regenerate') }}" method="POST" class="space-y-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
+                        @csrf
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900">重新生成恢复码</h3>
+                            <p class="mt-1 text-sm text-gray-500">旧恢复码会立即失效。请输入当前动态验证码，或提供一个尚未使用的恢复码进行确认。</p>
+                        </div>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <label class="block space-y-2">
+                                <span class="text-sm font-medium text-gray-700">动态验证码</span>
+                                <input type="text" name="code" class="input-field" inputmode="numeric" autocomplete="one-time-code" placeholder="输入 6 位动态码">
+                            </label>
+                            <label class="block space-y-2">
+                                <span class="text-sm font-medium text-gray-700">恢复码</span>
+                                <input type="text" name="recovery_code" class="input-field" autocomplete="off" placeholder="例如 ABCD-EFGH">
+                            </label>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+                                重新生成恢复码
+                            </button>
+                        </div>
+                    </form>
+
+                    <form action="{{ route('settings.account.two-factor.disable') }}" method="POST" class="space-y-4 rounded-xl border border-red-100 bg-red-50 p-4">
+                        @csrf
+                        @method('DELETE')
+                        <div>
+                            <h3 class="text-sm font-semibold text-red-900">关闭两步验证</h3>
+                            <p class="mt-1 text-sm text-red-700">关闭后，后续登录将不再要求动态验证码。请输入当前动态验证码或恢复码确认。</p>
+                        </div>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <label class="block space-y-2">
+                                <span class="text-sm font-medium text-red-900">动态验证码</span>
+                                <input type="text" name="code" class="input-field" inputmode="numeric" autocomplete="one-time-code" placeholder="输入 6 位动态码">
+                            </label>
+                            <label class="block space-y-2">
+                                <span class="text-sm font-medium text-red-900">恢复码</span>
+                                <input type="text" name="recovery_code" class="input-field" autocomplete="off" placeholder="例如 ABCD-EFGH">
+                            </label>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+                                关闭两步验证
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            @elseif ($twoFactorSetup)
+                <div class="mt-6 grid gap-6 lg:grid-cols-[280px,1fr]">
+                    <div class="flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="h-[240px] w-[240px] overflow-hidden rounded-2xl bg-white p-3 shadow-sm" data-qr-value="{{ $twoFactorSetup['provisioningUri'] }}"></div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900">第一步：绑定验证器</h3>
+                            <p class="mt-1 text-sm text-gray-500">使用 Google Authenticator、Microsoft Authenticator、1Password 等应用扫描二维码；若扫描不便，也可手动输入密钥。</p>
+                        </div>
+
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <p class="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">手动密钥</p>
+                            <code class="mt-2 block break-all text-sm font-semibold tracking-[0.25em] text-slate-900">{{ $twoFactorSetup['secret'] }}</code>
+                        </div>
+
+                        <form action="{{ route('settings.account.two-factor.enable') }}" method="POST" class="space-y-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
+                            @csrf
+                            <div>
+                                <h3 class="text-sm font-semibold text-blue-900">第二步：输入动态验证码完成开启</h3>
+                                <p class="mt-1 text-sm text-blue-700">绑定成功后，输入验证器当前显示的 6 位动态码。保存后系统会为你生成一次性恢复码。</p>
+                            </div>
+                            <label class="block space-y-2">
+                                <span class="text-sm font-medium text-blue-900">动态验证码</span>
+                                <input type="text" name="code" class="input-field" inputmode="numeric" autocomplete="one-time-code" placeholder="例如 123456" required>
+                            </label>
+                            <div class="flex justify-end">
+                                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                                    开启两步验证
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @endif
+        </section>
     </section>
 @endsection

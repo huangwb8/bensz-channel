@@ -20,7 +20,8 @@ class AccountSettingsTest extends TestCase
             ->assertOk()
             ->assertSee('账户设置')
             ->assertSee('基本资料')
-            ->assertSee('密码设置');
+            ->assertSee('密码设置')
+            ->assertSee('两步验证');
     }
 
     public function test_home_menu_exposes_account_settings_entry_for_authenticated_user(): void

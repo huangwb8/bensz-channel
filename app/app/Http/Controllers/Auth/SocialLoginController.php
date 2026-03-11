@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Services\Auth\SocialAccountResolver;
 use App\Services\Auth\SocialOAuthManager;
+use App\Support\PendingTwoFactorLogin;
 use App\Support\QrLoginBroker;
 use App\Support\SiteSettingsManager;
 use Illuminate\Http\RedirectResponse;
@@ -45,6 +46,7 @@ class SocialLoginController extends Controller
         SiteSettingsManager $siteSettingsManager,
         SocialOAuthManager $socialOAuthManager,
         SocialAccountResolver $socialAccountResolver,
+        PendingTwoFactorLogin $pendingTwoFactorLogin,
     ): RedirectResponse {
         abort_unless(in_array($provider, $siteSettingsManager->enabledQrProviders(), true), 404);
         abort_unless($socialOAuthManager->isReadyForOAuth($provider), 404);
@@ -79,6 +81,7 @@ class SocialLoginController extends Controller
         try {
             $identity = $socialOAuthManager->driver($provider)->resolveIdentity((string) $validated['code']);
             $user = $socialAccountResolver->resolve($identity);
+            $user = $user->fresh() ?? $user;
         } catch (\Illuminate\Validation\ValidationException $exception) {
             return to_route('login')->withErrors($exception->errors());
         } catch (Throwable $exception) {
@@ -91,8 +94,9 @@ class SocialLoginController extends Controller
             ]);
         }
 
-        Auth::login($user, true);
-        $request->session()->regenerate();
+        if ($pendingTwoFactorLogin->start($request, $user, true)) {
+            return to_route('auth.two-factor.challenge');
+        }
 
         return redirect()->intended(route('home'))->with('status', '登录成功，欢迎回来。');
     }

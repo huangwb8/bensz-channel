@@ -43,6 +43,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -58,7 +60,14 @@ class User extends Authenticatable
             'phone_verified_at' => 'datetime',
             'last_seen_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_recovery_codes' => 'array',
+            'two_factor_enabled_at' => 'datetime',
         ];
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return filled($this->two_factor_secret) && $this->two_factor_enabled_at !== null;
     }
 
     public function articles(): HasMany

@@ -23,6 +23,10 @@ Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/auth/code', [LoginController::class, 'sendCode'])->name('auth.code.send');
 Route::post('/auth/verify', [LoginController::class, 'verifyCode'])->name('auth.code.verify');
 Route::post('/auth/password', [LoginController::class, 'loginWithPassword'])->name('auth.password.login');
+Route::get('/auth/two-factor', [LoginController::class, 'showTwoFactorChallenge'])->name('auth.two-factor.challenge');
+Route::post('/auth/two-factor', [LoginController::class, 'verifyTwoFactor'])
+    ->middleware('throttle:6,1')
+    ->name('auth.two-factor.verify');
 Route::get('/auth/social/{provider}', [SocialLoginController::class, 'redirect'])->name('auth.social.redirect');
 Route::get('/auth/social/{provider}/callback', [SocialLoginController::class, 'callback'])->name('auth.social.callback');
 Route::post('/auth/qr/{provider}', [LoginController::class, 'startQr'])->name('auth.qr.start');
@@ -45,6 +49,10 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/settings/account', [AccountSettingsController::class, 'edit'])->name('settings.account.edit');
     Route::put('/settings/account/profile', [AccountSettingsController::class, 'updateProfile'])->name('settings.account.profile.update');
     Route::put('/settings/account/password', [AccountSettingsController::class, 'updatePassword'])->name('settings.account.password.update');
+    Route::post('/settings/account/two-factor', [AccountSettingsController::class, 'enableTwoFactor'])->name('settings.account.two-factor.enable');
+    Route::delete('/settings/account/two-factor', [AccountSettingsController::class, 'disableTwoFactor'])->name('settings.account.two-factor.disable');
+    Route::post('/settings/account/two-factor/recovery-codes', [AccountSettingsController::class, 'regenerateTwoFactorRecoveryCodes'])
+        ->name('settings.account.two-factor.recovery-codes.regenerate');
     Route::get('/settings/subscriptions', [SubscriptionSettingsController::class, 'edit'])->name('settings.subscriptions.edit');
     Route::put('/settings/subscriptions', [SubscriptionSettingsController::class, 'update'])->name('settings.subscriptions.update');
     Route::put('/settings/subscriptions/mail', [SubscriptionSettingsController::class, 'updateMailSettings'])

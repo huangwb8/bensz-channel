@@ -6,6 +6,39 @@
 
 ## [Unreleased]
 
+## [1.30.0] - 2026-03-11
+
+### Added（新增）
+
+- 新增了可选两步验证能力：登录用户现在可在 `app/resources/views/settings/account.blade.php` 中自主开启或关闭基于 TOTP 的 2FA，并在首次开启或重置时获得一次性恢复码
+- 新增了两步验证登录链路与回归测试：`app/resources/views/auth/two-factor.blade.php`、`app/tests/Feature/Auth/TwoFactorAuthenticationTest.php` 覆盖密码登录、邮箱验证码登录、社交身份解析与扫码登录状态轮询等关键场景
+- 新增了用户两步验证持久化字段：`app/database/migrations/2026_03_11_015500_add_two_factor_columns_to_users_table.php` 为用户表补充密钥、恢复码和启用时间，用于支撑稳定的 2FA 开关能力
+
+### Changed（变更）
+
+- 优化了登录完成链路：`app/app/Http/Controllers/Auth/LoginController.php`、`app/app/Http/Controllers/Auth/SocialLoginController.php` 现统一接入待完成 2FA 的挑战会话逻辑，避免不同登录方式出现绕过或行为不一致
+- 优化了账户安全配置体验：`app/app/Http/Controllers/AccountSettingsController.php` 与 `app/app/Support/TwoFactorAuthenticationManager.php` 现负责生成绑定二维码、验证动态码、轮换恢复码和关闭 2FA 的完整流程
+- 更新了 `app/config.toml` 与 `README.md`：将项目版本推进到 `1.30.0`
+
+### Fixed（修复）
+
+- 修复了站点缺少用户级二次验证保护的问题：此前任意登录方式在主认证成功后会直接建立完整登录态；现在当用户已开启 2FA 时，系统会先进入独立挑战页，只有动态验证码或恢复码验证通过后才真正完成登录
+
+## [1.29.2] - 2026-03-11
+
+### Added（新增）
+
+- 新增了静态 HTML 缓存策略回归测试：`app/tests/Feature/Static/StaticHtmlCachingConfigTest.php` 锁定首页、频道页与文章页的 Nginx 入口必须按 Cookie 区分缓存语义，并禁止浏览器复用过期前的游客版 HTML
+
+### Changed（变更）
+
+- 优化了静态访客页的 Nginx 缓存策略：`docker/nginx/default.conf` 现对首页、频道页和文章页返回 `Cache-Control: no-cache, no-store, must-revalidate` 与 `Vary: Cookie`，保留磁盘静态页加速的同时，避免登录前后复用错误的 HTML 视图
+- 更新了 `app/config.toml` 与 `README.md`：将项目版本推进到 `1.29.2`
+
+### Fixed（修复）
+
+- 修复了进入文章正文后右上角偶发显示“登录 / 注册”、评论区误判为未登录的问题：根因是浏览器缓存了静态生成的游客版文章页，登录后同一路径偶发直接复用旧 HTML；现在请求会重新到服务端判定 Cookie，再稳定返回正确的登录态页面
+
 ## [1.29.1] - 2026-03-10
 
 ### Changed（变更）

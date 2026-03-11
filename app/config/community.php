@@ -31,6 +31,7 @@ return [
         'otp_length' => (int) env('AUTH_OTP_LENGTH', 6),
         'qr_ttl_minutes' => (int) env('AUTH_QR_TTL', 10),
         'preview_codes' => filter_var(env('AUTH_PREVIEW_CODES', true), FILTER_VALIDATE_BOOL),
+        'two_factor_recovery_code_count' => (int) env('AUTH_2FA_RECOVERY_CODES', 8),
         'enabled_methods' => $enabledAuthMethods,
         'qr_providers' => $qrProviders,
         'social_providers' => [

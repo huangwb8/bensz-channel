@@ -9,7 +9,9 @@ use App\Models\QrLoginRequest;
 use App\Services\Auth\LoginUserResolver;
 use App\Services\Auth\SocialOAuthManager;
 use App\Support\QrLoginBroker;
+use App\Support\PendingTwoFactorLogin;
 use App\Support\SiteSettingsManager;
+use App\Support\TwoFactorAuthenticationManager;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -83,6 +85,7 @@ class LoginController extends Controller
         Request $request,
         OtpAuthGateway $gateway,
         LoginUserResolver $resolver,
+        PendingTwoFactorLogin $pendingTwoFactorLogin,
     ): RedirectResponse {
         $validated = $request->validate([
             'channel' => ['required', Rule::in([LoginCode::CHANNEL_EMAIL, LoginCode::CHANNEL_PHONE])],
@@ -104,13 +107,14 @@ class LoginController extends Controller
 
         $user = $resolver->resolve($identity);
 
-        Auth::login($user, true);
-        $request->session()->regenerate();
+        if ($pendingTwoFactorLogin->start($request, $user, true)) {
+            return to_route('auth.two-factor.challenge');
+        }
 
         return redirect()->intended(route('home'))->with('status', '登录成功，欢迎回来。');
     }
 
-    public function loginWithPassword(Request $request): RedirectResponse
+    public function loginWithPassword(Request $request, PendingTwoFactorLogin $pendingTwoFactorLogin): RedirectResponse
     {
         $this->ensureAuthMethodEnabled('email_password');
 
@@ -119,13 +123,78 @@ class LoginController extends Controller
             'password' => ['required', 'string', 'max:255'],
         ]);
 
-        if (! Auth::attempt($credentials, true)) {
+        $guard = Auth::guard();
+
+        if (! $guard->validate($credentials)) {
             throw ValidationException::withMessages([
                 'email' => '邮箱或密码不正确。',
             ]);
         }
 
-        $request->session()->regenerate();
+        $user = $guard->getProvider()->retrieveByCredentials($credentials);
+
+        if (! $user instanceof \App\Models\User) {
+            throw ValidationException::withMessages([
+                'email' => '邮箱或密码不正确。',
+            ]);
+        }
+
+        if ($pendingTwoFactorLogin->start($request, $user, true)) {
+            return to_route('auth.two-factor.challenge');
+        }
+
+        return redirect()->intended(route('home'))->with('status', '登录成功，欢迎回来。');
+    }
+
+    public function showTwoFactorChallenge(Request $request, PendingTwoFactorLogin $pendingTwoFactorLogin): View|RedirectResponse
+    {
+        if (Auth::check()) {
+            return to_route('home');
+        }
+
+        if ($pendingTwoFactorLogin->pendingUser($request) === null) {
+            return to_route('login')->withErrors([
+                'login_method' => '登录状态已失效，请重新登录。',
+            ]);
+        }
+
+        return view('auth.two-factor', [
+            'pageTitle' => '两步验证',
+        ]);
+    }
+
+    public function verifyTwoFactor(
+        Request $request,
+        PendingTwoFactorLogin $pendingTwoFactorLogin,
+        TwoFactorAuthenticationManager $twoFactorAuthenticationManager,
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'code' => ['nullable', 'string', 'max:32'],
+            'recovery_code' => ['nullable', 'string', 'max:32'],
+        ]);
+
+        if (blank($validated['code'] ?? null) && blank($validated['recovery_code'] ?? null)) {
+            throw ValidationException::withMessages([
+                'code' => '请输入动态验证码或恢复码。',
+            ]);
+        }
+
+        $user = $pendingTwoFactorLogin->pendingUser($request);
+
+        if ($user === null) {
+            return to_route('login')->withErrors([
+                'login_method' => '登录状态已失效，请重新登录。',
+            ]);
+        }
+
+        if (! $twoFactorAuthenticationManager->verifyChallenge($user, $validated['code'] ?? null, $validated['recovery_code'] ?? null)) {
+            throw ValidationException::withMessages([
+                'code' => '动态验证码或恢复码不正确。',
+                'recovery_code' => '动态验证码或恢复码不正确。',
+            ]);
+        }
+
+        $pendingTwoFactorLogin->complete($request);
 
         return redirect()->intended(route('home'))->with('status', '登录成功，欢迎回来。');
     }
@@ -148,7 +217,7 @@ class LoginController extends Controller
         ]);
     }
 
-    public function status(Request $request, QrLoginRequest $qrLoginRequest): JsonResponse
+    public function status(Request $request, QrLoginRequest $qrLoginRequest, PendingTwoFactorLogin $pendingTwoFactorLogin): JsonResponse
     {
         if ($qrLoginRequest->isExpired()) {
             $qrLoginRequest->update(['status' => QrLoginRequest::STATUS_EXPIRED]);
@@ -157,14 +226,13 @@ class LoginController extends Controller
         }
 
         if ($qrLoginRequest->status === QrLoginRequest::STATUS_APPROVED && $qrLoginRequest->approvedBy !== null) {
-            Auth::login($qrLoginRequest->approvedBy, true);
-            $request->session()->regenerate();
+            $requiresTwoFactorChallenge = $pendingTwoFactorLogin->start($request, $qrLoginRequest->approvedBy, true);
 
             $qrLoginRequest->update(['status' => QrLoginRequest::STATUS_CONSUMED]);
 
             return response()->json([
                 'status' => QrLoginRequest::STATUS_CONSUMED,
-                'redirect' => route('home'),
+                'redirect' => $requiresTwoFactorChallenge ? route('auth.two-factor.challenge') : route('home'),
             ]);
         }
 
