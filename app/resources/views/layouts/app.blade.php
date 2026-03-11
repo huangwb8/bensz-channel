@@ -268,11 +268,6 @@
             @yield('content')
         </main>
 
-        <!-- 页脚 -->
-        <footer class="border-t border-gray-200 bg-white py-6 mt-8">
-            <div class="mx-auto max-w-6xl px-4 text-center text-sm text-gray-500">
-                <p>{{ $siteName }} · {{ $siteTagline }}</p>
-            </div>
-        </footer>
+        @include('partials.site-footer')
     </body>
 </html>

@@ -29,4 +29,25 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringContainsString("[data-theme='dark'] .method-panel", $stylesheet);
         $this->assertStringContainsString("[data-theme='dark'] .method-tab", $stylesheet);
     }
+
+    public function test_app_stylesheet_provides_theme_aware_channel_management_components(): void
+    {
+        $stylesheet = file_get_contents(resource_path('css/app.css'));
+
+        $this->assertIsString($stylesheet);
+        $this->assertStringContainsString('.channel-admin-create-form', $stylesheet);
+        $this->assertStringContainsString('.channel-admin-switch-track', $stylesheet);
+        $this->assertStringContainsString('.channel-admin-card-dragging', $stylesheet);
+        $this->assertStringContainsString('var(--color-surface-elevated)', $stylesheet);
+    }
+
+    public function test_app_stylesheet_provides_theme_aware_site_footer_components(): void
+    {
+        $stylesheet = file_get_contents(resource_path('css/app.css'));
+
+        $this->assertIsString($stylesheet);
+        $this->assertStringContainsString('.site-footer', $stylesheet);
+        $this->assertStringContainsString('.site-footer-link', $stylesheet);
+        $this->assertStringContainsString('var(--color-accent-text)', $stylesheet);
+    }
 }

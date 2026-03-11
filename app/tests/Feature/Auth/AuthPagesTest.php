@@ -26,7 +26,9 @@ class AuthPagesTest extends TestCase
             ->assertDontSee(config('community.admin.email'))
             ->assertDontSee(config('community.admin.password'))
             ->assertDontSee('member@example.com')
-            ->assertDontSee('member123456');
+            ->assertDontSee('member123456')
+            ->assertSee('源代码')
+            ->assertSee(config('community.site.repository_url'), false);
     }
 
     public function test_login_page_only_shows_enabled_methods_from_site_settings(): void

@@ -3,8 +3,9 @@
 
 [project]
 name = "bensz-channel"
-version = "1.34.1"
+version = "1.34.3"
 description = "现代化 Web 社区平台，基于 PHP、PostgreSQL、Docker 构建，适合团队协作与知识分享"
+repository_url = "https://github.com/huangwb8/bensz-channel"
 
 [env]
 # 服务器配置
@@ -28,6 +29,7 @@ APP_URL = "http://localhost:6542"
 # 站点信息
 SITE_NAME = "Bensz Channel"
 SITE_TAGLINE = "专注内容与交流的 Web 社区平台，支持频道管理、静态游客访问与成员互动"
+PROJECT_REPOSITORY_URL = "https://github.com/huangwb8/bensz-channel"
 
 # 日志配置
 LOG_CHANNEL = "stack"

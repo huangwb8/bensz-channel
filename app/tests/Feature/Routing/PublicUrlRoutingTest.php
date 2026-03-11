@@ -47,6 +47,14 @@ class PublicUrlRoutingTest extends TestCase
             ->assertRedirect(route('feeds.channels.show', $channel));
     }
 
+    public function test_home_page_renders_repository_link_in_footer(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('源代码')
+            ->assertSee(config('community.site.repository_url'), false);
+    }
+
     private function createFixture(): array
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);

@@ -27,6 +27,54 @@
 
 - 修复了 README 快速开始部分引用不存在文件的问题：此前文档中引用了 `self/remote.env` 和 `self/docker-compose.yml`，但这些是私有配置文件不在 Git 仓库中；现在改为使用 `config/.env.example` 作为配置模板，并提供完整的配置说明，确保用户克隆仓库后能够正常部署
 
+## [1.34.4] - 2026-03-11
+
+### Added（新增）
+
+- 新增了全站源码仓库页脚入口：`app/resources/views/partials/site-footer.blade.php` 现统一渲染站点说明与 GitHub 源码链接，主站与登录页都会显示同一套优雅脚注
+- 新增了源码页脚回归测试：`app/tests/Feature/Auth/AuthPagesTest.php` 与 `app/tests/Feature/Routing/PublicUrlRoutingTest.php` 现锁定登录页和首页必须展示“源代码”链接，`app/tests/Feature/Static/ThemeStylesheetTest.php` 现校验页脚主题样式存在
+
+### Changed（变更）
+
+- 优化了全站布局的页脚实现：`app/resources/views/layouts/app.blade.php` 与 `app/resources/views/layouts/auth.blade.php` 现复用统一页脚 partial，避免不同界面脚注风格分裂
+- 优化了页脚视觉样式：`app/resources/css/app.css` 现新增 `site-footer` 系列样式，使用主题变量实现亮暗模式下一致、克制且可点击的 GitHub 仓库入口
+- 优化了站点配置：`app/config/community.php` 与 `app/config.toml` 新增仓库地址配置项，页脚链接可统一维护；同时将项目版本推进到 `1.34.4`
+
+### Fixed（修复）
+
+- 修复了 Web 界面脚注缺少源码仓库入口的问题；现在用户可通过统一、优雅的“源代码”链接直接跳转到项目 GitHub 仓库
+
+## [1.34.3] - 2026-03-11
+
+### Added（新增）
+
+- 新增了频道管理界面的主题回归校验：`app/tests/Feature/Admin/AdminChannelManagementTest.php` 现锁定页面会渲染专用主题类，`app/tests/Feature/Static/ThemeStylesheetTest.php` 现校验频道管理的面板、开关与拖拽高亮样式已接入主题变量
+
+### Changed（变更）
+
+- 优化了频道管理页的主题实现：`app/resources/views/admin/channels/index.blade.php` 现为新增频道表单、排序提示条、拖拽手柄、顶栏开关、空状态与系统提示统一挂载语义化样式类，避免继续依赖未完整覆盖的浅色 utility
+- 优化了 `app/resources/css/app.css`：新增 `channel-admin-*` 组件样式，统一使用站点主题变量驱动亮色/暗色外观，并为拖拽排序高亮与开关交互提供更稳定的视觉反馈
+- 更新了 `app/config.toml`：将项目版本推进到 `1.34.3`
+
+### Fixed（修复）
+
+- 修复了频道管理界面在夜间模式下部分区域仍显示浅色渐变、浅灰开关底板和不协调拖拽高亮的问题；现在频道管理页在暗色主题下保持一致的面板层级与交互反馈
+
+## [1.34.2] - 2026-03-11
+
+### Added（新增）
+
+- 新增了 Docker 图片上传冒烟回归：`scripts/test/docker-smoke.sh` 现会在管理员登录后向 `/uploads/images` 提交一张约 2MB 的 JPG，锁定文章编辑器图片上传不再被 Web 容器提前拒绝
+
+### Changed（变更）
+
+- 优化了 Web 容器上传限制配置：`docker/nginx/default.conf` 现显式设置 `client_max_body_size 12m`，`docker/web/php-upload.ini` 现将 PHP 的 `upload_max_filesize` 调整到 `10M`、`post_max_size` 调整到 `12M`，与应用层 10MB 校验保持一致
+- 更新了 `docker/web/Dockerfile` 与 `app/config.toml`：镜像构建时会复制上传配置，并将项目版本推进到 `1.34.2`
+
+### Fixed（修复）
+
+- 修复了文章编辑器中粘贴较大的截图/JPG 时始终提示上传失败的问题：根因是 Nginx 默认请求体上限过小，运行中的 `/uploads/images` 实际返回了 `413 Payload Too Large`；现在大图粘贴上传可正常通过到 Laravel 校验与存储流程
+
 ## [1.34.1] - 2026-03-11
 
 ### Added（新增）
