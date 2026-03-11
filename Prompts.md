@@ -18,7 +18,7 @@
 - RN3服务器里更新
 
 ```
-docker compose down; docker compose pull; docker compose up -d
+cd /docker/bensz-channel; docker compose down; docker compose pull; docker compose up -d
 ```
 
 # 日常
