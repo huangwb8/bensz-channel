@@ -18,8 +18,11 @@
 
 Bensz Channel is a web community platform built with **Laravel + Better Auth + PostgreSQL + Redis + Docker**, featuring a three-column layout design (left channel navigation, center content stream, right community info), ideal for team collaboration, knowledge sharing, and content curation.
 
+**🌟 Core Highlight**: Through custom Agent Skills, supports **remote management of channels, articles, comments, and users via Claude Code/Codex CLI**, enabling AI-driven community operations.
+
 ### Key Features
 
+- 🤖 **AI Tool Integration**: Remote content management via custom Agent Skill for Claude Code/Codex CLI, enabling intelligent community operations
 - 🏠 **Channel System**: Create and manage multiple topic channels with built-in "Featured" and "Uncategorized" system channels
 - 👥 **User Management**: Complete user registration, login, permission management, and ban system
 - 🔐 **Multiple Login Methods**: Email verification code, email password, WeChat/QQ QR code login
@@ -28,6 +31,20 @@ Bensz Channel is a web community platform built with **Laravel + Better Auth + P
 - ⚡ **Static Page Optimization**: Guest access automatically uses pre-built static HTML + Gzip compression
 - 🎨 **Admin Dashboard**: Complete management for channels, articles, users, and site settings
 - 🚀 **One-Click Deployment**: Docker Compose launches all services with one command
+
+---
+
+<div align="center">
+
+### ⭐ If this project helps you, please give it a Star!
+
+Developing and maintaining this project takes significant time and effort. Your Star is the greatest encouragement and helps more people discover this project.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=huangwb8/bensz-channel&type=Date)](https://star-history.com/#huangwb8/bensz-channel&Date)
+
+</div>
+
+---
 
 ## 🚀 Quick Start
 
@@ -220,25 +237,37 @@ After startup, visit:
 
 ### Build Images Locally
 
-If you need custom builds:
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/huangwb8/bensz-channel.git
-cd bensz-channel
-
-# 2. Build images (using local cache, fast and offline-capable)
-./scripts/build.sh
-
-# 3. Start services
-./scripts/compose.sh up -d
-```
+For custom builds, please refer to [Developer Documentation - Docker Image Building](docs/开发者文档.md#docker-镜像构建).
 
 ### Default Admin Account
 
 - 📧 Email: `admin@example.com`
 - 🔑 Password: `admin123456`
 - 🆔 User ID: `0`
+
+## 🤖 AI Tool Integration (Agent Skill)
+
+The core feature of this project is the custom Agent Skill that enables **remote management of channels, articles, comments, and users via Claude Code/Codex CLI**, enabling AI-driven community operations.
+
+### Installation Steps
+
+1. First, install the [Bensz Skills](https://github.com/huangwb8/skills) project and learn how to use the `install-bensz-skills` skill
+
+2. In Claude Code or Codex CLI, enter the following command to install this project's Agent Skills:
+
+```
+install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/main/skills
+```
+
+3. After installation, refer to the [Agent Skill Guide](skills/bensz-channel-devtools/README.md) to configure API keys and start using
+
+### Features
+
+- 📝 **Channel Management**: Create, update, delete channels, control visibility
+- 📰 **Article Management**: Publish, edit, delete articles, set pinned and featured status
+- 💬 **Comment Management**: View, hide, delete comments
+- 👤 **User Management**: View, update user information, manage roles and permissions
+- 🔐 **Secure & Controlled**: API key-based authentication, no source code modification
 
 ## 📚 Core Features
 
@@ -288,10 +317,22 @@ cd bensz-channel
 - 📘 [Developer Documentation](docs/开发者文档.md) - Detailed technical documentation and development guide
 - 🔧 [Build Instructions](scripts/BUILD.md) - Detailed Docker image build instructions
 - 🔐 [WeChat/QQ Login Configuration](docs/如何让本项目支持微信和QQ扫码登陆.md) - Third-party login configuration tutorial
+- 🤖 [Agent Skill Guide](skills/bensz-channel-devtools/README.md) - Remote content management via Claude Code/Codex CLI
+- 📝 [Project Introduction Blog](https://blognas.hwb0307.com/linux/docker/7053) - Detailed project introduction and user experience
 
 ## 🤝 Contributing
 
 Issues and Pull Requests are welcome!
+
+## 💝 Sponsorship
+
+Developing and maintaining this community platform takes significant time and effort 😓. **Your sponsorship will help me continuously optimize features, quickly respond to issues and bug fixes, develop new Agent Skills and features, and maintain long-term project updates**. If this project helps you, please consider sponsoring my development work! 🙏
+
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/huangwb8/ChineseResearchLaTeX/main/logo/pay-1024x541.jpg" alt="Sponsorship QR Code" width="400"/>
+
+</div>
 
 ## 📄 License
 

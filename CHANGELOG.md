@@ -8,14 +8,19 @@
 
 ### Added（新增）
 
-- 暂无
+- 在 README 中补充了 Agent Skill 特色功能说明：在"核心特性"中新增"AI 工具集成"条目，在"文档"部分新增 [Agent Skill 使用指南](skills/bensz-channel-devtools/README.md) 链接，介绍通过 Claude Code/Codex CLI 远程管理频道、文章、评论、用户等内容的能力；同步更新了 README_EN.md
+- 在 README 中新增"Agent Skill 安装"章节：引导用户通过 [Bensz Skills](https://github.com/huangwb8/skills) 项目安装本项目的 Agent Skill，提供完整的安装步骤，明确说明 `install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/main/skills` 命令是在 Claude Code/Codex CLI 中输入的（而非 shell 命令）；同步更新了 README_EN.md
+- 在 README 中新增 Star 呼吁章节：在"核心特性"之后、"快速开始"之前添加了友好的 Star 呼吁，说明开发维护不易，鼓励用户点 Star 支持项目；同时嵌入了 Star History Chart 可视化展示项目增长趋势；同步更新了 README_EN.md
+- 在 README 中新增"赞助"章节：参考 ChineseResearchLaTeX 项目，在"贡献"章节之后添加赞助说明，说明开发维护需要大量时间和精力，鼓励用户通过赞助支持项目持续发展；嵌入了赞助二维码图片；同步更新了 README_EN.md
 
 ### Changed（变更）
 
 - 重新定位了项目描述方式：移除所有"类似 QQ 频道"的表述，改为强调核心价值和使用场景；更新了 `README.md`、`README_EN.md`、`AGENTS.md`、`app/config.toml` 中的项目描述，突出"现代化 Web 社区平台"、"三栏式布局设计"、"适合团队协作、知识分享与内容沉淀"等独立特性
 - 优化了 README 文档结构：创建了中英双语版本（`README.md` 和 `README_EN.md`），参考 https://github.com/huangwb8/skills 的现代化风格，使用 badges、emoji 和居中标题区增强视觉效果；将技术细节移至 `docs/开发者文档.md`，保持 README 精简并突出核心功能与快速开始
 - 优化了测试规范章节：在 `AGENTS.md` 的"测试规范"中新增"交付前强制要求"小节，明确规定每次交付前必须跑通 `scripts/test/` 里的测试，且代码优化后必须同步更新测试代码，确保测试流程与最新代码相协调
+- 重构了 README 结构以突出 AI 工具集成特色：将"AI 工具集成"移至"核心特性"列表首位，在"项目简介"中新增"核心亮点"段落强调 AI 驱动的社区运营能力；将"Agent Skill 安装"章节从文档部分提前到"快速开始"之后，扩展为"AI 工具集成（Agent Skill）"独立章节，详细介绍安装步骤和功能特性；同步更新了 README_EN.md
 - 新增了文档同步规范章节：在 `AGENTS.md` 中新增"文档同步规范"章节，明确规定 `README_EN.md` 必须与 `README.md` 保持内容对齐（后者变前者变），`docs/开发者文档.md` 必须与最新源代码保持协调，确保文档信息准确性；同时提供了同步检查清单，规范不同变更类型对应的文档更新要求
+- 重构了"本地构建镜像"文档位置：将 `README.md` 和 `README_EN.md` 中的"本地构建镜像"详细步骤转移到 `docs/开发者文档.md` 的"Docker 镜像构建"章节，README 中仅保留简短引用；开发者文档中补充了"克隆仓库"步骤，形成完整的构建流程；符合"README 面向普通用户，开发者文档面向开发者"的文档分层原则
 
 ### Fixed（修复）
 

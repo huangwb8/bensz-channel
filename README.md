@@ -18,8 +18,11 @@
 
 Bensz Channel 是一个基于 **Laravel + Better Auth + PostgreSQL + Redis + Docker** 构建的 Web 社区平台，采用三栏式布局设计（左侧频道导航、中间内容流、右侧社区信息），适合团队协作、知识分享与内容沉淀。
 
+**🌟 核心亮点**：通过定制的 Agent Skill，支持使用 **Claude Code/Codex CLI 远程管理频道、文章、评论、用户**等内容，实现 AI 驱动的社区运营。
+
 ### 核心特性
 
+- 🤖 **AI 工具集成**：通过定制的 Agent Skill 支持 Claude Code/Codex CLI 远程管理内容，实现智能化社区运营
 - 🏠 **频道系统**：支持创建、管理多个主题频道，内置"精华"与"未分类"系统频道
 - 👥 **用户管理**：完整的用户注册、登录、权限管理与封禁系统
 - 🔐 **多种登录方式**：邮箱验证码、邮箱密码、微信/QQ 扫码登录
@@ -28,6 +31,20 @@ Bensz Channel 是一个基于 **Laravel + Better Auth + PostgreSQL + Redis + Doc
 - ⚡ **静态页面优化**：游客访问自动使用预构建静态 HTML + Gzip 压缩
 - 🎨 **管理后台**：完整的频道、文章、用户、站点设置管理
 - 🚀 **一键部署**：Docker Compose 一键启动所有服务
+
+---
+
+<div align="center">
+
+### ⭐ 如果这个项目对你有帮助，请点个 Star 支持一下！
+
+开发和维护这个项目需要大量时间和精力。你的 Star 是对我最大的鼓励，也能帮助更多人发现这个项目。
+
+[![Star History Chart](https://api.star-history.com/svg?repos=huangwb8/bensz-channel&type=Date)](https://star-history.com/#huangwb8/bensz-channel&Date)
+
+</div>
+
+---
 
 ## 🚀 快速开始
 
@@ -220,25 +237,37 @@ docker compose logs -f
 
 ### 本地构建镜像
 
-如果需要自定义构建：
-
-```bash
-# 1. 克隆仓库
-git clone https://github.com/huangwb8/bensz-channel.git
-cd bensz-channel
-
-# 2. 构建镜像（使用本地缓存，快速且支持离线）
-./scripts/build.sh
-
-# 3. 启动服务
-./scripts/compose.sh up -d
-```
+如果需要自定义构建，请参考 [开发者文档 - Docker 镜像构建](docs/开发者文档.md#docker-镜像构建)。
 
 ### 默认管理员账号
 
 - 📧 邮箱：`admin@example.com`
 - 🔑 密码：`admin123456`
 - 🆔 用户ID：`0`
+
+## 🤖 AI 工具集成（Agent Skill）
+
+本项目的核心特色是通过定制的 Agent Skill，支持使用 **Claude Code/Codex CLI 远程管理频道、文章、评论、用户**等内容，实现 AI 驱动的社区运营。
+
+### 安装步骤
+
+1. 首先安装 [Bensz Skills](https://github.com/huangwb8/skills) 项目，掌握 `install-bensz-skills` 这个 skill 的使用方法
+
+2. 在 Claude Code 或 Codex CLI 中输入以下命令安装本项目的 Agent Skill：
+
+```
+install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/main/skills
+```
+
+3. 安装完成后，参考 [Agent Skill 使用指南](skills/bensz-channel-devtools/README.md) 配置 API 密钥并开始使用
+
+### 功能特性
+
+- 📝 **频道管理**：创建、更新、删除频道，控制显示状态
+- 📰 **文章管理**：发布、编辑、删除文章，设置置顶和精华
+- 💬 **评论管理**：查看、隐藏、删除评论
+- 👤 **用户管理**：查看、更新用户信息，管理角色权限
+- 🔐 **安全可控**：基于 API 密钥认证，不修改软件源代码
 
 ## 📚 核心功能
 
@@ -288,10 +317,22 @@ cd bensz-channel
 - 📘 [开发者文档](docs/开发者文档.md) - 详细的技术文档与开发指南
 - 🔧 [构建说明](scripts/BUILD.md) - Docker 镜像构建详细说明
 - 🔐 [微信/QQ 登录配置](docs/如何让本项目支持微信和QQ扫码登陆.md) - 第三方登录配置教程
+- 🤖 [Agent Skill 使用指南](skills/bensz-channel-devtools/README.md) - 通过 Claude Code/Codex CLI 远程管理内容
+- 📝 [项目介绍博客](https://blognas.hwb0307.com/linux/docker/7053) - 详细的项目介绍与使用体验
 
 ## 🤝 贡献
 
 欢迎提交 Issue 和 Pull Request！
+
+## 💝 赞助
+
+开发和维护这个社区平台需要大量时间和精力 😓，**您的赞助将帮助我持续优化功能、快速响应问题和 Bug 修复、开发新的 Agent Skills 和特性，以及保持项目的长期维护和更新**。如果本项目对您有帮助，欢迎赞助支持我的开发工作！🙏
+
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/huangwb8/ChineseResearchLaTeX/main/logo/pay-1024x541.jpg" alt="赞助码" width="400"/>
+
+</div>
 
 ## 📄 许可证
 
