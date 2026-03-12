@@ -58,7 +58,8 @@ class AdminArticleManagementTest extends TestCase
             ->get(route('admin.articles.create'))
             ->assertOk()
             ->assertSee(route('uploads.images.store'), false)
-            ->assertSee('可直接按 <kbd>Ctrl</kbd> + <kbd>V</kbd> 粘贴图片', false);
+            ->assertSee(route('uploads.videos.store'), false)
+            ->assertSee('可直接按 <kbd>Ctrl</kbd> + <kbd>V</kbd> 粘贴图片或不大于 500MB 的视频', false);
     }
 
     public function test_admin_cannot_use_featured_channel_as_article_primary_channel(): void

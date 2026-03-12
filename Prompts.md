@@ -25,6 +25,10 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 
 ---
 
+我希望不大于500MB的视频，在Markdown编辑器里粘贴时，可以自动上传。 并且，我希望它的样式类似 '/Volumes/2T01/winE/我的坚果云/样式备份/网站/blognas.hwb0307.com/blog/new02/nextcloud/Docker系列 深度使用nextcloud（六）在博客中嵌入视频.md' 里所定义的那样。  使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。
+
+---
+
 软件web界面的脚注， 我希望有一个固定的几个字，有一个超链接可以跳转到源代码的github仓库地址。当然，要非常优雅地实现这一点。使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。
 
 ---

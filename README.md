@@ -4,7 +4,7 @@
 
 **现代化 Web 社区平台 - 频道管理、实时互动、内容沉淀一体化解决方案**
 
-[![Version](https://img.shields.io/badge/version-1.34.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
+[![Version](https://img.shields.io/badge/version-1.35.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
 [![Platform](https://img.shields.io/badge/platform-Docker-lightgrey.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -26,7 +26,7 @@ Bensz Channel 是一个基于 **Laravel + Better Auth + PostgreSQL + Redis + Doc
 - 🏠 **频道系统**：支持创建、管理多个主题频道，内置"精华"与"未分类"系统频道
 - 👥 **用户管理**：完整的用户注册、登录、权限管理与封禁系统
 - 🔐 **多种登录方式**：邮箱验证码、邮箱密码、微信/QQ 扫码登录
-- 📝 **Markdown 支持**：文章与评论支持 Markdown 渲染，支持粘贴图片自动上传
+- 📝 **Markdown 支持**：文章与评论支持 Markdown 渲染，支持粘贴图片与不大于 500MB 的视频自动上传
 - 📧 **订阅通知**：SMTP 邮件订阅与 RSS 订阅
 - ⚡ **静态页面优化**：游客访问自动使用预构建静态 HTML + Gzip 压缩
 - ☁️ **双模式 CDN**：同时支持回源型 CDN 与对象存储型 CDN，后台可测试连接、查看差异、手动同步与查看日志
@@ -178,6 +178,9 @@ STATIC_SITE_OUTPUT_DIR=static
 # 文章图片上传上限（MB）
 ARTICLE_IMAGE_MAX_MB=50
 
+# Markdown 视频上传上限（MB）
+VIDEO_UPLOAD_MAX_MB=500
+
 # PostgreSQL 配置
 DB_HOST=postgres
 POSTGRES_DB=bensz_channel
@@ -288,7 +291,7 @@ install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/mai
 
 ### 内容管理
 - Markdown 文章与评论
-- 粘贴图片自动上传
+- 粘贴图片与不大于 500MB 的视频自动上传
 - 文章置顶与精华标记
 - 自动生成目录 TOC
 

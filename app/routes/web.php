@@ -16,6 +16,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\RssFeedController;
 use App\Http\Controllers\SubscriptionSettingsController;
+use App\Http\Controllers\VideoUploadController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -47,6 +48,9 @@ Route::middleware(['auth', 'not-banned'])->group(function (): void {
     Route::post('/uploads/images', [ImageUploadController::class, 'store'])
         ->middleware('throttle:30,1')
         ->name('uploads.images.store');
+    Route::post('/uploads/videos', [VideoUploadController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('uploads.videos.store');
     Route::get('/settings/account', [AccountSettingsController::class, 'edit'])->name('settings.account.edit');
     Route::put('/settings/account/profile', [AccountSettingsController::class, 'updateProfile'])->name('settings.account.profile.update');
     Route::put('/settings/account/password', [AccountSettingsController::class, 'updatePassword'])->name('settings.account.password.update');

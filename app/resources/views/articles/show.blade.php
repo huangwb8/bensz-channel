@@ -155,12 +155,14 @@
                             class="input-field"
                             placeholder="写下你的看法..."
                             data-image-upload-url="{{ route('uploads.images.store') }}"
+                            data-video-upload-url="{{ route('uploads.videos.store') }}"
                             data-upload-context="comment"
-                            data-upload-label="评论图片"
+                            data-image-upload-label="评论图片"
+                            data-video-upload-label="评论视频"
                         >{{ old('body') }}</textarea>
                         <div class="markdown-upload-meta">
-                            <p class="markdown-upload-hint">支持 Markdown；聚焦输入框后可直接按 <kbd>Ctrl</kbd> + <kbd>V</kbd> 粘贴图片，图片会自动上传到站点托管目录。</p>
-                            <p class="markdown-upload-status" data-image-upload-status aria-live="polite" hidden></p>
+                            <p class="markdown-upload-hint">支持 Markdown；聚焦输入框后可直接按 <kbd>Ctrl</kbd> + <kbd>V</kbd> 粘贴图片或不大于 500MB 的视频，媒体会自动上传到站点托管目录并渲染为播放器。</p>
+                            <p class="markdown-upload-status" data-markdown-upload-status aria-live="polite" hidden></p>
                         </div>
                     </div>
                     @error('body')

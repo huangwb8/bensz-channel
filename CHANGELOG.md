@@ -32,6 +32,24 @@
 - 修复了频道管理页夜间模式下新增频道表单发白的问题：此前 `from-gray-50 → to-white` 渐变未被暗色主题覆盖，导致表单背景保持浅色、白色标签对比度异常；现在暗色模式会自动映射到深色渐变，频道管理与同类后台表单显示恢复正常
 - 修复了首次仅保存 CDN 设置时站点配置写入失败的问题：`app/app/Support/SiteSettingsManager.php` 现会为未显式提交的 `article_image_max_mb` 回退到运行时默认值，避免 `site_settings` 首次插入时触发非空约束；`app/tests/Feature/Admin/CdnSettingsTest.php` 同步增加断言覆盖该回归
 
+## [1.35.0] - 2026-03-12
+
+### Added（新增）
+
+- 新增 Markdown 视频粘贴上传能力：`app/app/Http/Controllers/VideoUploadController.php` 与 `app/routes/web.php` 现提供受鉴权保护的 `/uploads/videos` 端点，支持文章与评论编辑器自动上传不大于 500MB 的 MP4/WebM/Ogg 视频
+- 新增视频播放器渲染与回归测试：`app/app/Support/MarkdownRenderer.php` 现会把独立视频链接安全转换为 `nextcloud-video` 播放器，`app/tests/Unit/Support/MarkdownRendererTest.php` 与 `app/tests/Feature/Uploads/VideoUploadTest.php` 同步锁定渲染和上传行为
+
+### Changed（变更）
+
+- 优化了 Markdown 粘贴上传前端：`app/resources/js/markdown-image-upload.js`、`app/resources/views/admin/articles/form.blade.php` 与 `app/resources/views/articles/show.blade.php` 现统一支持图片/视频粘贴上传、状态提示与双击全屏播放
+- 优化了媒体显示与容器上传限制：`app/resources/css/app.css` 新增 `nextcloud-video` 播放器样式，`docker/nginx/default.conf` 与 `docker/web/php-upload.ini` 现将请求体与 PHP 上传上限提升到可承接 500MB 视频
+- 更新了配置与文档：`app/config.toml`、`app/config/community.php`、`app/.env.example`、`config/.env.example`、`README.md`、`README_EN.md` 与 `docs/开发者文档.md` 现新增 `VIDEO_UPLOAD_MAX_MB` 说明，并将项目版本推进到 `1.35.0`
+
+### Fixed（修复）
+
+- 修复了 Markdown 编辑器只能粘贴图片、无法直接插入站内视频播放器的问题；现在粘贴视频后会自动上传并以稳定的 16:9 播放器形式渲染
+- 修复了容器层上传上限低于业务需求的问题；此前超过约 100MB 的视频会在 Nginx/PHP 入口被提前拒绝，现在与 500MB 视频上传能力保持一致
+
 ## [1.34.5] - 2026-03-11
 
 ### Added（新增）

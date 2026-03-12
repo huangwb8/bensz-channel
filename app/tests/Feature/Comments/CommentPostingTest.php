@@ -59,8 +59,9 @@ class CommentPostingTest extends TestCase
             ->get(route('articles.show', [$article->channel, $article]))
             ->assertOk()
             ->assertSee(route('uploads.images.store'), false)
+            ->assertSee(route('uploads.videos.store'), false)
             ->assertSee('Ctrl', false)
-            ->assertSee('图片会自动上传到站点托管目录');
+            ->assertSee('粘贴图片或不大于 500MB 的视频', false);
     }
 
     private function createArticleFixture(): array

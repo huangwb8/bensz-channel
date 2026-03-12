@@ -89,12 +89,14 @@
                         rows="16"
                         class="input-field font-mono text-sm"
                         data-image-upload-url="{{ route('uploads.images.store') }}"
+                        data-video-upload-url="{{ route('uploads.videos.store') }}"
                         data-upload-context="article"
-                        data-upload-label="文章图片"
+                        data-image-upload-label="文章图片"
+                        data-video-upload-label="文章视频"
                     >{{ old('markdown_body', $article->markdown_body) }}</textarea>
                     <div class="markdown-upload-meta">
-                        <p class="markdown-upload-hint">支持 Markdown；聚焦正文后可直接按 <kbd>Ctrl</kbd> + <kbd>V</kbd> 粘贴图片，系统会自动上传并插入可访问的图片链接。</p>
-                        <p class="markdown-upload-status" data-image-upload-status aria-live="polite" hidden></p>
+                        <p class="markdown-upload-hint">支持 Markdown；聚焦正文后可直接按 <kbd>Ctrl</kbd> + <kbd>V</kbd> 粘贴图片或不大于 500MB 的视频，系统会自动上传并插入播放器片段。</p>
+                        <p class="markdown-upload-status" data-markdown-upload-status aria-live="polite" hidden></p>
                     </div>
                 </div>
             </div>

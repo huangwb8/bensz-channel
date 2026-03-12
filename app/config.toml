@@ -3,7 +3,7 @@
 
 [project]
 name = "bensz-channel"
-version = "1.34.5"
+version = "1.35.0"
 description = "现代化 Web 社区平台，基于 PHP、PostgreSQL、Docker 构建，适合团队协作与知识分享"
 repository_url = "https://github.com/huangwb8/bensz-channel"
 
@@ -31,6 +31,7 @@ SITE_NAME = "Bensz Channel"
 SITE_TAGLINE = "专注内容与交流的 Web 社区平台，支持频道管理、静态游客访问与成员互动"
 PROJECT_REPOSITORY_URL = "https://github.com/huangwb8/bensz-channel"
 ARTICLE_IMAGE_MAX_MB = 50
+VIDEO_UPLOAD_MAX_MB = 500
 
 # 日志配置
 LOG_CHANNEL = "stack"

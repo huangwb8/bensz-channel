@@ -1,6 +1,6 @@
 import './bootstrap';
 import QRCode from 'qrcode';
-import { initMarkdownImageUploads } from './markdown-image-upload';
+import { initMarkdownImageUploads, initMarkdownVideoEmbeds } from './markdown-image-upload';
 
 const syncInteractiveTitles = (root = document) => {
     root.querySelectorAll('button[aria-label]:not([title]), a[aria-label]:not([title]), [role="button"][aria-label]:not([title])').forEach((element) => {
@@ -21,6 +21,7 @@ const syncInteractiveTitles = (root = document) => {
 syncInteractiveTitles();
 
 initMarkdownImageUploads();
+initMarkdownVideoEmbeds();
 
 const mobileChannelTrigger = document.querySelector('[data-mobile-channel-trigger]');
 const mobileChannelDrawer = document.querySelector('[data-mobile-channel-drawer]');

@@ -4,7 +4,7 @@
 
 **Modern Web Community Platform - Integrated Solution for Channel Management, Real-time Interaction, and Content Curation**
 
-[![Version](https://img.shields.io/badge/version-1.34.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
+[![Version](https://img.shields.io/badge/version-1.35.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
 [![Platform](https://img.shields.io/badge/platform-Docker-lightgrey.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -26,7 +26,7 @@ Bensz Channel is a web community platform built with **Laravel + Better Auth + P
 - 🏠 **Channel System**: Create and manage multiple topic channels with built-in "Featured" and "Uncategorized" system channels
 - 👥 **User Management**: Complete user registration, login, permission management, and ban system
 - 🔐 **Multiple Login Methods**: Email verification code, email password, WeChat/QQ QR code login
-- 📝 **Markdown Support**: Articles and comments support Markdown rendering with paste-to-upload images
+- 📝 **Markdown Support**: Articles and comments support Markdown rendering with paste-to-upload images and videos up to 500MB
 - 📧 **Subscription Notifications**: SMTP email subscription and RSS feeds
 - ⚡ **Static Page Optimization**: Guest access automatically uses pre-built static HTML + Gzip compression
 - ☁️ **Dual-Mode CDN**: Supports both origin-pull CDN and object-storage CDN, with admin-side connection testing, diff preview, manual sync, and sync logs
@@ -178,6 +178,9 @@ STATIC_SITE_OUTPUT_DIR=static
 # Article image upload limit (MB)
 ARTICLE_IMAGE_MAX_MB=50
 
+# Markdown video upload limit (MB)
+VIDEO_UPLOAD_MAX_MB=500
+
 # PostgreSQL configuration
 DB_HOST=postgres
 POSTGRES_DB=bensz_channel
@@ -288,7 +291,7 @@ install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/mai
 
 ### Content Management
 - Markdown articles and comments
-- Paste-to-upload images
+- Paste-to-upload images and videos up to 500MB
 - Article pinning and featured marking
 - Auto-generated table of contents (TOC)
 

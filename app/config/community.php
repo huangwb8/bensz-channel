@@ -27,6 +27,7 @@ return [
     ],
     'uploads' => [
         'article_image_max_mb' => (int) env('ARTICLE_IMAGE_MAX_MB', 50),
+        'video_max_mb' => (int) env('VIDEO_UPLOAD_MAX_MB', 500),
     ],
 
     'auth' => [
