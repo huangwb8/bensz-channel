@@ -14,6 +14,12 @@ class SyncCdnFilesJob implements ShouldQueue
 
     public function handle(CdnSyncService $cdnSyncService): void
     {
+        if (str_contains($this->trigger, 'clear')) {
+            $cdnSyncService->clearRemote($this->trigger);
+
+            return;
+        }
+
         $cdnSyncService->syncAll($this->trigger);
     }
 }

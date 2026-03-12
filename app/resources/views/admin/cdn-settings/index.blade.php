@@ -47,6 +47,9 @@
             <div>
                 <label for="cdn_asset_url" class="mb-2 block text-sm font-medium text-gray-700">公开资源域名</label>
                 <input id="cdn_asset_url" type="url" name="cdn_asset_url" value="{{ old('cdn_asset_url', $cdnSettingsForm['cdn_asset_url']) }}" class="input-field h-11" placeholder="https://cdn.example.com">
+                @error('cdn_asset_url')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                @enderror
                 <p class="mt-2 text-xs text-gray-500">所有 `asset()` 生成的公开静态资源 URL 都会使用这个域名。</p>
             </div>
 
@@ -68,14 +71,23 @@
                     <div>
                         <label for="cdn_storage_bucket" class="mb-2 block text-sm font-medium text-gray-700">存储桶</label>
                         <input id="cdn_storage_bucket" type="text" name="cdn_storage_bucket" value="{{ old('cdn_storage_bucket', $cdnSettingsForm['cdn_storage_bucket']) }}" class="input-field h-11" placeholder="bucket-name">
+                        @error('cdn_storage_bucket')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
                         <label for="cdn_storage_region" class="mb-2 block text-sm font-medium text-gray-700">区域</label>
                         <input id="cdn_storage_region" type="text" name="cdn_storage_region" value="{{ old('cdn_storage_region', $cdnSettingsForm['cdn_storage_region']) }}" class="input-field h-11" placeholder="auto">
+                        @error('cdn_storage_region')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
                         <label for="cdn_storage_endpoint" class="mb-2 block text-sm font-medium text-gray-700">端点</label>
                         <input id="cdn_storage_endpoint" type="url" name="cdn_storage_endpoint" value="{{ old('cdn_storage_endpoint', $cdnSettingsForm['cdn_storage_endpoint']) }}" class="input-field h-11" placeholder="https://oss.example.com">
+                        @error('cdn_storage_endpoint')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
                         <label for="cdn_storage_access_key" class="mb-2 block text-sm font-medium text-gray-700">Access Key</label>
@@ -199,6 +211,10 @@
             document.querySelector('[data-cdn-diff]')?.addEventListener('click', async () => {
                 const response = await fetch(@json(route('admin.cdn-settings.diff')), { headers: { 'Accept': 'application/json' } });
                 const payload = await response.json();
+                if (!response.ok) {
+                    showResult('error', payload.message || '获取差异失败');
+                    return;
+                }
                 showResult('success', `待上传 ${payload.upload_count}，待删除 ${payload.delete_count}，已同步 ${payload.skip_count}`);
             });
             document.querySelector('[data-cdn-sync]')?.addEventListener('click', () => request(@json(route('admin.cdn-settings.sync')), 'POST'));

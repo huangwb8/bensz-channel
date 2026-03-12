@@ -1308,6 +1308,22 @@
         color: var(--color-danger-text-strong) !important;
     }
 
+    [data-theme='dark'] .hover\:bg-red-50:hover {
+        background-color: var(--color-danger-bg) !important;
+    }
+
+    [data-theme='dark'] .ring-gray-200 {
+        --tw-ring-color: var(--color-border) !important;
+    }
+
+    [data-theme='dark'] .ring-green-200 {
+        --tw-ring-color: var(--color-success-border) !important;
+    }
+
+    [data-theme='dark'] .ring-red-200 {
+        --tw-ring-color: var(--color-danger-border) !important;
+    }
+
     [data-theme='dark'] .bg-yellow-100 {
         background-color: var(--color-yellow-bg) !important;
     }

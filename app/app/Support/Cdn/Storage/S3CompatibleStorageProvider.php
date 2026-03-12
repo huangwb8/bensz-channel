@@ -27,7 +27,7 @@ class S3CompatibleStorageProvider implements StorageProvider
         try {
             return $this->disk()->writeStream(ltrim($remotePath, '/'), $stream, [
                 'visibility' => 'public',
-                'mimetype' => mime_content_type($localPath) ?: 'application/octet-stream',
+                'ContentType' => mime_content_type($localPath) ?: 'application/octet-stream',
             ]);
         } finally {
             fclose($stream);

@@ -92,8 +92,19 @@ class CdnSettingsController extends Controller
         ], $isValid ? 200 : 422);
     }
 
-    public function diff(CdnSyncService $cdnSyncService): JsonResponse
+    public function diff(CdnManager $cdnManager, CdnSyncService $cdnSyncService): JsonResponse
     {
+        if ($cdnManager->getMode() !== CdnMode::STORAGE) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => '仅对象存储模式支持查看差异。',
+                'upload_count' => 0,
+                'skip_count' => 0,
+                'delete_count' => 0,
+                'diff' => ['upload' => [], 'skip' => [], 'delete' => []],
+            ], 422);
+        }
+
         $diff = $cdnSyncService->getDiff();
 
         return response()->json([
