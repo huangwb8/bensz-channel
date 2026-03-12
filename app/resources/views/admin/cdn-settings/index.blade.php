@@ -109,14 +109,14 @@
             </section>
 
             <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-5 space-y-4">
-                <div class="rounded-lg border border-blue-100 bg-blue-50/70 p-4 text-sm text-blue-800">
-                    <div class="font-medium">当前运行状态</div>
+                <div class="cdn-runtime-panel">
+                    <div class="cdn-runtime-panel-title">当前运行状态</div>
                     <div class="mt-2 space-y-1 text-xs sm:text-sm">
-                        <p>状态：{{ $cdnSettingsForm['cdn_is_active'] ? '运行中' : '未应用或已停止' }}</p>
-                        <p>模式：{{ $cdnSettingsForm['cdn_runtime_mode'] === 'storage' ? '对象存储型 CDN' : ($cdnSettingsForm['cdn_runtime_mode'] === 'origin' ? '回源型 CDN' : '未应用') }}</p>
-                        <p>资源域名：{{ $cdnSettingsForm['cdn_runtime_asset_url'] ?: '未应用' }}</p>
-                        <p>服务商：{{ $cdnSettingsForm['cdn_runtime_provider'] ?: '未应用' }}</p>
-                        <p>同步：{{ $cdnSettingsForm['cdn_runtime_sync_enabled'] ? '已启用' : '未启用' }} / 构建后自动同步：{{ $cdnSettingsForm['cdn_runtime_sync_on_build'] ? '已启用' : '未启用' }}</p>
+                        <p class="cdn-runtime-panel-line">状态：{{ $cdnSettingsForm['cdn_is_active'] ? '运行中' : '未应用或已停止' }}</p>
+                        <p class="cdn-runtime-panel-line">模式：{{ $cdnSettingsForm['cdn_runtime_mode'] === 'storage' ? '对象存储型 CDN' : ($cdnSettingsForm['cdn_runtime_mode'] === 'origin' ? '回源型 CDN' : '未应用') }}</p>
+                        <p class="cdn-runtime-panel-line">资源域名：{{ $cdnSettingsForm['cdn_runtime_asset_url'] ?: '未应用' }}</p>
+                        <p class="cdn-runtime-panel-line">服务商：{{ $cdnSettingsForm['cdn_runtime_provider'] ?: '未应用' }}</p>
+                        <p class="cdn-runtime-panel-line">同步：{{ $cdnSettingsForm['cdn_runtime_sync_enabled'] ? '已启用' : '未启用' }} / 构建后自动同步：{{ $cdnSettingsForm['cdn_runtime_sync_on_build'] ? '已启用' : '未启用' }}</p>
                     </div>
                 </div>
 
