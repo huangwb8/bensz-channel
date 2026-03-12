@@ -24,6 +24,7 @@ class SiteSetting extends Model
             'cdn_sync_enabled' => 'boolean',
             'cdn_sync_on_build' => 'boolean',
             'article_image_max_mb' => 'integer',
+            'article_video_max_mb' => 'integer',
         ];
     }
 
@@ -46,5 +47,6 @@ class SiteSetting extends Model
         'theme_day_start',
         'theme_night_start',
         'article_image_max_mb',
+        'article_video_max_mb',
     ];
 }

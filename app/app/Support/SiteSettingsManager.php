@@ -61,6 +61,8 @@ class SiteSettingsManager
             'theme_night_start' => $setting?->theme_night_start ?? (string) config('community.theme.night_start', '19:00'),
             'article_image_max_mb' => $setting?->article_image_max_mb
                 ?? (int) config('community.uploads.article_image_max_mb', 50),
+            'article_video_max_mb' => $setting?->article_video_max_mb
+                ?? (int) config('community.uploads.video_max_mb', 500),
         ];
     }
 
@@ -88,6 +90,7 @@ class SiteSettingsManager
                 || filled($setting->theme_day_start)
                 || filled($setting->theme_night_start)
                 || $setting->article_image_max_mb !== null
+                || $setting->article_video_max_mb !== null
             );
     }
 
@@ -132,6 +135,12 @@ class SiteSettingsManager
                 'article_image_max_mb',
                 fn () => $this->normalizeImageMaxMb($validated['article_image_max_mb'] ?? null),
                 $setting->article_image_max_mb ?? $this->normalizeImageMaxMb(config('community.uploads.article_image_max_mb', 50)),
+            ),
+            'article_video_max_mb' => $this->resolvedValue(
+                $validated,
+                'article_video_max_mb',
+                fn () => $this->normalizeVideoMaxMb($validated['article_video_max_mb'] ?? null),
+                $setting->article_video_max_mb ?? $this->normalizeVideoMaxMb(config('community.uploads.video_max_mb', 500)),
             ),
         ]);
         $setting->save();
@@ -185,6 +194,7 @@ class SiteSettingsManager
                 'community.theme.day_start' => $this->normalizeThemeTime($setting->theme_day_start ?? null, '07:00'),
                 'community.theme.night_start' => $this->normalizeThemeTime($setting->theme_night_start ?? null, '19:00'),
                 'community.uploads.article_image_max_mb' => $this->normalizeImageMaxMb($setting->article_image_max_mb),
+                'community.uploads.video_max_mb' => $this->normalizeVideoMaxMb($setting->article_video_max_mb),
             ]);
         }
 
@@ -332,6 +342,17 @@ class SiteSettingsManager
         }
 
         return max(1, min(100, $normalized));
+    }
+
+    private function normalizeVideoMaxMb(mixed $value, int $fallback = 500): int
+    {
+        $normalized = (int) $value;
+
+        if ($normalized <= 0) {
+            return $fallback;
+        }
+
+        return max(1, min(10240, $normalized));
     }
 
     private function enabledQrProvidersFromMethods(array $methods): array

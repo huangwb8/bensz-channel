@@ -58,7 +58,7 @@ class VideoUploadController extends Controller
     {
         $normalized = strtolower(trim($context));
         $configured = (int) config('community.uploads.video_max_mb', 500);
-        $maxMb = max(1, min(500, $configured));
+        $maxMb = max(1, min(10240, $configured));
 
         if ($normalized === 'article') {
             return $maxMb * 1024;

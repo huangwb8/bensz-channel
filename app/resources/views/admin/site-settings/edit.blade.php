@@ -65,6 +65,21 @@
             </div>
 
             <div>
+                <label for="article_video_max_mb" class="mb-2 block text-sm font-medium text-gray-700">视频上传上限（MB）</label>
+                <input
+                    id="article_video_max_mb"
+                    type="number"
+                    name="article_video_max_mb"
+                    value="{{ old('article_video_max_mb', $siteSettingsForm['article_video_max_mb']) }}"
+                    class="input-field h-11"
+                    min="1"
+                    max="10240"
+                    step="1"
+                >
+                <p class="mt-2 text-xs text-gray-500">影响文章编辑器和评论区的视频上传大小限制，默认 500MB，最大 10240MB。</p>
+            </div>
+
+            <div>
                 <label for="cdn_asset_url" class="mb-2 block text-sm font-medium text-gray-700">静态资源 CDN</label>
                 <input id="cdn_asset_url" type="url" name="cdn_asset_url" value="{{ old('cdn_asset_url', $siteSettingsForm['cdn_asset_url']) }}" class="input-field h-11" placeholder="https://cdn.example.com">
                 <p class="mt-2 text-xs text-gray-500">用于加速 CSS、JS、图片和其它公开静态资源。页面主域名仍由 `APP_URL` 决定；这里建议填写 DogeCloud 等 CDN 加速域名。</p>
