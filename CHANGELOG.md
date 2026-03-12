@@ -33,6 +33,26 @@
 - 修复了频道管理页夜间模式下新增频道表单发白的问题：此前 `from-gray-50 → to-white` 渐变未被暗色主题覆盖，导致表单背景保持浅色、白色标签对比度异常；现在暗色模式会自动映射到深色渐变，频道管理与同类后台表单显示恢复正常
 - 修复了首次仅保存 CDN 设置时站点配置写入失败的问题：`app/app/Support/SiteSettingsManager.php` 现会为未显式提交的 `article_image_max_mb` 回退到运行时默认值，避免 `site_settings` 首次插入时触发非空约束；`app/tests/Feature/Admin/CdnSettingsTest.php` 同步增加断言覆盖该回归
 
+## [1.36.0] - 2026-03-12
+
+### Added（新增）
+
+- 新增了 CDN 运行态控制：`app/database/migrations/2026_03_12_150000_add_cdn_runtime_state_to_site_settings_table.php`、`app/app/Support/SiteSettingsManager.php` 与 `app/app/Http/Controllers/Admin/CdnSettingsController.php` 现支持将 CDN 草稿配置与已应用运行态分离，管理员可手动点击“应用 CDN”与“停止 CDN”控制是否启用
+- 新增了 CDN 详细工作日志：`app/app/Support/Cdn/CdnWorkLogManager.php`、`app/database/migrations/2026_03_12_151000_add_details_to_cdn_sync_logs_table.php` 与 `app/resources/views/admin/cdn-settings/index.blade.php` 现记录保存、测试、应用、停止、构建、同步、清理等工作过程，并保留详细原因与配置摘要
+- 新增了 CDN 运行态与失败细节回归测试：`app/tests/Feature/Admin/CdnSettingsTest.php` 与 `app/tests/Unit/Support/CdnSyncServiceTest.php` 现覆盖“保存不立即生效”“手动应用/停止”“测试失败原因入日志”“同步细节入日志”等关键场景
+
+### Changed（变更）
+
+- 优化了 CDN 后台工作流：`app/resources/views/admin/cdn-settings/index.blade.php` 现将“同步日志”升级为“工作日志”，展示当前运行状态，并让连接测试直接读取页面草稿表单内容
+- 优化了静态构建与同步可观测性：`app/app/Support/StaticPageBuilder.php`、`app/app/Support/Cdn/CdnSyncService.php` 与 `app/app/Support/Cdn/SyncResult.php` 现会在构建、同步、远程清理时产出更完整的过程细节和错误原因
+- 更新了 S3 依赖与文档：`app/composer.json`、`app/composer.lock`、`README.md`、`README_EN.md`、`docs/CDN配置指南.md`、`docs/开发者文档.md` 与 `app/config.toml` 已同步补齐对象存储驱动依赖、使用说明与版本号 `1.36.0`
+
+### Fixed（修复）
+
+- 修复了对象存储 CDN 连接时缺少 `league/flysystem-aws-s3-v3` 依赖导致 `Class "League\Flysystem\AwsS3V3\PortableVisibilityConverter" not found` 的问题；现在构建出的应用镜像会包含完整 S3/Flysystem 运行时依赖
+- 修复了 CDN 配置“保存即生效”导致管理员无法安全演练配置的问题；现在保存只更新草稿，必须显式点击“应用 CDN”才会切换线上运行态
+- 修复了 CDN 出错时日志过于粗糙的问题；现在测试失败、应用失败、构建失败、同步失败等场景都会在后台工作日志中展示具体原因
+
 ## [1.35.0] - 2026-03-12
 
 ### Added（新增）

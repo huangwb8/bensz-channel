@@ -4,7 +4,7 @@
 
 **Modern Web Community Platform - Integrated Solution for Channel Management, Real-time Interaction, and Content Curation**
 
-[![Version](https://img.shields.io/badge/version-1.35.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
+[![Version](https://img.shields.io/badge/version-1.36.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
 [![Platform](https://img.shields.io/badge/platform-Docker-lightgrey.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -29,7 +29,7 @@ Bensz Channel is a web community platform built with **Laravel + Better Auth + P
 - 📝 **Markdown Support**: Articles and comments support Markdown rendering with paste-to-upload images and videos up to 500MB
 - 📧 **Subscription Notifications**: SMTP email subscription and RSS feeds
 - ⚡ **Static Page Optimization**: Guest access automatically uses pre-built static HTML + Gzip compression
-- ☁️ **Dual-Mode CDN**: Supports both origin-pull CDN and object-storage CDN, with admin-side connection testing, diff preview, manual sync, and sync logs
+- ☁️ **Dual-Mode CDN**: Supports both origin-pull CDN and object-storage CDN, with draft saving, manual apply/stop, connection testing, diff preview, manual sync, and detailed work logs
 - 🎨 **Admin Dashboard**: Complete management for channels, articles, users, and site settings
 - 🚀 **One-Click Deployment**: Docker Compose launches all services with one command
 
