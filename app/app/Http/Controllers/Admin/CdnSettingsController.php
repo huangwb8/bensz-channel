@@ -22,7 +22,8 @@ class CdnSettingsController extends Controller
     {
         return view('admin.cdn-settings.index', [
             'pageTitle' => 'CDN 设置',
-            'cdnSettingsForm' => $siteSettingsManager->formData(),
+            'cdnSettingsForm' => $siteSettingsManager->cdnFormData(),
+            'cdnSettingsUsingOverrides' => $siteSettingsManager->cdnUsingOverrides(),
             'cdnProviderOptions' => config('cdn.providers', []),
             'cdnSyncLogs' => class_exists(CdnSyncLog::class)
                 ? CdnSyncLog::query()->latest('id')->limit(20)->get()

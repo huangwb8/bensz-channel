@@ -21,6 +21,7 @@ class CdnSettingsTest extends TestCase
             ->get(route('admin.cdn-settings.index'))
             ->assertOk()
             ->assertSee('CDN 设置')
+            ->assertSee('这是后台唯一的 CDN 配置入口')
             ->assertSee('回源型 CDN')
             ->assertSee('对象存储型 CDN')
             ->assertSee('测试连接')

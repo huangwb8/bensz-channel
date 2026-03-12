@@ -16,6 +16,7 @@
 
 ### Changed（变更）
 
+- 调整了后台设置的信息架构：`app/resources/views/admin/site-settings/edit.blade.php`、`app/app/Http/Controllers/Admin/SiteSettingsController.php` 与 `app/app/Support/SiteSettingsManager.php` 现将站点设置与 CDN 设置彻底拆分，站点设置页不再渲染或接收 `cdn_asset_url` 等 CDN 字段，CDN 配置统一收口到独立的 `admin/cdn-settings` 页面；同步补充 `app/tests/Feature/Admin/AdminSiteSettingsTest.php`、`app/tests/Feature/Admin/CdnSettingsTest.php` 与 `docs/开发者文档.md` 回归说明
 - 重新定位了项目描述方式：移除所有"类似 QQ 频道"的表述，改为强调核心价值和使用场景；更新了 `README.md`、`README_EN.md`、`AGENTS.md`、`app/config.toml` 中的项目描述，突出"现代化 Web 社区平台"、"三栏式布局设计"、"适合团队协作、知识分享与内容沉淀"等独立特性
 - 优化了 README 文档结构：创建了中英双语版本（`README.md` 和 `README_EN.md`），参考 https://github.com/huangwb8/skills 的现代化风格，使用 badges、emoji 和居中标题区增强视觉效果；将技术细节移至 `docs/开发者文档.md`，保持 README 精简并突出核心功能与快速开始
 - 优化了测试规范章节：在 `AGENTS.md` 的"测试规范"中新增"交付前强制要求"小节，明确规定每次交付前必须跑通 `scripts/test/` 里的测试，且代码优化后必须同步更新测试代码，确保测试流程与最新代码相协调

@@ -35,7 +35,7 @@ class SiteSettingsManager
         return Cache::rememberForever(self::CACHE_KEY, static fn (): ?SiteSetting => SiteSetting::query()->first());
     }
 
-    public function formData(): array
+    public function siteFormData(): array
     {
         $setting = $this->current();
 
@@ -44,6 +44,21 @@ class SiteSettingsManager
             'site_name' => $setting?->site_name ?? (string) config('community.site.name'),
             'site_tagline' => $setting?->site_tagline ?? (string) config('community.site.tagline'),
             'auth_enabled_methods' => $this->normalizeAuthMethods($setting?->auth_enabled_methods),
+            'theme_mode' => $setting?->theme_mode ?? (string) config('community.theme.mode', 'auto'),
+            'theme_day_start' => $setting?->theme_day_start ?? (string) config('community.theme.day_start', '07:00'),
+            'theme_night_start' => $setting?->theme_night_start ?? (string) config('community.theme.night_start', '19:00'),
+            'article_image_max_mb' => $setting?->article_image_max_mb
+                ?? (int) config('community.uploads.article_image_max_mb', 50),
+            'article_video_max_mb' => $setting?->article_video_max_mb
+                ?? (int) config('community.uploads.video_max_mb', 500),
+        ];
+    }
+
+    public function cdnFormData(): array
+    {
+        $setting = $this->current();
+
+        return [
             'cdn_asset_url' => $setting?->cdn_asset_url ?? (string) config('app.asset_url'),
             'cdn_mode' => $setting?->cdn_mode?->value ?? (string) config('cdn.mode', CdnMode::ORIGIN->value),
             'cdn_storage_provider' => $setting?->cdn_storage_provider ?? (string) config('cdn.storage.provider', 'dogecloud'),
@@ -56,17 +71,10 @@ class SiteSettingsManager
             'cdn_sync_on_build' => $setting?->cdn_sync_on_build ?? (bool) config('cdn.sync.on_build', true),
             'cdn_storage_access_key_masked' => $this->maskSecret($setting?->cdn_storage_access_key),
             'cdn_storage_secret_key_masked' => $this->maskSecret($setting?->cdn_storage_secret_key),
-            'theme_mode' => $setting?->theme_mode ?? (string) config('community.theme.mode', 'auto'),
-            'theme_day_start' => $setting?->theme_day_start ?? (string) config('community.theme.day_start', '07:00'),
-            'theme_night_start' => $setting?->theme_night_start ?? (string) config('community.theme.night_start', '19:00'),
-            'article_image_max_mb' => $setting?->article_image_max_mb
-                ?? (int) config('community.uploads.article_image_max_mb', 50),
-            'article_video_max_mb' => $setting?->article_video_max_mb
-                ?? (int) config('community.uploads.video_max_mb', 500),
         ];
     }
 
-    public function usingOverrides(): bool
+    public function siteUsingOverrides(): bool
     {
         $setting = $this->current();
 
@@ -76,7 +84,21 @@ class SiteSettingsManager
                 || filled($setting->site_name)
                 || filled($setting->site_tagline)
                 || $setting->auth_enabled_methods !== null
-                || filled($setting->cdn_asset_url)
+                || filled($setting->theme_mode)
+                || filled($setting->theme_day_start)
+                || filled($setting->theme_night_start)
+                || $setting->article_image_max_mb !== null
+                || $setting->article_video_max_mb !== null
+            );
+    }
+
+    public function cdnUsingOverrides(): bool
+    {
+        $setting = $this->current();
+
+        return $setting instanceof SiteSetting
+            && (
+                filled($setting->cdn_asset_url)
                 || $setting->cdn_mode !== null
                 || filled($setting->cdn_storage_provider)
                 || filled($setting->cdn_storage_access_key)
@@ -86,11 +108,6 @@ class SiteSettingsManager
                 || filled($setting->cdn_storage_endpoint)
                 || $setting->cdn_sync_enabled !== null
                 || $setting->cdn_sync_on_build !== null
-                || filled($setting->theme_mode)
-                || filled($setting->theme_day_start)
-                || filled($setting->theme_night_start)
-                || $setting->article_image_max_mb !== null
-                || $setting->article_video_max_mb !== null
             );
     }
 

@@ -25,7 +25,9 @@ class AdminSiteSettingsTest extends TestCase
             ->assertSee('文章图片上传上限')
             ->assertSee('视频上传上限')
             ->assertSee('主题模式')
-            ->assertSee('允许用户使用的登录 / 注册方式');
+            ->assertSee('允许用户使用的登录 / 注册方式')
+            ->assertSee('CDN 已拆分为独立页面统一管理')
+            ->assertDontSee('name="cdn_asset_url"', false);
     }
 
     public function test_admin_site_settings_page_renders_iconified_management_shortcuts(): void
@@ -80,6 +82,13 @@ class AdminSiteSettingsTest extends TestCase
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
+        SiteSetting::query()->create([
+            'cdn_asset_url' => 'https://cdn.example.com',
+            'cdn_mode' => 'origin',
+            'cdn_sync_enabled' => true,
+            'cdn_sync_on_build' => false,
+        ]);
+
         $this->actingAs($admin)
             ->put(route('admin.site-settings.update'), [
                 'app_name' => 'Bensz Channel Admin',
@@ -87,7 +96,6 @@ class AdminSiteSettingsTest extends TestCase
                 'site_tagline' => '一个支持静态游客访问与成员互动的频道式社区。',
                 'article_image_max_mb' => 32,
                 'article_video_max_mb' => 1024,
-                'cdn_asset_url' => 'https://cdn.example.com',
                 'theme_mode' => 'auto',
                 'theme_day_start' => '06:30',
                 'theme_night_start' => '20:30',
@@ -108,6 +116,9 @@ class AdminSiteSettingsTest extends TestCase
 
         $setting = SiteSetting::query()->first();
         $this->assertSame('https://cdn.example.com', $setting?->cdn_asset_url);
+        $this->assertSame('origin', $setting?->cdn_mode?->value ?? $setting?->cdn_mode);
+        $this->assertTrue((bool) $setting?->cdn_sync_enabled);
+        $this->assertFalse((bool) $setting?->cdn_sync_on_build);
         $this->assertSame(['email_code', 'qq_qr'], $setting?->auth_enabled_methods);
     }
 

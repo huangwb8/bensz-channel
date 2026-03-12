@@ -5,10 +5,15 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-semibold text-gray-900">CDN 设置</h2>
-                <p class="mt-1 text-sm text-gray-500">统一管理回源型 CDN 与对象存储型 CDN，并在需要时执行资源同步。</p>
+                <p class="mt-1 text-sm text-gray-500">统一管理回源型 CDN 与对象存储型 CDN，并在需要时执行资源同步。这是后台唯一的 CDN 配置入口。</p>
             </div>
-            <div class="icon-action-group">
-                <x-icon-button :href="route('admin.site-settings.edit')" icon="save" label="站点设置" title="返回站点设置" />
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="rounded-full px-3 py-1 text-xs font-semibold {{ $cdnSettingsUsingOverrides ? 'bg-green-50 text-green-700 ring-1 ring-green-200' : 'bg-gray-100 text-gray-600 ring-1 ring-gray-200' }}">
+                    {{ $cdnSettingsUsingOverrides ? '当前使用 CDN 后台覆盖配置' : '当前使用 config/config.toml 默认值' }}
+                </div>
+                <div class="icon-action-group">
+                    <x-icon-button :href="route('admin.site-settings.edit')" icon="save" label="站点设置" title="返回站点设置" />
+                </div>
             </div>
         </div>
     </section>
@@ -16,7 +21,7 @@
     <section class="mt-6 rounded-xl border border-gray-200 bg-white p-6">
         <div class="border-b border-gray-100 pb-4">
             <h3 class="text-lg font-semibold text-gray-900">模式与凭证</h3>
-            <p class="mt-1 text-sm text-gray-500">建议优先使用回源型 CDN；如需将公开静态资源同步到对象存储，可切换到对象存储模式。</p>
+            <p class="mt-1 text-sm text-gray-500">建议优先使用回源型 CDN；如需将公开静态资源同步到对象存储，可切换到对象存储模式。站点设置页不再包含任何 CDN 表单字段。</p>
         </div>
 
         <form action="{{ route('admin.cdn-settings.update') }}" method="POST" class="mt-6 space-y-6">

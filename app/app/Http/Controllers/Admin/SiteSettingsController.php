@@ -21,8 +21,8 @@ class SiteSettingsController extends Controller
     {
         return view('admin.site-settings.edit', [
             'pageTitle' => '站点设置',
-            'siteSettingsForm' => $siteSettingsManager->formData(),
-            'siteSettingsUsingOverrides' => $siteSettingsManager->usingOverrides(),
+            'siteSettingsForm' => $siteSettingsManager->siteFormData(),
+            'siteSettingsUsingOverrides' => $siteSettingsManager->siteUsingOverrides(),
             'themeModeOptions' => [
                 'auto' => '自动（按时间段切换）',
                 'light' => '固定白天模式',
@@ -94,7 +94,6 @@ class SiteSettingsController extends Controller
             'site_tagline' => ['required', 'string', 'max:255'],
             'article_image_max_mb' => ['required', 'integer', 'min:1', 'max:100'],
             'article_video_max_mb' => ['required', 'integer', 'min:1', 'max:10240'],
-            'cdn_asset_url' => ['nullable', 'url', 'max:255'],
             'theme_mode' => ['required', Rule::in(['auto', 'light', 'dark'])],
             'theme_day_start' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
             'theme_night_start' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],

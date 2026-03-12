@@ -5,7 +5,7 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-semibold text-gray-900">站点设置</h2>
-                <p class="mt-1 text-sm text-gray-500">管理员可以在这里覆盖 `config/config.toml` 中的站点名称、标语，以及允许用户使用的登录/注册方式默认值。</p>
+                <p class="mt-1 text-sm text-gray-500">管理员可以在这里维护站点展示文案、上传限制、主题排程与认证入口。CDN 已拆分为独立页面统一管理。</p>
             </div>
             <div class="icon-action-group">
                 <x-icon-button :href="route('admin.articles.index')" icon="document" label="文章管理" title="文章管理" />
@@ -23,13 +23,17 @@
                 <p class="mt-1 text-sm text-gray-500">保存后会立即覆盖运行时配置，并自动重建游客静态页与登录页展示。</p>
             </div>
             <div class="rounded-full px-3 py-1 text-xs font-semibold {{ $siteSettingsUsingOverrides ? 'bg-green-50 text-green-700 ring-1 ring-green-200' : 'bg-gray-100 text-gray-600 ring-1 ring-gray-200' }}">
-                {{ $siteSettingsUsingOverrides ? '当前使用后台覆盖配置' : '当前使用 config/config.toml 默认值' }}
+                {{ $siteSettingsUsingOverrides ? '当前使用站点后台覆盖配置' : '当前使用 config/config.toml 默认值' }}
             </div>
         </div>
 
         <form action="{{ route('admin.site-settings.update') }}" method="POST" class="mt-6 space-y-6">
             @csrf
             @method('PUT')
+
+            <div class="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                静态资源加速、对象存储凭证与同步策略已迁移到 <a href="{{ route('admin.cdn-settings.index') }}" class="font-semibold underline decoration-blue-300 underline-offset-2 hover:text-blue-900">CDN 设置</a> 独立页面，本页不再保存 CDN 字段。
+            </div>
 
             <div>
                 <label for="app_name" class="mb-2 block text-sm font-medium text-gray-700">APP_NAME</label>
@@ -77,12 +81,6 @@
                     step="1"
                 >
                 <p class="mt-2 text-xs text-gray-500">影响文章编辑器和评论区的视频上传大小限制，默认 500MB，最大 10240MB。</p>
-            </div>
-
-            <div>
-                <label for="cdn_asset_url" class="mb-2 block text-sm font-medium text-gray-700">静态资源 CDN</label>
-                <input id="cdn_asset_url" type="url" name="cdn_asset_url" value="{{ old('cdn_asset_url', $siteSettingsForm['cdn_asset_url']) }}" class="input-field h-11" placeholder="https://cdn.example.com">
-                <p class="mt-2 text-xs text-gray-500">用于加速 CSS、JS、图片和其它公开静态资源。页面主域名仍由 `APP_URL` 决定；这里建议填写 DogeCloud 等 CDN 加速域名。</p>
             </div>
 
             <section class="space-y-4 rounded-xl border border-slate-200 bg-slate-50/70 p-5">
