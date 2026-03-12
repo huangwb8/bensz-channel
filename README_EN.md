@@ -260,13 +260,13 @@ The core feature of this project is the custom Agent Skill that enables **remote
 
 1. First, install the [Bensz Skills](https://github.com/huangwb8/skills) project and learn how to use the `install-bensz-skills` skill
 
-2. In Claude Code or Codex CLI, enter the following command to install this project's Agent Skills:
+2. In Claude Code or Codex CLI, enter the following command to install the Agent Skill (hosted at [bensz-devtools](https://github.com/huangwb8/bensz-devtools)):
 
 ```
-install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/main/skills
+install-bensz-skills --source https://github.com/huangwb8/bensz-devtools
 ```
 
-3. After installation, refer to the [Agent Skill Guide](skills/bensz-channel-devtools/README.md) to configure API keys and start using
+3. After installation, refer to the [Agent Skill Guide](https://github.com/huangwb8/bensz-devtools/tree/main/bensz-channel-vibe-config) to configure API keys and start using
 
 ### Features
 
@@ -325,7 +325,7 @@ install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/mai
 - ☁️ [CDN Configuration Guide](docs/CDN配置指南.md) - Origin CDN / object-storage CDN setup and sync workflow
 - 🔧 [Build Instructions](scripts/BUILD.md) - Detailed Docker image build instructions
 - 🔐 [WeChat/QQ Login Configuration](docs/如何让本项目支持微信和QQ扫码登陆.md) - Third-party login configuration tutorial
-- 🤖 [Agent Skill Guide](skills/bensz-channel-devtools/README.md) - Remote content management via Claude Code/Codex CLI
+- 🤖 [Agent Skill Guide](https://github.com/huangwb8/bensz-devtools/tree/main/bensz-channel-vibe-config) - Remote content management via Claude Code/Codex CLI (hosted at bensz-devtools)
 - 📝 [Project Introduction Blog](https://blognas.hwb0307.com/linux/docker/7053) - Detailed project introduction and user experience
 
 ## 🤝 Contributing

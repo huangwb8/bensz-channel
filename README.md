@@ -260,13 +260,13 @@ docker compose logs -f
 
 1. 首先安装 [Bensz Skills](https://github.com/huangwb8/skills) 项目，掌握 `install-bensz-skills` 这个 skill 的使用方法
 
-2. 在 Claude Code 或 Codex CLI 中输入以下命令安装本项目的 Agent Skill：
+2. 在 Claude Code 或 Codex CLI 中输入以下命令安装 Agent Skill（托管于 [bensz-devtools](https://github.com/huangwb8/bensz-devtools)）：
 
 ```
-install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/main/skills
+install-bensz-skills --source https://github.com/huangwb8/bensz-devtools
 ```
 
-3. 安装完成后，参考 [Agent Skill 使用指南](skills/bensz-channel-devtools/README.md) 配置 API 密钥并开始使用
+3. 安装完成后，参考 [Agent Skill 使用指南](https://github.com/huangwb8/bensz-devtools/tree/main/bensz-channel-vibe-config) 配置 API 密钥并开始使用
 
 ### 功能特性
 
@@ -325,7 +325,7 @@ install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/mai
 - ☁️ [CDN 配置指南](docs/CDN配置指南.md) - 回源型 CDN / 对象存储型 CDN 配置与同步说明
 - 🔧 [构建说明](scripts/BUILD.md) - Docker 镜像构建详细说明
 - 🔐 [微信/QQ 登录配置](docs/如何让本项目支持微信和QQ扫码登陆.md) - 第三方登录配置教程
-- 🤖 [Agent Skill 使用指南](skills/bensz-channel-devtools/README.md) - 通过 Claude Code/Codex CLI 远程管理内容
+- 🤖 [Agent Skill 使用指南](https://github.com/huangwb8/bensz-devtools/tree/main/bensz-channel-vibe-config) - 通过 Claude Code/Codex CLI 远程管理内容（托管于 bensz-devtools）
 - 📝 [项目介绍博客](https://blognas.hwb0307.com/linux/docker/7053) - 详细的项目介绍与使用体验
 
 ## 🤝 贡献
