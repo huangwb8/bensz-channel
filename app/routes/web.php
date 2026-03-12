@@ -109,6 +109,8 @@ Route::prefix('admin')->middleware(['auth', 'not-banned', 'admin'])->name('admin
     Route::get('/cdn-settings', [AdminCdnSettingsController::class, 'index'])->name('cdn-settings.index');
     Route::put('/cdn-settings', [AdminCdnSettingsController::class, 'update'])->name('cdn-settings.update');
     Route::post('/cdn-settings/test', [AdminCdnSettingsController::class, 'testConnection'])->name('cdn-settings.test');
+    Route::post('/cdn-settings/apply', [AdminCdnSettingsController::class, 'apply'])->name('cdn-settings.apply');
+    Route::post('/cdn-settings/stop', [AdminCdnSettingsController::class, 'stop'])->name('cdn-settings.stop');
     Route::get('/cdn-settings/diff', [AdminCdnSettingsController::class, 'diff'])->name('cdn-settings.diff');
     Route::post('/cdn-settings/sync', [AdminCdnSettingsController::class, 'sync'])->name('cdn-settings.sync');
     Route::delete('/cdn-settings/remote', [AdminCdnSettingsController::class, 'clearRemote'])->name('cdn-settings.remote.clear');

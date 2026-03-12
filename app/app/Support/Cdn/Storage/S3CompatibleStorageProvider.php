@@ -4,8 +4,8 @@ namespace App\Support\Cdn\Storage;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemManager;
-use RuntimeException;
 use Throwable;
+use RuntimeException;
 
 class S3CompatibleStorageProvider implements StorageProvider
 {
@@ -60,14 +60,43 @@ class S3CompatibleStorageProvider implements StorageProvider
         return $this->disk()->url(ltrim($remotePath, '/'));
     }
 
-    public function validateCredentials(): bool
+    public function testConnection(): ConnectionTestResult
     {
-        try {
-            $this->listFiles('');
+        $details = [
+            '使用顶层目录探测对象存储可用性。',
+            '端点：'.($this->configuration['endpoint'] ?? '-'),
+            '存储桶：'.($this->configuration['bucket'] ?? '-'),
+            '区域：'.($this->configuration['region'] ?? '-'),
+        ];
 
-            return true;
-        } catch (Throwable) {
-            return false;
+        try {
+            $files = $this->disk()->files('');
+
+            $details[] = sprintf('连接成功，顶层探测到 %d 个对象。', count($files));
+
+            return new ConnectionTestResult(
+                true,
+                '对象存储连接测试通过。',
+                implode(PHP_EOL, $details),
+                [
+                    'remote_file_count' => count($files),
+                ],
+            );
+        } catch (Throwable $exception) {
+            $details[] = '异常类型：'.$exception::class;
+            $details[] = '异常原因：'.$exception->getMessage();
+
+            return new ConnectionTestResult(
+                false,
+                '对象存储连接测试失败：'.$exception->getMessage(),
+                implode(PHP_EOL, $details),
+                [
+                    'exception' => [
+                        'class' => $exception::class,
+                        'message' => $exception->getMessage(),
+                    ],
+                ],
+            );
         }
     }
 

@@ -57,6 +57,7 @@ class SiteSettingsManager
     public function cdnFormData(): array
     {
         $setting = $this->current();
+        $runtime = $this->cdnRuntimeData();
 
         return [
             'cdn_asset_url' => $setting?->cdn_asset_url ?? (string) config('app.asset_url'),
@@ -71,6 +72,30 @@ class SiteSettingsManager
             'cdn_sync_on_build' => $setting?->cdn_sync_on_build ?? (bool) config('cdn.sync.on_build', true),
             'cdn_storage_access_key_masked' => $this->maskSecret($setting?->cdn_storage_access_key),
             'cdn_storage_secret_key_masked' => $this->maskSecret($setting?->cdn_storage_secret_key),
+            'cdn_is_active' => $runtime['is_active'],
+            'cdn_runtime_mode' => $runtime['mode'],
+            'cdn_runtime_asset_url' => $runtime['asset_url'],
+            'cdn_runtime_provider' => $runtime['provider'],
+            'cdn_runtime_sync_enabled' => $runtime['sync_enabled'],
+            'cdn_runtime_sync_on_build' => $runtime['sync_on_build'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function cdnRuntimeData(): array
+    {
+        $setting = $this->current();
+        $snapshot = $this->decodeCdnAppliedSnapshot($setting?->cdn_applied_snapshot);
+
+        return [
+            'is_active' => (bool) ($setting?->cdn_is_active ?? false) && $snapshot !== [],
+            'mode' => $snapshot['mode'] ?? null,
+            'asset_url' => $snapshot['asset_url'] ?? null,
+            'provider' => $snapshot['storage_provider'] ?? null,
+            'sync_enabled' => (bool) ($snapshot['sync_enabled'] ?? false),
+            'sync_on_build' => (bool) ($snapshot['sync_on_build'] ?? false),
         ];
     }
 
@@ -167,6 +192,39 @@ class SiteSettingsManager
         return $setting->fresh();
     }
 
+    /**
+     * @param  array<string, mixed>  $configuration
+     */
+    public function activateCdn(array $configuration): SiteSetting
+    {
+        $setting = SiteSetting::query()->firstOrNew(['id' => 1]);
+        $setting->fill([
+            'cdn_is_active' => true,
+            'cdn_applied_snapshot' => json_encode(
+                $this->normalizeCdnSnapshot($configuration),
+                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
+            ),
+        ]);
+        $setting->save();
+
+        $this->forgetCached();
+
+        return $setting->fresh();
+    }
+
+    public function deactivateCdn(): SiteSetting
+    {
+        $setting = SiteSetting::query()->firstOrNew(['id' => 1]);
+        $setting->fill([
+            'cdn_is_active' => false,
+        ]);
+        $setting->save();
+
+        $this->forgetCached();
+
+        return $setting->fresh();
+    }
+
     public function applyConfiguredSettings(): void
     {
         $setting = $this->current();
@@ -186,24 +244,21 @@ class SiteSettingsManager
 
             config(['community.auth.enabled_methods' => $this->normalizeAuthMethods($setting->auth_enabled_methods)]);
 
-            $cdnMode = $this->normalizeCdnMode($setting->cdn_mode?->value ?? null);
-            $cdnAssetUrl = filled($setting->cdn_asset_url)
-                ? rtrim((string) $setting->cdn_asset_url, '/')
-                : null;
+            $cdnRuntime = $this->resolvedRuntimeCdnConfiguration($setting);
 
             config([
-                'app.asset_url' => $cdnAssetUrl,
-                'cdn.mode' => $cdnMode,
-                'cdn.origin.asset_url' => $cdnMode === CdnMode::ORIGIN->value ? $cdnAssetUrl : config('cdn.origin.asset_url'),
-                'cdn.storage.provider' => $setting->cdn_storage_provider ?: config('cdn.storage.provider'),
-                'cdn.storage.access_key' => $setting->cdn_storage_access_key ?: config('cdn.storage.access_key'),
-                'cdn.storage.secret_key' => $setting->cdn_storage_secret_key ?: config('cdn.storage.secret_key'),
-                'cdn.storage.bucket' => $setting->cdn_storage_bucket ?: config('cdn.storage.bucket'),
-                'cdn.storage.region' => $setting->cdn_storage_region ?: config('cdn.storage.region'),
-                'cdn.storage.endpoint' => $setting->cdn_storage_endpoint ?: config('cdn.storage.endpoint'),
-                'cdn.storage.public_url' => $cdnMode === CdnMode::STORAGE->value ? $cdnAssetUrl : config('cdn.storage.public_url'),
-                'cdn.sync.enabled' => (bool) ($setting->cdn_sync_enabled ?? config('cdn.sync.enabled', false)),
-                'cdn.sync.on_build' => (bool) ($setting->cdn_sync_on_build ?? config('cdn.sync.on_build', true)),
+                'app.asset_url' => $cdnRuntime['asset_url'],
+                'cdn.mode' => $cdnRuntime['mode'],
+                'cdn.origin.asset_url' => $cdnRuntime['mode'] === CdnMode::ORIGIN->value ? $cdnRuntime['asset_url'] : $this->defaultCdnConfiguration()['origin_asset_url'],
+                'cdn.storage.provider' => $cdnRuntime['storage_provider'],
+                'cdn.storage.access_key' => $cdnRuntime['storage_access_key'],
+                'cdn.storage.secret_key' => $cdnRuntime['storage_secret_key'],
+                'cdn.storage.bucket' => $cdnRuntime['storage_bucket'],
+                'cdn.storage.region' => $cdnRuntime['storage_region'],
+                'cdn.storage.endpoint' => $cdnRuntime['storage_endpoint'],
+                'cdn.storage.public_url' => $cdnRuntime['mode'] === CdnMode::STORAGE->value ? $cdnRuntime['asset_url'] : $this->defaultCdnConfiguration()['storage_public_url'],
+                'cdn.sync.enabled' => $cdnRuntime['sync_enabled'],
+                'cdn.sync.on_build' => $cdnRuntime['sync_on_build'],
             ]);
 
             config([
@@ -300,7 +355,6 @@ class SiteSettingsManager
         return mb_substr($value, 0, 2).str_repeat('*', max(4, $length - 4)).mb_substr($value, -2);
     }
 
-
     private function normalizeUrl(mixed $value): ?string
     {
         $normalized = $this->nullableString($value);
@@ -370,6 +424,79 @@ class SiteSettingsManager
         }
 
         return max(1, min(10240, $normalized));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function normalizeCdnSnapshot(array $configuration): array
+    {
+        return [
+            'mode' => $this->normalizeCdnMode($configuration['mode'] ?? null),
+            'asset_url' => $this->normalizeUrl($configuration['asset_url'] ?? null),
+            'storage_provider' => $this->nullableString($configuration['storage_provider'] ?? null),
+            'storage_access_key' => $this->nullableString($configuration['storage_access_key'] ?? null),
+            'storage_secret_key' => $this->nullableString($configuration['storage_secret_key'] ?? null),
+            'storage_bucket' => $this->nullableString($configuration['storage_bucket'] ?? null),
+            'storage_region' => $this->nullableString($configuration['storage_region'] ?? null),
+            'storage_endpoint' => $this->normalizeUrl($configuration['storage_endpoint'] ?? null),
+            'sync_enabled' => $this->normalizeBoolean($configuration['sync_enabled'] ?? null, false),
+            'sync_on_build' => $this->normalizeBoolean($configuration['sync_on_build'] ?? null, true),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resolvedRuntimeCdnConfiguration(?SiteSetting $setting): array
+    {
+        $defaults = $this->defaultCdnConfiguration();
+        $snapshot = $this->decodeCdnAppliedSnapshot($setting?->cdn_applied_snapshot);
+
+        if (! ($setting?->cdn_is_active ?? false) || $snapshot === []) {
+            return $defaults;
+        }
+
+        return array_replace($defaults, $snapshot);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function defaultCdnConfiguration(): array
+    {
+        $mode = $this->normalizeCdnMode(env('CDN_MODE', CdnMode::ORIGIN->value));
+        $originAssetUrl = $this->normalizeUrl(env('CDN_ASSET_URL', env('ASSET_URL')));
+        $storagePublicUrl = $this->normalizeUrl(env('CDN_STORAGE_PUBLIC_URL', env('CDN_ASSET_URL', env('ASSET_URL'))));
+
+        return [
+            'mode' => $mode,
+            'asset_url' => $mode === CdnMode::STORAGE->value ? $storagePublicUrl : $originAssetUrl,
+            'origin_asset_url' => $originAssetUrl,
+            'storage_provider' => $this->nullableString(env('CDN_STORAGE_PROVIDER', 'dogecloud')) ?? 'dogecloud',
+            'storage_access_key' => $this->nullableString(env('CDN_STORAGE_ACCESS_KEY', env('AWS_ACCESS_KEY_ID'))),
+            'storage_secret_key' => $this->nullableString(env('CDN_STORAGE_SECRET_KEY', env('AWS_SECRET_ACCESS_KEY'))),
+            'storage_bucket' => $this->nullableString(env('CDN_STORAGE_BUCKET', env('AWS_BUCKET'))),
+            'storage_region' => $this->nullableString(env('CDN_STORAGE_REGION', env('AWS_DEFAULT_REGION', 'auto'))) ?? 'auto',
+            'storage_endpoint' => $this->normalizeUrl(env('CDN_STORAGE_ENDPOINT', env('AWS_ENDPOINT'))),
+            'storage_public_url' => $storagePublicUrl,
+            'sync_enabled' => $this->normalizeBoolean(env('CDN_SYNC_ENABLED', false), false),
+            'sync_on_build' => $this->normalizeBoolean(env('CDN_SYNC_ON_BUILD', true), true),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decodeCdnAppliedSnapshot(?string $snapshot): array
+    {
+        if (! filled($snapshot)) {
+            return [];
+        }
+
+        $decoded = json_decode($snapshot, true);
+
+        return is_array($decoded) ? $this->normalizeCdnSnapshot($decoded) : [];
     }
 
     private function enabledQrProvidersFromMethods(array $methods): array

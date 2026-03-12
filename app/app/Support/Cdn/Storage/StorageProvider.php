@@ -17,5 +17,5 @@ interface StorageProvider
 
     public function getPublicUrl(string $remotePath): string;
 
-    public function validateCredentials(): bool;
+    public function testConnection(): ConnectionTestResult;
 }

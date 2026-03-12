@@ -11,6 +11,9 @@
                 <div class="rounded-full px-3 py-1 text-xs font-semibold {{ $cdnSettingsUsingOverrides ? 'bg-green-50 text-green-700 ring-1 ring-green-200' : 'bg-gray-100 text-gray-600 ring-1 ring-gray-200' }}">
                     {{ $cdnSettingsUsingOverrides ? '当前使用 CDN 后台覆盖配置' : '当前使用 config/config.toml 默认值' }}
                 </div>
+                <div class="rounded-full px-3 py-1 text-xs font-semibold {{ $cdnSettingsForm['cdn_is_active'] ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' }}">
+                    {{ $cdnSettingsForm['cdn_is_active'] ? 'CDN 运行中' : 'CDN 未应用/已停止' }}
+                </div>
                 <div class="icon-action-group">
                     <x-icon-button :href="route('admin.site-settings.edit')" icon="save" label="站点设置" title="返回站点设置" />
                 </div>
@@ -21,7 +24,7 @@
     <section class="mt-6 rounded-xl border border-gray-200 bg-white p-6">
         <div class="border-b border-gray-100 pb-4">
             <h3 class="text-lg font-semibold text-gray-900">模式与凭证</h3>
-            <p class="mt-1 text-sm text-gray-500">建议优先使用回源型 CDN；如需将公开静态资源同步到对象存储，可切换到对象存储模式。站点设置页不再包含任何 CDN 表单字段。</p>
+            <p class="mt-1 text-sm text-gray-500">建议优先使用回源型 CDN；如需将公开静态资源同步到对象存储，可切换到对象存储模式。保存仅更新草稿，不会立即影响线上运行状态。</p>
         </div>
 
         <form action="{{ route('admin.cdn-settings.update') }}" method="POST" class="mt-6 space-y-6">
@@ -106,6 +109,17 @@
             </section>
 
             <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-5 space-y-4">
+                <div class="rounded-lg border border-blue-100 bg-blue-50/70 p-4 text-sm text-blue-800">
+                    <div class="font-medium">当前运行状态</div>
+                    <div class="mt-2 space-y-1 text-xs sm:text-sm">
+                        <p>状态：{{ $cdnSettingsForm['cdn_is_active'] ? '运行中' : '未应用或已停止' }}</p>
+                        <p>模式：{{ $cdnSettingsForm['cdn_runtime_mode'] === 'storage' ? '对象存储型 CDN' : ($cdnSettingsForm['cdn_runtime_mode'] === 'origin' ? '回源型 CDN' : '未应用') }}</p>
+                        <p>资源域名：{{ $cdnSettingsForm['cdn_runtime_asset_url'] ?: '未应用' }}</p>
+                        <p>服务商：{{ $cdnSettingsForm['cdn_runtime_provider'] ?: '未应用' }}</p>
+                        <p>同步：{{ $cdnSettingsForm['cdn_runtime_sync_enabled'] ? '已启用' : '未启用' }} / 构建后自动同步：{{ $cdnSettingsForm['cdn_runtime_sync_on_build'] ? '已启用' : '未启用' }}</p>
+                    </div>
+                </div>
+
                 <div>
                     <h4 class="text-base font-semibold text-gray-900">同步策略</h4>
                     <p class="mt-1 text-sm text-gray-500">当前默认同步目录：{{ implode('、', $cdnSyncDirectories) }}</p>
@@ -137,6 +151,8 @@
 
             <div class="flex flex-wrap items-center gap-3">
                 <button type="submit" class="btn-primary inline-flex items-center justify-center">保存 CDN 设置</button>
+                <button type="button" class="btn-secondary inline-flex items-center justify-center" data-cdn-apply>应用 CDN</button>
+                <button type="button" class="inline-flex items-center justify-center rounded-lg border border-amber-200 px-4 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-50" data-cdn-stop>停止 CDN</button>
                 <button type="button" class="btn-secondary inline-flex items-center justify-center" data-cdn-test>测试连接</button>
                 <button type="button" class="btn-secondary inline-flex items-center justify-center" data-cdn-diff>查看差异</button>
                 <button type="button" class="btn-secondary inline-flex items-center justify-center" data-cdn-sync>立即同步</button>
@@ -149,8 +165,8 @@
 
     <section class="mt-6 rounded-xl border border-gray-200 bg-white p-6">
         <div class="border-b border-gray-100 pb-4">
-            <h3 class="text-lg font-semibold text-gray-900">同步日志</h3>
-            <p class="mt-1 text-sm text-gray-500">展示最近 20 次同步结果，便于快速排查异常。</p>
+            <h3 class="text-lg font-semibold text-gray-900">工作日志</h3>
+            <p class="mt-1 text-sm text-gray-500">展示最近 50 次 CDN 相关工作，包含保存、测试、应用、停止、构建、同步、清理及失败原因。</p>
         </div>
 
         <div class="mt-6 overflow-x-auto">
@@ -158,28 +174,45 @@
                 <thead>
                     <tr class="text-left text-xs uppercase tracking-wide text-gray-500">
                         <th class="px-3 py-2">时间</th>
-                        <th class="px-3 py-2">触发方式</th>
+                        <th class="px-3 py-2">工作类型</th>
                         <th class="px-3 py-2">状态</th>
                         <th class="px-3 py-2">文件数</th>
                         <th class="px-3 py-2">耗时</th>
                         <th class="px-3 py-2">摘要</th>
+                        <th class="px-3 py-2">详情</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 text-gray-700">
-                    @forelse($cdnSyncLogs as $log)
+                    @forelse($cdnWorkLogs as $log)
                         <tr>
                             <td class="px-3 py-3 whitespace-nowrap">{{ optional($log->started_at)->format('Y-m-d H:i:s') ?? '-' }}</td>
                             <td class="px-3 py-3">{{ $log->trigger }}</td>
                             <td class="px-3 py-3">
-                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $log->status === 'success' ? 'bg-green-50 text-green-700 ring-1 ring-green-200' : 'bg-red-50 text-red-700 ring-1 ring-red-200' }}">{{ $log->status }}</span>
+                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{
+                                    in_array($log->status, ['success', 'queued'], true)
+                                        ? 'bg-green-50 text-green-700 ring-1 ring-green-200'
+                                        : ($log->status === 'skipped'
+                                            ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+                                            : 'bg-red-50 text-red-700 ring-1 ring-red-200')
+                                }}">{{ $log->status }}</span>
                             </td>
                             <td class="px-3 py-3">{{ $log->uploaded_count }}/{{ $log->skipped_count }}/{{ $log->deleted_count }}</td>
                             <td class="px-3 py-3">{{ $log->duration_ms }} ms</td>
                             <td class="px-3 py-3">{{ $log->message }}</td>
+                            <td class="px-3 py-3 max-w-xl">
+                                @if(filled($log->details))
+                                    <details class="group">
+                                        <summary class="cursor-pointer text-sm text-blue-700">展开查看</summary>
+                                        <pre class="mt-3 whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-xs text-slate-700">{{ $log->details }}</pre>
+                                    </details>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-3 py-6 text-center text-gray-500">暂无同步日志。</td>
+                            <td colspan="7" class="px-3 py-6 text-center text-gray-500">暂无工作日志。</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -190,6 +223,7 @@
     <script>
         (function () {
             const resultBox = document.getElementById('cdn-action-result');
+            const form = document.querySelector('form[action="{{ route('admin.cdn-settings.update') }}"]');
 
             function showResult(type, message) {
                 resultBox.classList.remove('hidden', 'border-green-200', 'bg-green-50', 'text-green-700', 'border-red-200', 'bg-red-50', 'text-red-700');
@@ -199,20 +233,27 @@
                 resultBox.textContent = message;
             }
 
-            async function request(url, method) {
+            async function request(url, method, body = null) {
                 const response = await fetch(url, {
                     method,
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                         'Accept': 'application/json',
                     },
+                    body,
                 });
 
                 const payload = await response.json();
                 showResult(payload.status === 'success' ? 'success' : 'error', payload.message || '操作完成');
             }
 
-            document.querySelector('[data-cdn-test]')?.addEventListener('click', () => request(@json(route('admin.cdn-settings.test')), 'POST'));
+            function formPayload() {
+                return form ? new FormData(form) : new FormData();
+            }
+
+            document.querySelector('[data-cdn-apply]')?.addEventListener('click', () => request(@json(route('admin.cdn-settings.apply')), 'POST'));
+            document.querySelector('[data-cdn-stop]')?.addEventListener('click', () => request(@json(route('admin.cdn-settings.stop')), 'POST'));
+            document.querySelector('[data-cdn-test]')?.addEventListener('click', () => request(@json(route('admin.cdn-settings.test')), 'POST', formPayload()));
             document.querySelector('[data-cdn-diff]')?.addEventListener('click', async () => {
                 const response = await fetch(@json(route('admin.cdn-settings.diff')), { headers: { 'Accept': 'application/json' } });
                 const payload = await response.json();

@@ -26,6 +26,7 @@ class CdnSyncLog extends Model
         'deleted_count',
         'duration_ms',
         'message',
+        'details',
         'context',
         'started_at',
         'finished_at',

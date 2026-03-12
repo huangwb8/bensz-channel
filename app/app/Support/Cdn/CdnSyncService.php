@@ -17,6 +17,7 @@ class CdnSyncService
         private readonly CdnManager $cdnManager,
         private readonly StorageProviderFactory $storageProviderFactory,
         private readonly Filesystem $filesystem,
+        private readonly CdnWorkLogManager $workLogManager,
     ) {}
 
     public function shouldSyncOnBuild(): bool
@@ -33,6 +34,205 @@ class CdnSyncService
     {
         $localFiles = $this->localFiles();
         $manifest = $this->readManifest();
+
+        return $this->diffFromState($localFiles, $manifest);
+    }
+
+    public function syncAll(string $trigger = 'manual'): SyncResult
+    {
+        $startedAt = CarbonImmutable::now();
+        $configuration = $this->cdnManager->runtimeConfiguration();
+        $errors = $this->cdnManager->validateRuntimeConfiguration();
+        $details = [
+            '工作类型：同步对象存储资源',
+            '触发来源：'.$trigger,
+            '同步目录：'.implode('、', $this->configuredDirectories()),
+        ];
+
+        if (($configuration['mode'] ?? null) !== CdnMode::STORAGE->value) {
+            $errors[] = '当前未应用对象存储型 CDN，无法执行同步。';
+        }
+
+        if (! (bool) ($configuration['sync_enabled'] ?? false)) {
+            $errors[] = '当前运行中的 CDN 未启用同步。';
+        }
+
+        if ($errors !== []) {
+            $details[] = '失败原因：'.implode('；', $errors);
+            $result = $this->makeResult(
+                $trigger,
+                'failed',
+                $configuration,
+                0,
+                0,
+                0,
+                0,
+                $errors,
+                $startedAt,
+                [
+                    'directories' => $this->configuredDirectories(),
+                ],
+                $this->workLogManager->buildDetails($details),
+            );
+            $this->logResult($result);
+
+            return $result;
+        }
+
+        $diff = ['upload' => [], 'skip' => [], 'delete' => []];
+        $localFiles = [];
+
+        try {
+            $provider = $this->storageProvider();
+            $localFiles = $this->localFiles();
+            $manifest = $this->readManifest();
+            $diff = $this->diffFromState($localFiles, $manifest);
+
+            $details[] = sprintf('本地文件：共 %d 个。', count($localFiles));
+            $details[] = sprintf('待上传 %d 个，已同步 %d 个，待删除 %d 个。', count($diff['upload']), count($diff['skip']), count($diff['delete']));
+            $details[] = $this->workLogManager->summarizePaths('待上传文件', $diff['upload']);
+            $details[] = $this->workLogManager->summarizePaths('待删除文件', $diff['delete']);
+
+            foreach ($diff['upload'] as $path) {
+                $provider->upload($localFiles[$path]['absolute_path'], $path);
+                $manifest[$path] = [
+                    'hash' => $localFiles[$path]['hash'],
+                    'size' => $localFiles[$path]['size'],
+                ];
+            }
+
+            foreach ($diff['delete'] as $path) {
+                $provider->delete($path);
+                unset($manifest[$path]);
+            }
+
+            $this->writeManifest($manifest);
+            $details[] = '同步完成，Manifest 已更新：'.$this->manifestPath();
+
+            $result = $this->makeResult(
+                $trigger,
+                'success',
+                $configuration,
+                count($diff['upload']),
+                count($diff['skip']),
+                count($diff['delete']),
+                count($localFiles),
+                [],
+                $startedAt,
+                [
+                    'directories' => $this->configuredDirectories(),
+                    'diff' => $diff,
+                ],
+                $this->workLogManager->buildDetails($details),
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+            $details[] = $this->workLogManager->describeException($exception);
+
+            $result = $this->makeResult(
+                $trigger,
+                'failed',
+                $configuration,
+                0,
+                count($diff['skip']),
+                0,
+                count($localFiles),
+                [$exception->getMessage()],
+                $startedAt,
+                [
+                    'directories' => $this->configuredDirectories(),
+                    'diff' => $diff,
+                    'exception' => [
+                        'class' => $exception::class,
+                        'message' => $exception->getMessage(),
+                    ],
+                ],
+                $this->workLogManager->buildDetails($details),
+            );
+        }
+
+        $this->logResult($result);
+
+        return $result;
+    }
+
+    public function clearRemote(string $trigger = 'manual-clear'): SyncResult
+    {
+        $startedAt = CarbonImmutable::now();
+        $configuration = $this->cdnManager->runtimeConfiguration();
+        $details = [
+            '工作类型：清理远程对象存储文件',
+            '触发来源：'.$trigger,
+        ];
+
+        try {
+            $provider = $this->storageProvider();
+            $remoteFiles = $provider->listFiles('');
+            $details[] = sprintf('准备删除远程文件 %d 个。', count($remoteFiles));
+            $details[] = $this->workLogManager->summarizePaths('待删除远程文件', $remoteFiles);
+
+            foreach ($remoteFiles as $path) {
+                $provider->delete($path);
+            }
+
+            $this->writeManifest([]);
+            $details[] = '远程清理完成，本地 Manifest 已重置。';
+
+            $result = $this->makeResult(
+                $trigger,
+                'success',
+                $configuration,
+                0,
+                0,
+                count($remoteFiles),
+                count($remoteFiles),
+                [],
+                $startedAt,
+                [
+                    'remote_files' => $remoteFiles,
+                ],
+                $this->workLogManager->buildDetails($details),
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+            $details[] = $this->workLogManager->describeException($exception);
+            $result = $this->makeResult(
+                $trigger,
+                'failed',
+                $configuration,
+                0,
+                0,
+                0,
+                0,
+                [$exception->getMessage()],
+                $startedAt,
+                [
+                    'exception' => [
+                        'class' => $exception::class,
+                        'message' => $exception->getMessage(),
+                    ],
+                ],
+                $this->workLogManager->buildDetails($details),
+            );
+        }
+
+        $this->logResult($result);
+
+        return $result;
+    }
+
+    private function storageProvider(): StorageProvider
+    {
+        return $this->storageProviderFactory->make();
+    }
+
+    /**
+     * @param  array<string, array{absolute_path: string, hash: string, size: int}>  $localFiles
+     * @param  array<string, array{hash: string, size: int}>  $manifest
+     * @return array<string, array<int, string>>
+     */
+    private function diffFromState(array $localFiles, array $manifest): array
+    {
         $upload = [];
         $skip = [];
         $delete = [];
@@ -56,113 +256,6 @@ class CdnSyncService
             'skip' => array_values($skip),
             'delete' => array_values($delete),
         ];
-    }
-
-    public function syncAll(string $trigger = 'manual'): SyncResult
-    {
-        $startedAt = CarbonImmutable::now();
-        $configuration = $this->cdnManager->configuration();
-        $errors = $this->cdnManager->validateConfiguration();
-
-        if (($configuration['mode'] ?? null) !== CdnMode::STORAGE->value) {
-            $errors[] = '当前不是对象存储模式，无法执行同步。';
-        }
-
-        if (! (bool) ($configuration['sync_enabled'] ?? false)) {
-            $errors[] = '当前未启用自动同步。';
-        }
-
-        if ($errors !== []) {
-            $result = $this->makeResult($trigger, 'failed', $configuration, 0, 0, 0, 0, $errors, $startedAt, ['directories' => $this->configuredDirectories()]);
-            $this->logResult($result);
-
-            return $result;
-        }
-
-        $provider = $this->storageProvider();
-        $diff = $this->getDiff();
-        $localFiles = $this->localFiles();
-        $manifest = $this->readManifest();
-
-        try {
-            foreach ($diff['upload'] as $path) {
-                $provider->upload($localFiles[$path]['absolute_path'], $path);
-                $manifest[$path] = [
-                    'hash' => $localFiles[$path]['hash'],
-                    'size' => $localFiles[$path]['size'],
-                ];
-            }
-
-            foreach ($diff['delete'] as $path) {
-                $provider->delete($path);
-                unset($manifest[$path]);
-            }
-
-            $this->writeManifest($manifest);
-
-            $result = $this->makeResult(
-                $trigger,
-                'success',
-                $configuration,
-                count($diff['upload']),
-                count($diff['skip']),
-                count($diff['delete']),
-                count($localFiles),
-                [],
-                $startedAt,
-                ['directories' => $this->configuredDirectories()],
-            );
-        } catch (Throwable $exception) {
-            report($exception);
-
-            $result = $this->makeResult(
-                $trigger,
-                'failed',
-                $configuration,
-                0,
-                count($diff['skip']),
-                0,
-                count($localFiles),
-                [$exception->getMessage()],
-                $startedAt,
-                ['directories' => $this->configuredDirectories()],
-            );
-        }
-
-        $this->logResult($result);
-
-        return $result;
-    }
-
-    public function clearRemote(string $trigger = 'manual-clear'): SyncResult
-    {
-        $startedAt = CarbonImmutable::now();
-        $configuration = $this->cdnManager->configuration();
-
-        try {
-            $provider = $this->storageProvider();
-            $remoteFiles = $provider->listFiles('');
-
-            foreach ($remoteFiles as $path) {
-                $provider->delete($path);
-            }
-
-            $this->writeManifest([]);
-
-            $result = $this->makeResult($trigger, 'success', $configuration, 0, 0, count($remoteFiles), count($remoteFiles), [], $startedAt, []);
-        } catch (Throwable $exception) {
-            report($exception);
-            $result = $this->makeResult($trigger, 'failed', $configuration, 0, 0, 0, 0, [$exception->getMessage()], $startedAt, []);
-        }
-
-        $this->logResult($result);
-
-        return $result;
-    }
-
-    private function storageProvider(): StorageProvider
-    {
-        return $this->storageProviderFactory->make();
     }
 
     /**
@@ -286,6 +379,7 @@ class CdnSyncService
         array $errors,
         CarbonImmutable $startedAt,
         array $context,
+        string $details,
     ): SyncResult {
         $finishedAt = CarbonImmutable::now();
         $durationMs = max(0, $finishedAt->diffInMilliseconds($startedAt));
@@ -301,6 +395,7 @@ class CdnSyncService
             $totalCount,
             $durationMs,
             $errors,
+            $details,
             $context,
             $startedAt,
             $finishedAt,
@@ -309,10 +404,6 @@ class CdnSyncService
 
     private function logResult(SyncResult $result): void
     {
-        if (! class_exists(CdnSyncLog::class)) {
-            return;
-        }
-
-        CdnSyncLog::query()->create($result->toLogPayload());
+        $this->workLogManager->record($result->toLogPayload());
     }
 }

@@ -6,8 +6,11 @@ use App\Jobs\SyncCdnFilesJob;
 use App\Jobs\ProcessStaticSiteBuildJob;
 use App\Models\Article;
 use App\Models\Channel;
+use App\Support\Cdn\CdnWorkLogManager;
+use Carbon\CarbonImmutable;
 use Illuminate\Filesystem\Filesystem;
 use RuntimeException;
+use Throwable;
 
 class StaticPageBuilder
 {
@@ -17,6 +20,7 @@ class StaticPageBuilder
         private readonly CommunityViewData $viewData,
         private readonly Filesystem $filesystem,
         private readonly \App\Support\Cdn\CdnSyncService $cdnSyncService,
+        private readonly CdnWorkLogManager $cdnWorkLogManager,
     ) {}
 
     public function buildAll(?callable $progress = null): array
@@ -26,15 +30,89 @@ class StaticPageBuilder
 
     public function buildPayload(array $payload, ?callable $progress = null): array
     {
+        $startedAt = CarbonImmutable::now();
+
         if (! config('community.static.enabled')) {
+            $this->cdnWorkLogManager->record([
+                'trigger' => 'build:skipped',
+                'status' => 'skipped',
+                'mode' => (string) config('cdn.mode', 'origin'),
+                'provider' => config('cdn.storage.provider'),
+                'message' => '静态构建已跳过：静态站点功能未启用。',
+                'details' => $this->cdnWorkLogManager->buildDetails([
+                    '工作类型：静态页面构建',
+                    '构建方式：跳过',
+                    '原因：community.static.enabled=false',
+                ]),
+                'started_at' => $startedAt,
+                'finished_at' => CarbonImmutable::now(),
+            ]);
+
             return $this->makeSummary();
         }
 
         $normalized = $this->normalizePayload($payload);
 
-        return $normalized['full']
-            ? $this->buildFull($progress)
-            : $this->buildIncremental($normalized, $progress);
+        try {
+            $summary = $normalized['full']
+                ? $this->buildFull($progress)
+                : $this->buildIncremental($normalized, $progress);
+
+            $this->cdnWorkLogManager->record([
+                'trigger' => $normalized['full'] ? 'build:full' : 'build:incremental',
+                'status' => 'success',
+                'mode' => (string) config('cdn.mode', 'origin'),
+                'provider' => config('cdn.storage.provider'),
+                'total_count' => (int) (($summary['built'] ?? 0) + ($summary['skipped'] ?? 0) + ($summary['deleted'] ?? 0)),
+                'uploaded_count' => (int) ($summary['built'] ?? 0),
+                'skipped_count' => (int) ($summary['skipped'] ?? 0),
+                'deleted_count' => (int) ($summary['deleted'] ?? 0),
+                'duration_ms' => max(0, CarbonImmutable::now()->diffInMilliseconds($startedAt)),
+                'message' => $this->summaryMessage($summary),
+                'details' => $this->cdnWorkLogManager->buildDetails([
+                    '工作类型：静态页面构建',
+                    '构建方式：'.($normalized['full'] ? '全量构建' : '增量构建'),
+                    '构建结果：'.$this->summaryMessage($summary),
+                    '输出目录：'.$this->outputRoot(),
+                    '请求载荷：'.json_encode($normalized, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                ]),
+                'context' => [
+                    'build_payload' => $normalized,
+                    'summary' => $summary,
+                ],
+                'started_at' => $startedAt,
+                'finished_at' => CarbonImmutable::now(),
+            ]);
+
+            return $summary;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->cdnWorkLogManager->record([
+                'trigger' => $normalized['full'] ? 'build:full' : 'build:incremental',
+                'status' => 'failed',
+                'mode' => (string) config('cdn.mode', 'origin'),
+                'provider' => config('cdn.storage.provider'),
+                'duration_ms' => max(0, CarbonImmutable::now()->diffInMilliseconds($startedAt)),
+                'message' => '静态构建失败：'.$exception->getMessage(),
+                'details' => $this->cdnWorkLogManager->buildDetails([
+                    '工作类型：静态页面构建',
+                    '构建方式：'.($normalized['full'] ? '全量构建' : '增量构建'),
+                    $this->cdnWorkLogManager->describeException($exception),
+                ]),
+                'context' => [
+                    'build_payload' => $normalized,
+                    'exception' => [
+                        'class' => $exception::class,
+                        'message' => $exception->getMessage(),
+                    ],
+                ],
+                'started_at' => $startedAt,
+                'finished_at' => CarbonImmutable::now(),
+            ]);
+
+            throw $exception;
+        }
     }
 
     public function rebuildAll(): void
@@ -48,7 +126,26 @@ class StaticPageBuilder
             return;
         }
 
-        ProcessStaticSiteBuildJob::dispatch($this->normalizePayload($payload))->onQueue($this->queueName());
+        $normalized = $this->normalizePayload($payload);
+        ProcessStaticSiteBuildJob::dispatch($normalized)->onQueue($this->queueName());
+
+        $this->cdnWorkLogManager->record([
+            'trigger' => 'build:queued',
+            'status' => 'queued',
+            'mode' => (string) config('cdn.mode', 'origin'),
+            'provider' => config('cdn.storage.provider'),
+            'message' => '静态构建任务已加入队列。',
+            'details' => $this->cdnWorkLogManager->buildDetails([
+                '工作类型：静态页面构建',
+                '构建方式：排队执行',
+                '队列名称：'.$this->queueName(),
+                '请求载荷：'.json_encode($normalized, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ]),
+            'context' => [
+                'build_payload' => $normalized,
+                'queue' => $this->queueName(),
+            ],
+        ]);
     }
 
     public function captureArticleState(?Article $article): array
@@ -301,7 +398,8 @@ class StaticPageBuilder
         }
 
         $this->saveManifest($manifest);
-        $this->dispatchCdnSyncIfNeeded();
+        $syncQueued = $this->dispatchCdnSyncIfNeeded();
+        $summary['cdn_sync_queued'] = $syncQueued;
         $this->notify($progress, $this->summaryMessage($summary));
 
         return $summary;
@@ -393,7 +491,8 @@ class StaticPageBuilder
         }
 
         $this->saveManifest($manifest);
-        $this->dispatchCdnSyncIfNeeded();
+        $syncQueued = $this->dispatchCdnSyncIfNeeded();
+        $summary['cdn_sync_queued'] = $syncQueued;
         $this->notify($progress, $this->summaryMessage($summary));
 
         return $summary;
@@ -420,13 +519,15 @@ class StaticPageBuilder
         return $normalized;
     }
 
-    private function dispatchCdnSyncIfNeeded(): void
+    private function dispatchCdnSyncIfNeeded(): bool
     {
         if (! $this->cdnSyncService->shouldSyncOnBuild()) {
-            return;
+            return false;
         }
 
         SyncCdnFilesJob::dispatch('build');
+
+        return true;
     }
 
     private function normalizeIntegerList(mixed $values): array

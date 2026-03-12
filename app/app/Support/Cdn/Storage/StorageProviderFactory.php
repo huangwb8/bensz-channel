@@ -17,6 +17,14 @@ class StorageProviderFactory
     {
         $configuration = $this->cdnManager->storageConfiguration();
 
+        return $this->makeFromConfiguration($configuration);
+    }
+
+    /**
+     * @param  array<string, mixed>  $configuration
+     */
+    public function makeFromConfiguration(array $configuration): StorageProvider
+    {
         if ($configuration === []) {
             throw new RuntimeException('当前 CDN 未配置对象存储模式。');
         }

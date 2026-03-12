@@ -3,10 +3,13 @@
 namespace Tests\Unit\Support;
 
 use App\Enums\CdnMode;
+use App\Models\CdnSyncLog;
 use App\Models\SiteSetting;
 use App\Support\Cdn\CdnSyncService;
+use App\Support\Cdn\Storage\ConnectionTestResult;
 use App\Support\Cdn\Storage\StorageProvider;
 use App\Support\Cdn\Storage\StorageProviderFactory;
+use App\Support\SiteSettingsManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
@@ -36,16 +39,30 @@ class CdnSyncServiceTest extends TestCase
             'cdn_storage_bucket' => 'bucket-name',
             'cdn_storage_region' => 'auto',
             'cdn_storage_endpoint' => 'https://oss.example.com',
+            'cdn_is_active' => true,
+            'cdn_applied_snapshot' => json_encode([
+                'mode' => CdnMode::STORAGE->value,
+                'asset_url' => 'https://assets.example.com',
+                'storage_provider' => 'dogecloud',
+                'storage_access_key' => 'access-key',
+                'storage_secret_key' => 'secret-key',
+                'storage_bucket' => 'bucket-name',
+                'storage_region' => 'auto',
+                'storage_endpoint' => 'https://oss.example.com',
+                'sync_enabled' => true,
+                'sync_on_build' => true,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
             'cdn_sync_enabled' => true,
             'cdn_sync_on_build' => true,
         ]);
 
         config([
-            'cdn.mode' => CdnMode::STORAGE->value,
-            'cdn.sync.enabled' => true,
             'cdn.sync.directories' => [$this->testDirectory],
             'cdn.sync.exclude_patterns' => [],
         ]);
+
+        app(SiteSettingsManager::class)->forgetCached();
+        app(SiteSettingsManager::class)->applyConfiguredSettings();
 
         File::ensureDirectoryExists(public_path($this->testDirectory.'/assets'));
         File::put(public_path($this->testDirectory.'/assets/app.js'), 'console.log("v1");');
@@ -89,9 +106,9 @@ class CdnSyncServiceTest extends TestCase
                 return 'https://assets.example.com/'.ltrim($remotePath, '/');
             }
 
-            public function validateCredentials(): bool
+            public function testConnection(): ConnectionTestResult
             {
-                return true;
+                return new ConnectionTestResult(true, 'ok');
             }
         };
 
@@ -128,5 +145,10 @@ class CdnSyncServiceTest extends TestCase
         $this->assertSame(0, $third->uploadedCount);
         $this->assertSame(1, $third->deletedCount);
         $this->assertSame([$this->testDirectory.'/assets/app.js'], $provider->deleted);
+
+        $log = CdnSyncLog::query()->latest('id')->firstOrFail();
+        $this->assertSame('manual', $log->trigger);
+        $this->assertSame('success', $log->status);
+        $this->assertStringContainsString('待删除文件', (string) $log->details);
     }
 }
