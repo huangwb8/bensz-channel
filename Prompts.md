@@ -25,6 +25,16 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 
 ---
 
+CDN优化：
+
+- CDN目前不能正常连通。 我尝试时还有一个error：`Class "League\Flysystem\AwsS3V3\PortableVisibilityConverter" not found`。 
+- 我希望保存配置后不要马上应用； 而是加`应用CDN`、`停止CDN`的按钮，让用户可以随意控制它的使用。
+- 我希望日志可以更加地详细； 如果有任何错误，包括测试失败，具体的原因都要在日志里体现。因为，下面不要搞`同步日志`，而要搞`工作日志`；各种工作里的细节都要在日志里体现。
+
+使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。docker重新布署后供我审查。
+
+---
+
 目前，本项目的CDN，不是有一个单独的设置界面吗？怎么还是在站点设置里？问题出在哪？使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。docker重新布署后供我审查。
 
 ---
