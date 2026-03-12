@@ -25,6 +25,10 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 
 ---
 
+admin/devtools右上角的文章管理、频道管理、用户管理等按钮应该图标化。参考其它管理页面。 使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。
+
+---
+
 目前，CDN可配置的内容太少了。 为什么？
 
 ---
