@@ -133,6 +133,9 @@
                                     <a href="{{ route('admin.site-settings.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
                                         ⚙️ 站点设置
                                     </a>
+                                    <a href="{{ route('admin.cdn-settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
+                                        ☁️ CDN 设置
+                                    </a>
                                     <a href="{{ route('admin.articles.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
                                         📝 管理文章
                                     </a>

@@ -22,6 +22,7 @@ class AdminNavigationTest extends TestCase
 
         $labels = [
             '站点设置',
+            'CDN 设置',
             '管理文章',
             '管理频道',
             '管理用户',
