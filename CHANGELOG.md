@@ -6,8 +6,12 @@
 
 ## [Unreleased]
 
+## [1.40.0] - 2026-03-15
+
 ### Added（新增）
 
+- 新增移动端阅读时顶部导航自动隐藏功能：`app/resources/js/app.js` 现会在移动端（≤767px）阅读文章时监听滚动方向，向下滚动超过 14px 且位移超过 96px 时自动隐藏顶部导航栏，向上滚动超过 10px 时立即还原；以 `requestAnimationFrame` 节流，支持 `prefers-reduced-motion`；`article` 标签添加 `data-mobile-reading-page`、`header` 添加 `data-top-nav` 作为 JS 挂载点；同步更新 `ArticleTocTest` 回归断言
+- 新增 `.btn-warning` 与 `.btn-danger` 统一按钮组件类：`app/resources/css/app.css` 现提供与 `.btn-primary`/`.btn-secondary` 风格一致的警告与危险按钮样式，支持亮色/暗色双主题；同步更新 `CdnSettingsTest` 与 `ThemeStylesheetTest` 回归断言
 - 在 README 中补充了 Agent Skill 特色功能说明：在"核心特性"中新增"AI 工具集成"条目，在"文档"部分新增 [Agent Skill 使用指南](skills/bensz-channel-devtools/README.md) 链接，介绍通过 Claude Code/Codex CLI 远程管理频道、文章、评论、用户等内容的能力；同步更新了 README_EN.md
 - 在 README 中新增"Agent Skill 安装"章节：引导用户通过 [Bensz Skills](https://github.com/huangwb8/skills) 项目安装本项目的 Agent Skill，提供完整的安装步骤，明确说明 `install-bensz-skills --source https://github.com/huangwb8/bensz-channel/tree/main/skills` 命令是在 Claude Code/Codex CLI 中输入的（而非 shell 命令）；同步更新了 README_EN.md
 - 在 README 中新增 Star 呼吁章节：在"核心特性"之后、"快速开始"之前添加了友好的 Star 呼吁，说明开发维护不易，鼓励用户点 Star 支持项目；同时嵌入了 Star History Chart 可视化展示项目增长趋势；同步更新了 README_EN.md
@@ -26,6 +30,8 @@
 - 优化了暗色主题灰阶渐变支持：`app/resources/css/app.css` 现补充 `from-gray-50` 与 `to-white` 的夜间模式覆盖规则，确保后台创建表单等灰阶渐变容器在暗色主题下保持一致的深色视觉；`app/tests/Feature/Static/ThemeStylesheetTest.php` 同步增加回归断言
 - 补全了透明蓝色背景的暗色主题覆盖：`app/resources/css/app.css` 现新增 `bg-blue-50/50` 的夜间模式映射，确保管理员 SMTP 配置中的提示小栏在暗色主题下保持正确的强调底色；`app/tests/Feature/Static/ThemeStylesheetTest.php` 同步增加断言
 - 优化了账户设置页两步验证初始化区的暗色主题表现：`app/resources/views/settings/account.blade.php` 与 `app/resources/css/app.css` 现将二维码容器、手动密钥卡片与验证确认卡片改为主题感知样式，避免夜间模式下出现大面积浅底；相关回归已补到 `app/tests/Feature/Static/ThemeStylesheetTest.php` 与 `app/tests/Feature/Settings/AccountSettingsTest.php`
+- 统一了 CDN 操作按钮样式：`app/resources/views/admin/cdn-settings/index.blade.php` 中"停止 CDN"与"清空远程"按钮改为使用 `.btn-warning`/`.btn-danger` 组件类，与页面其他按钮风格保持一致
+- 更新了项目版本号：`app/config.toml` 已同步推进到 `1.40.0`
 
 ### Fixed（修复）
 
