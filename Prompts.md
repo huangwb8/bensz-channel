@@ -6,7 +6,7 @@
 - 发布release
 
 ```
-/git-commit;  创建tag；/git-publish-release 。 然后触发一次docker image构建的github action，确实地将最新的image推送至 docker hub 。  
+/git-commit;  创建tag；/git-publish-release 。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub 。  
 ```
 
 - 保持skill的最新兼容性
@@ -22,6 +22,15 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 ```
 
 # 日常
+
+---
+
+管理评论优化
+
+- 现在，每个评论只有查看、隐藏和删除。 应该有回复按钮，这样，管理员可以直接在当前界面就回复； 而不需要直接回去源文档的评论区才能回复
+- 普通用户具有管理自己发起的评论、发起评论后续新评论的权限。 这是有有用的——比如，有人艾特他，在骂他，他就可以直接删除这个评论。 这样把部分能力给到普通用户，管理员的负担也会大幅减少。
+- 普通用户不能修改、删除其它用户发起的评论。
+- 管理员可以管理任意用户（包括管理员本身）的评论
 
 ---
 
