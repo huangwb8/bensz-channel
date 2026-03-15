@@ -33,6 +33,23 @@
 - 修复了频道管理页夜间模式下新增频道表单发白的问题：此前 `from-gray-50 → to-white` 渐变未被暗色主题覆盖，导致表单背景保持浅色、白色标签对比度异常；现在暗色模式会自动映射到深色渐变，频道管理与同类后台表单显示恢复正常
 - 修复了首次仅保存 CDN 设置时站点配置写入失败的问题：`app/app/Support/SiteSettingsManager.php` 现会为未显式提交的 `article_image_max_mb` 回退到运行时默认值，避免 `site_settings` 首次插入时触发非空约束；`app/tests/Feature/Admin/CdnSettingsTest.php` 同步增加断言覆盖该回归
 
+## [1.39.0] - 2026-03-15
+
+### Added（新增）
+
+- 新增了评论线程自管理能力：`app/app/Http/Controllers/CommentManagementController.php`、`app/app/Models/Comment.php` 与 `app/resources/views/articles/partials/comment-item.blade.php` 现允许普通用户删除自己发布的评论，以及自己评论下继续展开的后续回复；管理员仍可管理任意用户评论
+- 新增了后台评论页直接回复入口：`app/resources/views/admin/comments/index.blade.php` 与 `app/app/Http/Controllers/CommentController.php` 现支持管理员在评论管理页内直接回复评论，并在提交后返回当前管理页面
+
+### Changed（变更）
+
+- 优化了文章页评论视图数据：`app/app/Support/CommunityViewData.php` 与 `app/resources/views/articles/show.blade.php` 现会按当前登录用户计算可管理评论集合，只在有权限时展示删除操作
+- 更新了评论治理文档与版本号：`docs/开发者文档.md` 与 `app/config.toml` 已同步补充后台原地回复、普通用户评论线程治理边界，并将项目版本推进到 `1.39.0`
+
+### Fixed（修复）
+
+- 修复了管理员必须回到文章详情页才能回复评论的问题：现在后台评论管理页即可完成回复，减少往返切换
+- 修复了普通用户无法自助清理自己评论链后续回复的问题：现在普通用户可直接删除自己评论及其下游回复，越权删除仍会被系统拒绝
+
 ## [1.38.0] - 2026-03-15
 
 ### Added（新增）

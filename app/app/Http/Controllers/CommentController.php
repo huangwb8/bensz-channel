@@ -32,6 +32,7 @@ class CommentController extends Controller
         $validated = $request->validate([
             'body' => ['required', 'string', 'max:5000'],
             'parent_id' => ['nullable', 'integer', 'exists:comments,id'],
+            'redirect_back' => ['nullable', 'boolean'],
         ], [
             'body.required' => '评论内容不能为空。',
         ]);
@@ -85,6 +86,10 @@ class CommentController extends Controller
         $article->refreshCommentCount();
 
         $staticPageBuilder->rebuildAfterComment($article->fresh(['channel']));
+
+        if (($validated['redirect_back'] ?? false) && $request->headers->has('referer')) {
+            return redirect()->back()->with('status', '评论已发布。');
+        }
 
         return to_route('articles.show', [$article->channel, $article])->with('status', '评论已发布。');
     }

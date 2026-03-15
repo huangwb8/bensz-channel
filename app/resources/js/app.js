@@ -634,3 +634,64 @@ if (adminUsersPage) {
 }
 
 initializeBulkSelection(document.querySelector('[data-admin-articles-page]'));
+
+// 评论回复面板切换（事件委托，支持页面内所有评论项）
+document.addEventListener('click', (event) => {
+    // 展开/收起回复表单
+    const replyToggle = event.target instanceof Element
+        ? event.target.closest('[data-reply-toggle]')
+        : null;
+
+    if (replyToggle) {
+        const commentCard = replyToggle.closest('[data-comment-card]');
+
+        if (! commentCard) {
+            return;
+        }
+
+        const panel = commentCard.querySelector('[data-reply-panel]');
+
+        if (! panel) {
+            return;
+        }
+
+        const isExpanded = replyToggle.getAttribute('aria-expanded') === 'true';
+
+        panel.hidden = isExpanded;
+        replyToggle.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+
+        if (! isExpanded) {
+            const textarea = panel.querySelector('textarea');
+
+            if (textarea instanceof HTMLTextAreaElement) {
+                textarea.focus();
+            }
+        }
+
+        return;
+    }
+
+    // 取消回复
+    const replyCancel = event.target instanceof Element
+        ? event.target.closest('[data-reply-cancel]')
+        : null;
+
+    if (replyCancel) {
+        const commentCard = replyCancel.closest('[data-comment-card]');
+
+        if (! commentCard) {
+            return;
+        }
+
+        const panel = commentCard.querySelector('[data-reply-panel]');
+        const toggle = commentCard.querySelector('[data-reply-toggle]');
+
+        if (panel) {
+            panel.hidden = true;
+        }
+
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    }
+});

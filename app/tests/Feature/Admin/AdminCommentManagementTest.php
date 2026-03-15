@@ -51,7 +51,42 @@ class AdminCommentManagementTest extends TestCase
             ->assertDontSee('第一条可见评论')
             ->assertSee('仅隐藏')
             ->assertSee('评论作者')
-            ->assertSee($article->title);
+            ->assertSee($article->title)
+            ->assertSee('回复评论');
+    }
+
+    public function test_admin_can_reply_from_comment_management_page_and_return_back(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        [$article] = $this->createArticleFixture();
+        $member = User::factory()->create([
+            'name' => '普通成员',
+            'role' => User::ROLE_MEMBER,
+        ]);
+
+        $comment = Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $member->id,
+            'markdown_body' => '需要后台回复的评论',
+            'html_body' => '<p>需要后台回复的评论</p>',
+            'is_visible' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.comments.index'))
+            ->post(route('articles.comments.store', $article), [
+                'body' => '管理员在后台直接回复',
+                'parent_id' => $comment->id,
+                'redirect_back' => '1',
+            ])
+            ->assertRedirect(route('admin.comments.index'));
+
+        $this->assertDatabaseHas('comments', [
+            'article_id' => $article->id,
+            'user_id' => $admin->id,
+            'parent_id' => $comment->id,
+            'markdown_body' => '管理员在后台直接回复',
+        ]);
     }
 
     public function test_admin_can_toggle_comment_visibility_and_refresh_visible_comment_count(): void

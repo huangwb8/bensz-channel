@@ -111,6 +111,9 @@ class CommunityViewData
                 ->map(fn (mixed $id): int => (int) $id)
                 ->all()
             : [];
+        $manageableCommentIds = $currentUser instanceof User
+            ? $this->collectManageableCommentIds($commentTree, $currentUser)
+            : [];
 
         return [
             ...$this->chrome($article->channel, $article),
@@ -121,6 +124,7 @@ class CommunityViewData
             'commentTree' => $commentTree,
             'commentCount' => $comments->count(),
             'subscribedCommentIds' => $subscribedCommentIds,
+            'manageableCommentIds' => $manageableCommentIds,
             'relatedArticles' => Article::query()
                 ->published()
                 ->where('channel_id', $article->channel_id)
@@ -151,6 +155,36 @@ class CommunityViewData
         };
 
         return $build();
+    }
+
+    /**
+     * @param  Collection<int, Comment>  $comments
+     * @return list<int>
+     */
+    private function collectManageableCommentIds(Collection $comments, User $user, bool $inheritedManage = false): array
+    {
+        $manageableCommentIds = [];
+
+        foreach ($comments as $comment) {
+            $canManageCurrent = $user->isAdmin()
+                || $inheritedManage
+                || $comment->user_id === $user->id;
+
+            if ($canManageCurrent) {
+                $manageableCommentIds[] = $comment->id;
+            }
+
+            $manageableCommentIds = [
+                ...$manageableCommentIds,
+                ...$this->collectManageableCommentIds(
+                    $comment->threadChildren,
+                    $user,
+                    $canManageCurrent,
+                ),
+            ];
+        }
+
+        return array_values(array_unique($manageableCommentIds));
     }
 
     public function chrome(?Channel $currentChannel = null, ?Article $currentArticle = null): array

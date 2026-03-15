@@ -58,4 +58,42 @@ class Comment extends Model
     {
         return $this->hasMany(CommentSubscription::class);
     }
+
+    public function canBeManagedBy(?User $user): bool
+    {
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        if ($user->isAdmin() || $this->user_id === $user->id) {
+            return true;
+        }
+
+        $parentId = $this->parent_id;
+        $seenParentIds = [];
+
+        while ($parentId !== null) {
+            if (isset($seenParentIds[$parentId])) {
+                return false;
+            }
+
+            $seenParentIds[$parentId] = true;
+
+            $parent = self::query()
+                ->select(['id', 'user_id', 'parent_id'])
+                ->find($parentId);
+
+            if (! $parent instanceof self) {
+                return false;
+            }
+
+            if ($parent->user_id === $user->id) {
+                return true;
+            }
+
+            $parentId = $parent->parent_id;
+        }
+
+        return false;
+    }
 }

@@ -469,6 +469,28 @@
         @apply space-y-3;
     }
 
+    /* 评论输入框容器 - 统一边框/背景/焦点样式 */
+    .comment-input-box {
+        @apply rounded-xl overflow-hidden transition-all duration-200;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface-elevated);
+
+        &:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        & textarea {
+            @apply block w-full px-4 pt-3.5 pb-2 text-sm outline-none placeholder:text-gray-400 bg-transparent resize-y;
+            color: var(--color-text-primary);
+        }
+
+        & .comment-input-toolbar {
+            @apply flex items-center justify-between gap-3 px-3 py-2;
+            border-top: 1px solid var(--color-border-light);
+        }
+    }
+
     .markdown-upload-meta {
         @apply flex flex-col gap-2 text-xs sm:flex-row sm:items-start sm:justify-between;
     }

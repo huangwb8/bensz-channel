@@ -6,7 +6,7 @@
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <h2 class="text-xl font-semibold text-gray-900">评论管理</h2>
-                    <p class="mt-1 text-sm text-gray-500">集中查看全站评论，支持按内容、用户与文章筛选，并可快速显示、隐藏或删除。</p>
+                    <p class="mt-1 text-sm text-gray-500">集中查看全站评论，支持按内容、用户与文章筛选，并可快速回复、显示、隐藏或删除。</p>
                 </div>
                 <div class="icon-action-group">
                     <x-icon-button :href="route('admin.articles.index')" icon="document" label="文章管理" title="文章管理" />
@@ -74,43 +74,78 @@
                             <p class="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">{{ $comment->markdown_body }}</p>
                         </div>
 
-                        <div class="icon-action-group shrink-0">
-                            <x-icon-button
-                                :href="route('articles.show', [$comment->article->channel, $comment->article]).'#comments'"
-                                icon="eye"
-                                label="查看评论"
-                                title="查看评论"
-                                :aria-label="'查看评论：'.$comment->article->title"
-                            />
-                            <form action="{{ route('admin.comments.visibility', $comment) }}" method="POST">
-                                @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="q" value="{{ $filters['q'] }}">
-                                <input type="hidden" name="visibility" value="{{ $filters['visibility'] }}">
-                                <input type="hidden" name="is_visible" value="{{ $comment->is_visible ? '0' : '1' }}">
+                        <div class="shrink-0 space-y-3">
+                            <div class="icon-action-group">
                                 <x-icon-button
-                                    icon="chat-bubble-left-right"
-                                    :label="$comment->is_visible ? '隐藏评论' : '显示评论'"
-                                    :title="$comment->is_visible ? '隐藏评论' : '显示评论'"
-                                    :aria-label="($comment->is_visible ? '隐藏评论：' : '显示评论：').$comment->article->title"
-                                    :variant="$comment->is_visible ? 'default' : 'primary'"
-                                    type="submit"
+                                    :href="route('articles.show', [$comment->article->channel, $comment->article]).'#comments'"
+                                    icon="eye"
+                                    label="查看评论"
+                                    title="查看评论"
+                                    :aria-label="'查看评论：'.$comment->article->title"
                                 />
-                            </form>
-                            <form action="{{ route('admin.comments.destroy', $comment) }}" method="POST" onsubmit="return confirm('确认删除这条评论吗？删除后不可恢复。');">
-                                @csrf
-                                @method('DELETE')
-                                <input type="hidden" name="q" value="{{ $filters['q'] }}">
-                                <input type="hidden" name="visibility" value="{{ $filters['visibility'] }}">
-                                <x-icon-button
-                                    icon="trash"
-                                    label="删除评论"
-                                    title="删除评论"
-                                    :aria-label="'删除评论：'.$comment->article->title"
-                                    variant="danger"
-                                    type="submit"
-                                />
-                            </form>
+                                <form action="{{ route('admin.comments.visibility', $comment) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                                    <input type="hidden" name="visibility" value="{{ $filters['visibility'] }}">
+                                    <input type="hidden" name="is_visible" value="{{ $comment->is_visible ? '0' : '1' }}">
+                                    <x-icon-button
+                                        icon="chat-bubble-left-right"
+                                        :label="$comment->is_visible ? '隐藏评论' : '显示评论'"
+                                        :title="$comment->is_visible ? '隐藏评论' : '显示评论'"
+                                        :aria-label="($comment->is_visible ? '隐藏评论：' : '显示评论：').$comment->article->title"
+                                        :variant="$comment->is_visible ? 'default' : 'primary'"
+                                        type="submit"
+                                    />
+                                </form>
+                                <form action="{{ route('admin.comments.destroy', $comment) }}" method="POST" onsubmit="return confirm('确认删除这条评论吗？删除后不可恢复。');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                                    <input type="hidden" name="visibility" value="{{ $filters['visibility'] }}">
+                                    <x-icon-button
+                                        icon="trash"
+                                        label="删除评论"
+                                        title="删除评论"
+                                        :aria-label="'删除评论：'.$comment->article->title"
+                                        variant="danger"
+                                        type="submit"
+                                    />
+                                </form>
+                            </div>
+
+                            <details class="w-full rounded-xl border border-gray-200 bg-gray-50 p-3">
+                                <summary class="cursor-pointer list-none text-sm font-medium text-gray-700">
+                                    回复评论
+                                </summary>
+                                <form action="{{ route('articles.comments.store', $comment->article) }}" method="POST" class="mt-3 space-y-3">
+                                    @csrf
+                                    <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+                                    <input type="hidden" name="redirect_back" value="1">
+                                    <div class="markdown-upload-shell" data-markdown-upload-shell>
+                                        <textarea
+                                            name="body"
+                                            rows="3"
+                                            class="input-field"
+                                            placeholder="直接在这里回复这条评论..."
+                                            data-image-upload-url="{{ route('uploads.images.store') }}"
+                                            data-video-upload-url="{{ route('uploads.videos.store') }}"
+                                            data-upload-context="comment"
+                                            data-image-upload-label="评论图片"
+                                            data-video-upload-label="评论视频"
+                                        ></textarea>
+                                        <div class="markdown-upload-meta">
+                                            <p class="markdown-upload-hint">支持 Markdown，可继续粘贴图片或视频。</p>
+                                            <p class="markdown-upload-status" data-markdown-upload-status aria-live="polite" hidden></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-end">
+                                        <button type="submit" class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700">
+                                            提交回复
+                                        </button>
+                                    </div>
+                                </form>
+                            </details>
                         </div>
                     </div>
                 </article>

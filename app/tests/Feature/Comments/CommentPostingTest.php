@@ -126,6 +126,144 @@ class CommentPostingTest extends TestCase
             ->assertSee('暂停此评论后续提醒');
     }
 
+    public function test_member_can_delete_their_own_comment(): void
+    {
+        [$article] = $this->createArticleFixture();
+        $member = User::factory()->create(['role' => User::ROLE_MEMBER]);
+
+        $comment = Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $member->id,
+            'markdown_body' => '这是我自己的评论',
+            'html_body' => '<p>这是我自己的评论</p>',
+            'is_visible' => true,
+        ]);
+
+        $article->refreshCommentCount();
+
+        $this->actingAs($member)
+            ->delete(route('comments.destroy', $comment))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('comments', [
+            'id' => $comment->id,
+        ]);
+        $this->assertSame(0, $article->fresh()->comment_count);
+    }
+
+    public function test_member_can_delete_follow_up_reply_under_their_comment(): void
+    {
+        [$article] = $this->createArticleFixture();
+        $owner = User::factory()->create(['role' => User::ROLE_MEMBER]);
+        $other = User::factory()->create(['role' => User::ROLE_MEMBER]);
+
+        $rootComment = Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $owner->id,
+            'parent_id' => null,
+            'root_id' => null,
+            'markdown_body' => '我发起的评论',
+            'html_body' => '<p>我发起的评论</p>',
+            'is_visible' => true,
+        ]);
+        $rootComment->forceFill(['root_id' => $rootComment->id])->save();
+
+        $reply = Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $other->id,
+            'parent_id' => $rootComment->id,
+            'root_id' => $rootComment->id,
+            'markdown_body' => '@'.$owner->name.' 这是一条后续回复',
+            'html_body' => '<p>@'.$owner->name.' 这是一条后续回复</p>',
+            'is_visible' => true,
+        ]);
+
+        $article->refreshCommentCount();
+
+        $this->actingAs($owner)
+            ->delete(route('comments.destroy', $reply))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('comments', [
+            'id' => $reply->id,
+        ]);
+        $this->assertSame(1, $article->fresh()->comment_count);
+    }
+
+    public function test_member_cannot_delete_unrelated_comment(): void
+    {
+        [$article] = $this->createArticleFixture();
+        $member = User::factory()->create(['role' => User::ROLE_MEMBER]);
+        $other = User::factory()->create(['role' => User::ROLE_MEMBER]);
+
+        $comment = Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $other->id,
+            'markdown_body' => '与你无关的评论',
+            'html_body' => '<p>与你无关的评论</p>',
+            'is_visible' => true,
+        ]);
+
+        $this->actingAs($member)
+            ->delete(route('comments.destroy', $comment))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('comments', [
+            'id' => $comment->id,
+        ]);
+    }
+
+    public function test_article_page_only_renders_delete_action_for_manageable_comments(): void
+    {
+        [$article] = $this->createArticleFixture();
+        $owner = User::factory()->create([
+            'name' => '楼主',
+            'role' => User::ROLE_MEMBER,
+        ]);
+        $other = User::factory()->create([
+            'name' => '其他成员',
+            'role' => User::ROLE_MEMBER,
+        ]);
+
+        $rootComment = Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $owner->id,
+            'parent_id' => null,
+            'root_id' => null,
+            'markdown_body' => '楼主评论',
+            'html_body' => '<p>楼主评论</p>',
+            'is_visible' => true,
+        ]);
+        $rootComment->forceFill(['root_id' => $rootComment->id])->save();
+
+        Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $other->id,
+            'parent_id' => $rootComment->id,
+            'root_id' => $rootComment->id,
+            'markdown_body' => '楼主评论下的回复',
+            'html_body' => '<p>楼主评论下的回复</p>',
+            'is_visible' => true,
+        ]);
+
+        Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $other->id,
+            'parent_id' => null,
+            'root_id' => null,
+            'markdown_body' => '无关评论',
+            'html_body' => '<p>无关评论</p>',
+            'is_visible' => true,
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('articles.show', [$article->channel, $article]))
+            ->assertOk()
+            ->assertSee('删除评论：楼主评论')
+            ->assertSee('删除评论：楼主评论下的回复')
+            ->assertDontSee('删除评论：无关评论');
+    }
+
     private function createArticleFixture(): array
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);

@@ -141,34 +141,48 @@
         </div>
 
         @auth
-            <form action="{{ route('articles.comments.store', $article) }}" method="POST" class="mt-5 space-y-4">
+            <form action="{{ route('articles.comments.store', $article) }}" method="POST" class="mt-5">
                 @csrf
                 <input type="hidden" name="parent_id" value="">
-                <div>
-                    <label for="body" class="mb-2 block text-sm font-medium text-gray-700">发表评论（支持 Markdown）</label>
-                    <div class="markdown-upload-shell" data-markdown-upload-shell>
-                        <textarea
-                            id="body"
-                            name="body"
-                            rows="4"
-                            class="input-field"
-                            placeholder="写下你的看法..."
-                            data-image-upload-url="{{ route('uploads.images.store') }}"
-                            data-video-upload-url="{{ route('uploads.videos.store') }}"
-                            data-upload-context="comment"
-                            data-image-upload-label="评论图片"
-                            data-video-upload-label="评论视频"
-                        >{{ old('body') }}</textarea>
-                        <div class="markdown-upload-meta">
-                            <p class="markdown-upload-hint">支持 Markdown；聚焦输入框后可直接按 <kbd>Ctrl</kbd> + <kbd>V</kbd> 粘贴图片或不大于 500MB 的视频，媒体会自动上传到站点托管目录并渲染为播放器。</p>
-                            <p class="markdown-upload-status" data-markdown-upload-status aria-live="polite" hidden></p>
+                <div class="flex items-start gap-3">
+                    <x-user-avatar :user="auth()->user()" class="h-9 w-9 shrink-0 mt-0.5" />
+                    <div class="min-w-0 flex-1">
+                        <div class="comment-input-box" data-markdown-upload-shell>
+                            <textarea
+                                id="body"
+                                name="body"
+                                rows="4"
+                                placeholder="写下你的看法...（支持 Markdown）"
+                                data-image-upload-url="{{ route('uploads.images.store') }}"
+                                data-video-upload-url="{{ route('uploads.videos.store') }}"
+                                data-upload-context="comment"
+                                data-image-upload-label="评论图片"
+                                data-video-upload-label="评论视频"
+                            >{{ old('body') }}</textarea>
+                            <div class="comment-input-toolbar">
+                                <div class="flex items-center gap-3 text-xs" style="color: var(--color-text-muted);">
+                                    <span class="inline-flex items-center gap-1">
+                                        <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 98 98" fill="currentColor" aria-hidden="true">
+                                            <path d="M78.6 0H19.4C8.7 0 0 8.7 0 19.4v59.2C0 89.3 8.7 98 19.4 98h59.2C89.3 98 98 89.3 98 78.6V19.4C98 8.7 89.3 0 78.6 0zM76.2 64.6H66V37.2l-17 22.6-17-22.6v27.4H21.8V33.4h10.2l17 22.6 17-22.6h10.2v31.2z"/>
+                                        </svg>
+                                        Markdown
+                                    </span>
+                                    <span class="hidden items-center gap-1.5 sm:inline-flex">
+                                        <kbd class="rounded border px-1.5 py-0.5 text-[10px] font-mono font-medium" style="border-color: var(--color-border); background: var(--color-surface);">Ctrl+V</kbd>
+                                        粘贴图片/视频
+                                    </span>
+                                    <p class="markdown-upload-status" data-markdown-upload-status aria-live="polite" hidden></p>
+                                </div>
+                                <button type="submit" class="inline-flex shrink-0 items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-gray-800">
+                                    发布评论
+                                </button>
+                            </div>
                         </div>
+                        @error('body')
+                            <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
                     </div>
-                    @error('body')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
                 </div>
-                <button type="submit" class="btn-primary">发布评论</button>
             </form>
         @else
             <div class="mt-5 rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
@@ -183,6 +197,7 @@
                     'comment' => $comment,
                     'article' => $article,
                     'subscribedCommentIds' => $subscribedCommentIds,
+                    'manageableCommentIds' => $manageableCommentIds,
                     'depth' => 0,
                 ])
             @empty

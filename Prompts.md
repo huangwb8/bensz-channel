@@ -25,6 +25,14 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 
 ---
 
+评论区UI优化：
+
+- 如图，这是某文章下评论区里，评论时的UI界面。 这个太丑了。 要优化下。 使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
+
+![image-20260315111542380](https://chevereto.hwb0307.com/images/2026/03/15/image-20260315111542380.png)
+
+---
+
 管理评论优化
 
 - 现在，每个评论只有查看、隐藏和删除。 应该有回复按钮，这样，管理员可以直接在当前界面就回复； 而不需要直接回去源文档的评论区才能回复
