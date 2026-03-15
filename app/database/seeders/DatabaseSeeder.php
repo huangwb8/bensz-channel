@@ -10,7 +10,6 @@ use App\Support\MarkdownRenderer;
 use App\Support\StaticPageBuilder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -23,17 +22,6 @@ class DatabaseSeeder extends Seeder
         $markdown = app(MarkdownRenderer::class);
 
         $admin = User::query()->where('email', config('community.admin.email'))->firstOrFail();
-
-        $member = User::query()->updateOrCreate([
-            'email' => 'member@example.com',
-        ], [
-            'name' => '社区成员',
-            'role' => User::ROLE_MEMBER,
-            'email_verified_at' => now(),
-            'phone' => '13800138000',
-            'phone_verified_at' => now(),
-            'password' => Hash::make('member123456'),
-        ]);
 
         $channels = collect([
             ['name' => '公告大厅', 'slug' => 'announcements', 'description' => '管理员发布公告、版本说明与平台动态。', 'accent_color' => '#8b5cf6', 'icon' => '📢', 'sort_order' => 1],
@@ -115,7 +103,7 @@ MD,
 
             Comment::query()->updateOrCreate([
                 'article_id' => $article->id,
-                'user_id' => $member->id,
+                'user_id' => $admin->id,
             ], [
                 'markdown_body' => '看起来不错，期待后续把更多频道能力也接进来。',
                 'html_body' => $markdown->toHtml('看起来不错，期待后续把更多频道能力也接进来。'),
@@ -131,7 +119,5 @@ MD,
 
         $this->command?->info('默认管理员账号：'.config('community.admin.email'));
         $this->command?->info('默认管理员密码：'.config('community.admin.password'));
-        $this->command?->info('示例成员账号：member@example.com / member123456');
-        $this->command?->info('示例手机号：13800138000（验证码登录，开发环境会显示预览码）');
     }
 }
