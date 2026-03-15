@@ -169,7 +169,7 @@
                                     </span>
                                     <span class="hidden items-center gap-1.5 sm:inline-flex">
                                         <kbd class="rounded border px-1.5 py-0.5 text-[10px] font-mono font-medium" style="border-color: var(--color-border); background: var(--color-surface);">Ctrl+V</kbd>
-                                        粘贴图片/视频
+                                        粘贴图片或不大于 500MB 的视频
                                     </span>
                                     <p class="markdown-upload-status" data-markdown-upload-status aria-live="polite" hidden></p>
                                 </div>

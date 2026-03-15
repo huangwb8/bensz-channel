@@ -108,14 +108,25 @@ class AvatarPresenter
     private function svgForSeed(string $seed, string $label, string $style): string
     {
         $palette = $this->palette($seed);
+        $safeLabel = $this->escapeSvgValue($label);
 
         return match ($style) {
-            'aurora_ring' => $this->auroraRingSvg($seed, $label, $palette),
-            'orbit_burst' => $this->orbitBurstSvg($seed, $label, $palette),
-            'pixel_patch' => $this->pixelPatchSvg($seed, $label, $palette),
-            'paper_cut' => $this->paperCutSvg($seed, $label, $palette),
-            default => $this->classicLetterSvg($seed, $label, $palette),
+            'aurora_ring' => $this->auroraRingSvg($seed, $safeLabel, $palette),
+            'orbit_burst' => $this->orbitBurstSvg($seed, $safeLabel, $palette),
+            'pixel_patch' => $this->pixelPatchSvg($seed, $safeLabel, $palette),
+            'paper_cut' => $this->paperCutSvg($seed, $safeLabel, $palette),
+            default => $this->classicLetterSvg($seed, $safeLabel, $palette),
         };
+    }
+
+    private function escapeSvgValue(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    private function svgId(string $prefix, string $seed): string
+    {
+        return $prefix.'-'.substr($seed, 0, 12);
     }
 
     /**
@@ -140,16 +151,17 @@ class AvatarPresenter
     private function classicLetterSvg(string $seed, string $label, array $palette): string
     {
         $fontSize = 42 + (hexdec(substr($seed, 2, 2)) % 6);
+        $gradientId = $this->svgId('classic-a', $seed);
 
         return <<<SVG
 <svg viewBox="0 0 96 96" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{$label}">
   <defs>
-    <linearGradient id="classic-a" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="{$gradientId}" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="{$palette[0]}"/>
       <stop offset="100%" stop-color="{$palette[1]}"/>
     </linearGradient>
   </defs>
-  <rect width="96" height="96" rx="28" fill="url(#classic-a)"/>
+  <rect width="96" height="96" rx="28" fill="url(#{$gradientId})"/>
   <circle cx="76" cy="22" r="10" fill="{$palette[2]}" fill-opacity="0.35"/>
   <circle cx="18" cy="74" r="16" fill="{$palette[3]}" fill-opacity="0.18"/>
   <text x="48" y="57" text-anchor="middle" font-size="{$fontSize}" font-weight="700" fill="#ffffff" font-family="'Plus Jakarta Sans', 'PingFang SC', sans-serif">{$label}</text>
@@ -163,17 +175,18 @@ SVG;
     private function auroraRingSvg(string $seed, string $label, array $palette): string
     {
         $ringOpacity = 0.18 + ((hexdec(substr($seed, 4, 2)) % 20) / 100);
+        $gradientId = $this->svgId('aurora-a', $seed);
 
         return <<<SVG
 <svg viewBox="0 0 96 96" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{$label}">
   <defs>
-    <radialGradient id="aurora-a" cx="30%" cy="20%" r="90%">
+    <radialGradient id="{$gradientId}" cx="30%" cy="20%" r="90%">
       <stop offset="0%" stop-color="{$palette[2]}"/>
       <stop offset="55%" stop-color="{$palette[1]}"/>
       <stop offset="100%" stop-color="{$palette[0]}"/>
     </radialGradient>
   </defs>
-  <rect width="96" height="96" rx="28" fill="url(#aurora-a)"/>
+  <rect width="96" height="96" rx="28" fill="url(#{$gradientId})"/>
   <circle cx="48" cy="48" r="30" fill="none" stroke="#ffffff" stroke-opacity="{$ringOpacity}" stroke-width="8"/>
   <circle cx="48" cy="48" r="18" fill="none" stroke="{$palette[3]}" stroke-opacity="0.25" stroke-width="4"/>
   <circle cx="72" cy="26" r="7" fill="#ffffff" fill-opacity="0.28"/>

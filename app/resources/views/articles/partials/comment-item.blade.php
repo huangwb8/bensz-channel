@@ -46,7 +46,7 @@
                     <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
                     </svg>
-                    回复
+                    回复这条评论
                 </button>
 
                 @if($isSubscribed)
@@ -105,7 +105,7 @@
                                         <span>Markdown</span>
                                         <span class="hidden sm:inline">·</span>
                                         <kbd class="hidden rounded border px-1 py-0.5 text-[10px] font-mono sm:inline" style="border-color: var(--color-border); background: var(--color-surface);">Ctrl+V</kbd>
-                                        <span class="hidden sm:inline">粘贴媒体</span>
+                                        <span class="hidden sm:inline">粘贴图片或不大于 500MB 的视频</span>
                                         <p class="markdown-upload-status" data-markdown-upload-status aria-live="polite" hidden></p>
                                     </div>
                                     <div class="flex shrink-0 items-center gap-2">
