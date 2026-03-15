@@ -12,7 +12,7 @@
     </div>
 
     <!-- 文章内容 -->
-    <article class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+    <article class="rounded-xl border border-gray-200 bg-white overflow-hidden" data-mobile-reading-page>
         <!-- 文章头部 -->
         <div class="border-b border-gray-100 p-6">
             <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-3">

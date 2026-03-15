@@ -40,6 +40,7 @@ class ArticleTocTest extends TestCase
         $this->get(route('articles.show', [$channel, $article]))
             ->assertOk()
             ->assertSee('文章目录')
+            ->assertSee('data-mobile-reading-page', false)
             ->assertSee('article-toc-mobile', false)
             ->assertSee('article-toc-desktop', false)
             ->assertSee('href="#overview"', false)

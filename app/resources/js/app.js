@@ -122,6 +122,91 @@ if (mobileChannelTrigger && mobileChannelDrawer) {
     }
 }
 
+const topNav = document.querySelector('[data-top-nav]');
+const mobileReadingPage = document.querySelector('[data-mobile-reading-page]');
+
+if (topNav instanceof HTMLElement && mobileReadingPage) {
+    const mobileReadingMediaQuery = window.matchMedia('(max-width: 767px)');
+    let lastScrollY = window.scrollY;
+    let navHidden = false;
+    let ticking = false;
+
+    const showTopNav = () => {
+        if (! navHidden) {
+            return;
+        }
+
+        topNav.classList.remove('top-nav-mobile-hidden');
+        navHidden = false;
+    };
+
+    const hideTopNav = () => {
+        if (navHidden) {
+            return;
+        }
+
+        topNav.classList.add('top-nav-mobile-hidden');
+        navHidden = true;
+    };
+
+    const syncTopNavVisibility = () => {
+        ticking = false;
+
+        if (! mobileReadingMediaQuery.matches) {
+            showTopNav();
+            lastScrollY = window.scrollY;
+
+            return;
+        }
+
+        const currentScrollY = Math.max(window.scrollY, 0);
+        const scrollDelta = currentScrollY - lastScrollY;
+        const isDrawerOpen = mobileChannelDrawer instanceof HTMLElement && ! mobileChannelDrawer.hidden;
+
+        if (isDrawerOpen || currentScrollY <= 32) {
+            showTopNav();
+            lastScrollY = currentScrollY;
+
+            return;
+        }
+
+        if (scrollDelta >= 14 && currentScrollY > 96) {
+            hideTopNav();
+        } else if (scrollDelta <= -10) {
+            showTopNav();
+        }
+
+        lastScrollY = currentScrollY;
+    };
+
+    const requestTopNavSync = () => {
+        if (ticking) {
+            return;
+        }
+
+        ticking = true;
+        window.requestAnimationFrame(syncTopNavVisibility);
+    };
+
+    window.addEventListener('scroll', requestTopNavSync, { passive: true });
+    window.addEventListener('resize', requestTopNavSync, { passive: true });
+    window.addEventListener('pageshow', requestTopNavSync);
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            requestTopNavSync();
+        }
+    });
+
+    if (typeof mobileReadingMediaQuery.addEventListener === 'function') {
+        mobileReadingMediaQuery.addEventListener('change', requestTopNavSync);
+    } else if (typeof mobileReadingMediaQuery.addListener === 'function') {
+        mobileReadingMediaQuery.addListener(requestTopNavSync);
+    }
+
+    requestTopNavSync();
+}
+
 const userMenuShells = Array.from(document.querySelectorAll('[data-user-menu-shell]'));
 
 if (userMenuShells.length > 0) {

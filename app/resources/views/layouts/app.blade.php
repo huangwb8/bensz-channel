@@ -45,7 +45,7 @@
         @endphp
 
         <!-- 顶部固定导航栏 -->
-        <header class="top-nav">
+        <header class="top-nav" data-top-nav>
             <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:gap-4">
                 <div class="flex min-w-0 items-center gap-2 sm:gap-3">
                     <button
