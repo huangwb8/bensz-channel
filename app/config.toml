@@ -3,7 +3,7 @@
 
 [project]
 name = "bensz-channel"
-version = "1.37.0"
+version = "1.38.0"
 description = "现代化 Web 社区平台，基于 PHP、PostgreSQL、Docker 构建，适合团队协作与知识分享"
 repository_url = "https://github.com/huangwb8/bensz-channel"
 

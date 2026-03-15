@@ -33,6 +33,26 @@
 - 修复了频道管理页夜间模式下新增频道表单发白的问题：此前 `from-gray-50 → to-white` 渐变未被暗色主题覆盖，导致表单背景保持浅色、白色标签对比度异常；现在暗色模式会自动映射到深色渐变，频道管理与同类后台表单显示恢复正常
 - 修复了首次仅保存 CDN 设置时站点配置写入失败的问题：`app/app/Support/SiteSettingsManager.php` 现会为未显式提交的 `article_image_max_mb` 回退到运行时默认值，避免 `site_settings` 首次插入时触发非空约束；`app/tests/Feature/Admin/CdnSettingsTest.php` 同步增加断言覆盖该回归
 
+## [1.38.0] - 2026-03-15
+
+### Added（新增）
+
+- 新增了评论回复树与评论线程订阅：`app/database/migrations/2026_03_15_100000_add_threading_fields_to_comments_table.php`、`app/database/migrations/2026_03_15_100200_create_comment_subscriptions_table.php`、`app/app/Support/CommentSubscriptionManager.php` 与 `app/resources/views/articles/partials/comment-item.blade.php` 现支持按评论回复评论、展示嵌套讨论，并允许用户对单条评论线程暂停或恢复后续提醒
+- 新增了评论回复邮件通知：`app/database/migrations/2026_03_15_100100_add_comment_reply_preferences_to_user_notification_preferences_table.php`、`app/app/Support/CommentReplyNotifier.php` 与 `app/app/Notifications/CommentReplyNotification.php` 现会在有人回复你发布或订阅的评论线程时发送邮件提醒，且全局默认开启
+- 新增了多风格默认头像与头像上传：`app/database/migrations/2026_03_15_100300_add_avatar_fields_to_users_table.php`、`app/app/Support/AvatarPresenter.php`、`app/resources/views/components/user-avatar.blade.php` 与 `app/resources/views/settings/account.blade.php` 现支持多套站内默认头像风格、`JPG/PNG` 自定义上传头像（`<=1MB`）以及外链头像三种来源
+
+### Changed（变更）
+
+- 优化了文章详情页评论区：`app/app/Support/CommunityViewData.php` 与 `app/resources/views/articles/show.blade.php` 现按评论树渲染讨论，并在已登录用户界面提供“回复这条评论”“暂停/开启此评论后续提醒”等交互
+- 优化了用户资料与头像渲染链路：`app/app/Support/UserAccountManager.php`、`app/app/Http/Controllers/AccountSettingsController.php`、`app/resources/views/layouts/app.blade.php`、`app/resources/views/admin/users/index.blade.php` 与认证解析器现统一处理 `generated/external/uploaded` 三类头像来源，站内头像展示全部改为复用 `x-user-avatar`
+- 优化了数据备份与版本元信息：`app/app/Support/DataBackupManager.php`、`app/tests/Feature/Admin/AdminDataBackupRestoreTest.php`、`docs/开发者文档.md` 与 `app/config.toml` 已同步纳入评论线程订阅、评论回复提醒与头像来源字段，并将项目版本推进到 `1.38.0`
+
+### Fixed（修复）
+
+- 修复了评论只能单层平铺、无法围绕某条评论继续讨论的问题：现在任意用户都可以对任意可见评论继续回复，形成稳定的评论线程
+- 修复了用户无法关闭单条高热评论后续提醒的问题：现在用户既能在全局订阅设置中关闭评论回复邮件，也能在评论区按线程暂停或恢复提醒
+- 修复了默认首字母头像样式单一且观感较弱的问题：现在默认头像改为多风格可选，并支持用户上传自己的头像图片
+
 ## [1.37.0] - 2026-03-15
 
 ### Added（新增）
