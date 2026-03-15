@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\Channel;
 use App\Models\ChannelEmailSubscription;
 use App\Models\Comment;
+use App\Models\CommentSubscription;
 use App\Models\MailSetting;
 use App\Models\SiteSetting;
 use App\Models\SocialAccount;
@@ -58,6 +59,7 @@ class AdminDataBackupRestoreTest extends TestCase
         UserNotificationPreference::query()->where('user_id', $member->id)->update([
             'email_all_articles' => false,
             'email_mentions' => true,
+            'email_comment_replies' => false,
         ]);
 
         SocialAccount::query()->create([
@@ -92,12 +94,19 @@ class AdminDataBackupRestoreTest extends TestCase
             'comment_count' => 1,
         ]);
 
-        Comment::query()->create([
+        $comment = Comment::query()->create([
             'article_id' => $article->id,
             'user_id' => $member->id,
             'markdown_body' => '原始评论',
             'html_body' => '<p>原始评论</p>',
             'is_visible' => true,
+        ]);
+
+        CommentSubscription::query()->updateOrCreate([
+            'comment_id' => $comment->id,
+            'user_id' => $member->id,
+        ], [
+            'is_active' => false,
         ]);
 
         ChannelEmailSubscription::query()->create([
@@ -115,6 +124,7 @@ class AdminDataBackupRestoreTest extends TestCase
             'smtp_host' => 'smtp.mutated.test',
             'smtp_password' => 'mutated-secret',
         ]);
+        CommentSubscription::query()->delete();
         Comment::query()->delete();
         Article::query()->delete();
         ChannelEmailSubscription::query()->delete();
@@ -173,6 +183,11 @@ class AdminDataBackupRestoreTest extends TestCase
         ]);
         $this->assertDatabaseHas(Comment::class, [
             'markdown_body' => '原始评论',
+        ]);
+        $this->assertDatabaseHas(CommentSubscription::class, [
+            'comment_id' => $comment->id,
+            'user_id' => $member->id,
+            'is_active' => false,
         ]);
         $this->assertDatabaseHas(SocialAccount::class, [
             'provider' => 'qq',

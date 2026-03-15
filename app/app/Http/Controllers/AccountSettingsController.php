@@ -6,6 +6,7 @@ use App\Support\PendingTwoFactorLogin;
 use App\Support\SiteSettingsManager;
 use App\Support\StaticPageBuilder;
 use App\Support\TwoFactorAuthenticationManager;
+use App\Support\AvatarPresenter;
 use App\Support\UserAccountManager;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +19,7 @@ class AccountSettingsController extends Controller
         Request $request,
         SiteSettingsManager $siteSettingsManager,
         TwoFactorAuthenticationManager $twoFactorAuthenticationManager,
+        AvatarPresenter $avatarPresenter,
     ): View
     {
         $user = $request->user();
@@ -30,6 +32,7 @@ class AccountSettingsController extends Controller
             'twoFactorEnabled' => $twoFactorAuthenticationManager->hasEnabledTwoFactor($user),
             'twoFactorSetup' => $twoFactorAuthenticationManager->setupPayload($request, $user),
             'twoFactorRecoveryCodes' => array_values(array_filter((array) session('two_factor_recovery_codes', []), 'is_string')),
+            'avatarStyles' => $avatarPresenter->styles(),
         ]);
     }
 
@@ -45,11 +48,14 @@ class AccountSettingsController extends Controller
             'name',
             'email',
             'phone',
+            'avatar_type',
+            'avatar_style',
             'avatar_url',
             'bio',
         ])));
 
         $validated = $request->validate($userAccountManager->profileValidationRules($user));
+        $validated['avatar_upload'] = $request->file('avatar_upload');
 
         $userAccountManager->assertHasLoginIdentifier($validated);
         $userAccountManager->fillProfile($user, $validated);

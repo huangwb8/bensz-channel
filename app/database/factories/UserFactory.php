@@ -30,6 +30,8 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'phone_verified_at' => now(),
             'role' => 'member',
+            'avatar_type' => 'generated',
+            'avatar_style' => 'classic_letter',
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'last_seen_at' => now(),

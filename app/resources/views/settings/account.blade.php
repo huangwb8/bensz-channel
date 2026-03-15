@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
-    @php($currentUser = auth()->user())
+    @php
+        $currentUser = auth()->user();
+    @endphp
 
     <section class="space-y-6">
         <section class="rounded-xl border border-gray-200 bg-white p-6">
@@ -26,7 +28,12 @@
                 </div>
             </div>
 
-            <form action="{{ route('settings.account.profile.update') }}" method="POST" class="mt-6 space-y-6">
+            @php
+                $avatarType = old('avatar_type', $currentUser?->avatar_type ?? 'generated');
+                $avatarStyle = old('avatar_style', $currentUser?->avatar_style ?? 'classic_letter');
+            @endphp
+
+            <form action="{{ route('settings.account.profile.update') }}" method="POST" enctype="multipart/form-data" class="mt-6 space-y-6">
                 @csrf
                 @method('PUT')
 
@@ -42,10 +49,6 @@
                             <input type="text" name="name" value="{{ old('name', $currentUser?->name) }}" class="input-field" maxlength="40" required>
                         </label>
                         <label class="block space-y-2">
-                            <span class="text-sm font-medium text-gray-700">头像链接</span>
-                            <input type="url" name="avatar_url" value="{{ old('avatar_url', $currentUser?->avatar_url) }}" class="input-field" maxlength="2048" placeholder="https://example.com/avatar.png">
-                        </label>
-                        <label class="block space-y-2">
                             <span class="text-sm font-medium text-gray-700">邮箱</span>
                             <input type="email" name="email" value="{{ old('email', $currentUser?->email) }}" class="input-field" maxlength="120" placeholder="name@example.com">
                         </label>
@@ -54,6 +57,98 @@
                             <input type="text" name="phone" value="{{ old('phone', $currentUser?->phone) }}" class="input-field" maxlength="32" placeholder="13800000000">
                         </label>
                     </div>
+
+                    <section class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                        <div class="flex flex-wrap items-start gap-4">
+                            <div class="space-y-3">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-gray-900">当前头像</h3>
+                                    <p class="mt-1 text-sm text-gray-500">支持默认头像风格、外链头像和本地上传头像三种来源。</p>
+                                </div>
+                                <x-user-avatar :user="$currentUser" class="h-20 w-20 rounded-[24px] ring-1 ring-gray-200" />
+                            </div>
+
+                            <div class="min-w-0 flex-1 space-y-4">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-gray-900">头像来源</h3>
+                                    <div class="mt-3 grid gap-3 md:grid-cols-3">
+                                        <label class="rounded-xl border border-gray-200 bg-white p-3">
+                                            <div class="flex items-start gap-3">
+                                                <input type="radio" name="avatar_type" value="generated" class="mt-1 h-4 w-4" @checked($avatarType === 'generated')>
+                                                <div>
+                                                    <div class="text-sm font-medium text-gray-900">默认风格</div>
+                                                    <div class="mt-1 text-xs text-gray-500">完全站内生成，适合默认头像。</div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                        <label class="rounded-xl border border-gray-200 bg-white p-3">
+                                            <div class="flex items-start gap-3">
+                                                <input type="radio" name="avatar_type" value="uploaded" class="mt-1 h-4 w-4" @checked($avatarType === 'uploaded')>
+                                                <div>
+                                                    <div class="text-sm font-medium text-gray-900">上传 JPG 或 PNG 头像</div>
+                                                    <div class="mt-1 text-xs text-gray-500">文件大小不超过 1MB。</div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                        <label class="rounded-xl border border-gray-200 bg-white p-3">
+                                            <div class="flex items-start gap-3">
+                                                <input type="radio" name="avatar_type" value="external" class="mt-1 h-4 w-4" @checked($avatarType === 'external')>
+                                                <div>
+                                                    <div class="text-sm font-medium text-gray-900">外链头像</div>
+                                                    <div class="mt-1 text-xs text-gray-500">沿用已有 CDN / 图床资源。</div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="grid gap-4 md:grid-cols-2">
+                                    <label class="block space-y-2">
+                                        <span class="text-sm font-medium text-gray-700">上传文件</span>
+                                        <input type="file" name="avatar_upload" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="input-field h-auto p-3">
+                                        <p class="text-xs text-gray-500">只有在上方选择“上传 JPG 或 PNG 头像”时才会生效。</p>
+                                    </label>
+                                    <label class="block space-y-2">
+                                        <span class="text-sm font-medium text-gray-700">外链头像地址</span>
+                                        <input type="url" name="avatar_url" value="{{ old('avatar_url', $currentUser?->avatar_type === 'external' ? $currentUser?->avatar_url : '') }}" class="input-field" maxlength="2048" placeholder="https://example.com/avatar.png">
+                                        <p class="text-xs text-gray-500">只有在选择“外链头像”时会作为实际头像使用。</p>
+                                    </label>
+                                </div>
+
+                                <div>
+                                    <h3 class="text-sm font-semibold text-gray-900">默认头像风格</h3>
+                                    <p class="mt-1 text-sm text-gray-500">选择默认头像时，可在这里切换风格；即使你暂时使用上传/外链头像，风格也会先保存下来，方便以后切回。</p>
+                                    <div class="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                        @foreach($avatarStyles as $style)
+                                            <label class="rounded-2xl border border-gray-200 bg-white p-4 transition hover:border-blue-300 hover:shadow-sm">
+                                                <div class="flex items-start gap-3">
+                                                    <input type="radio" name="avatar_style" value="{{ $style['id'] }}" class="mt-1 h-4 w-4" @checked($avatarStyle === $style['id'])>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="flex items-center gap-3">
+                                                            <span class="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl ring-1 ring-gray-200">
+                                                                {!! app(\App\Support\AvatarPresenter::class)->preview($currentUser, $style['id']) !!}
+                                                            </span>
+                                                            <div>
+                                                                <div class="text-sm font-medium text-gray-900">{{ $style['name'] }}</div>
+                                                                <p class="mt-1 text-xs text-gray-500">{{ $style['description'] }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @error('avatar_upload')
+                            <p class="mt-3 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                        @error('avatar_url')
+                            <p class="mt-3 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </section>
 
                     <label class="block space-y-2">
                         <span class="text-sm font-medium text-gray-700">个人简介</span>

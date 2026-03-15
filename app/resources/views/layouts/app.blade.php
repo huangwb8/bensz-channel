@@ -105,9 +105,7 @@
                                 aria-controls="user-menu-panel"
                                 title="打开用户菜单"
                             >
-                                <span class="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-xs font-semibold text-blue-700">
-                                    {{ mb_substr(auth()->user()->name, 0, 1) }}
-                                </span>
+                                <x-user-avatar :user="auth()->user()" class="h-6 w-6" />
                                 <span class="hidden sm:inline max-w-[100px] truncate">{{ auth()->user()->name }}</span>
                                 <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>

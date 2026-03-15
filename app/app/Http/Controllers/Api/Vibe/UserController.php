@@ -15,7 +15,7 @@ class UserController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = User::query()->select(['id', 'user_id', 'name', 'email', 'phone', 'role', 'bio', 'avatar_url', 'last_seen_at', 'created_at']);
+        $query = User::query()->select(['id', 'user_id', 'name', 'email', 'phone', 'role', 'bio', 'avatar_url', 'avatar_type', 'avatar_style', 'last_seen_at', 'created_at']);
 
         if ($request->filled('q')) {
             $q = trim((string) $request->input('q'));
@@ -45,6 +45,8 @@ class UserController extends Controller
             'name',
             'email',
             'phone',
+            'avatar_type',
+            'avatar_style',
             'avatar_url',
             'bio',
         ])));
@@ -77,11 +79,17 @@ class UserController extends Controller
             }
         }
 
-        $user->update($validated);
+        $userAccountManager->fillProfile($user, $validated);
+
+        if (array_key_exists('role', $validated)) {
+            $user->role = $validated['role'];
+        }
+
+        $user->save();
 
         $user->refresh();
 
-        return response()->json(['user' => $user->only(['id', 'user_id', 'name', 'email', 'phone', 'role', 'bio', 'avatar_url'])]);
+        return response()->json(['user' => $user->only(['id', 'user_id', 'name', 'email', 'phone', 'role', 'bio', 'avatar_url', 'avatar_type', 'avatar_style'])]);
     }
 
     public function destroy(User $user, ManagedUserService $managedUserService): JsonResponse

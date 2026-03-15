@@ -37,6 +37,7 @@ class SocialAccountResolver
                 'email' => $identity->email,
                 'phone' => $identity->phone,
                 'avatar_url' => $identity->avatarUrl,
+                'avatar_type' => $identity->avatarUrl !== null ? 'external' : 'generated',
                 'role' => User::ROLE_MEMBER,
                 'last_seen_at' => now(),
             ]);
@@ -80,6 +81,7 @@ class SocialAccountResolver
 
         if (blank($user->avatar_url) && $identity->avatarUrl !== null) {
             $payload['avatar_url'] = $identity->avatarUrl;
+            $payload['avatar_type'] = 'external';
         }
 
         $user->fill($payload)->save();

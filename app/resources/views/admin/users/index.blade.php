@@ -294,13 +294,7 @@
                         </div>
 
                         <div class="flex min-w-0 flex-1 items-start gap-3">
-                            <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
-                                @if($managedUser->avatar_url)
-                                    <img src="{{ $managedUser->avatar_url }}" alt="{{ $managedUser->name }} 的头像" class="h-full w-full object-cover">
-                                @else
-                                    {{ mb_substr($managedUser->name, 0, 1) }}
-                                @endif
-                            </div>
+                            <x-user-avatar :user="$managedUser" class="h-12 w-12 shrink-0" />
 
                             <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-2">

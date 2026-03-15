@@ -4,7 +4,9 @@ namespace Tests\Feature\Settings;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AccountSettingsTest extends TestCase
@@ -22,6 +24,8 @@ class AccountSettingsTest extends TestCase
             ->assertSee('基本资料')
             ->assertSee('密码设置')
             ->assertSee('两步验证')
+            ->assertSee('默认头像风格')
+            ->assertSee('上传 JPG 或 PNG 头像')
             ->assertSee('two-factor-setup-shell', false)
             ->assertSee('two-factor-secret-card', false)
             ->assertSee('two-factor-verify-card', false);
@@ -59,6 +63,8 @@ class AccountSettingsTest extends TestCase
             'email' => 'before@example.com',
             'phone' => '13800000000',
             'avatar_url' => 'https://example.com/old.png',
+            'avatar_type' => 'external',
+            'avatar_style' => 'classic_letter',
             'bio' => 'old bio',
             'email_verified_at' => now(),
             'phone_verified_at' => now(),
@@ -69,6 +75,8 @@ class AccountSettingsTest extends TestCase
                 'name' => '新昵称',
                 'email' => 'after@example.com',
                 'phone' => '139-0000-0000',
+                'avatar_type' => 'external',
+                'avatar_style' => 'aurora_ring',
                 'avatar_url' => 'https://example.com/avatar.png',
                 'bio' => '新的个人简介',
             ])
@@ -81,6 +89,8 @@ class AccountSettingsTest extends TestCase
         $this->assertSame('after@example.com', $user->email);
         $this->assertSame('13900000000', $user->phone);
         $this->assertSame('https://example.com/avatar.png', $user->avatar_url);
+        $this->assertSame('external', $user->avatar_type);
+        $this->assertSame('aurora_ring', $user->avatar_style);
         $this->assertSame('新的个人简介', $user->bio);
         $this->assertNull($user->email_verified_at);
         $this->assertNull($user->phone_verified_at);
@@ -100,6 +110,8 @@ class AccountSettingsTest extends TestCase
                 'name' => '新昵称',
                 'email' => 'after@example.com',
                 'phone' => '13900000000',
+                'avatar_type' => 'generated',
+                'avatar_style' => 'pixel_patch',
                 'avatar_url' => '',
                 'bio' => '新的个人简介',
             ])
@@ -121,6 +133,8 @@ class AccountSettingsTest extends TestCase
                 'name' => $user->name,
                 'email' => '',
                 'phone' => '',
+                'avatar_type' => 'generated',
+                'avatar_style' => 'classic_letter',
                 'avatar_url' => '',
                 'bio' => '',
             ])
@@ -185,5 +199,94 @@ class AccountSettingsTest extends TestCase
             ->assertRedirect(route('settings.account.edit'));
 
         $this->assertNull($user->fresh()->password);
+    }
+
+    public function test_user_can_switch_to_generated_avatar_style(): void
+    {
+        $user = User::factory()->create([
+            'name' => '风格切换用户',
+            'email' => 'member@example.com',
+            'phone' => '13800000000',
+            'avatar_url' => 'https://example.com/original.png',
+            'avatar_type' => 'external',
+            'avatar_style' => 'classic_letter',
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('settings.account.profile.update'), [
+                'name' => '风格切换用户',
+                'email' => 'member@example.com',
+                'phone' => '13800000000',
+                'avatar_type' => 'generated',
+                'avatar_style' => 'pixel_patch',
+                'avatar_url' => '',
+                'bio' => '',
+            ])
+            ->assertRedirect(route('settings.account.edit'));
+
+        $user->refresh();
+
+        $this->assertSame('generated', $user->avatar_type);
+        $this->assertSame('pixel_patch', $user->avatar_style);
+        $this->assertNull($user->avatar_url);
+    }
+
+    public function test_user_can_upload_custom_avatar_image(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'name' => '上传头像用户',
+            'email' => 'member@example.com',
+            'phone' => '13800000000',
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('settings.account.profile.update'), [
+                'name' => '上传头像用户',
+                'email' => 'member@example.com',
+                'phone' => '13800000000',
+                'avatar_type' => 'uploaded',
+                'avatar_style' => 'aurora_ring',
+                'avatar_upload' => UploadedFile::fake()->image('avatar.png', 240, 240)->size(900),
+                'avatar_url' => '',
+                'bio' => '',
+            ])
+            ->assertRedirect(route('settings.account.edit'));
+
+        $user->refresh();
+
+        $this->assertSame('uploaded', $user->avatar_type);
+        $this->assertSame('aurora_ring', $user->avatar_style);
+        $this->assertIsString($user->avatar_url);
+        $this->assertStringStartsWith('/storage/avatars/', $user->avatar_url);
+
+        $storedPath = ltrim((string) preg_replace('#^/storage/#', '', $user->avatar_url), '/');
+        Storage::disk('public')->assertExists($storedPath);
+    }
+
+    public function test_avatar_upload_must_be_jpg_or_png_and_smaller_than_one_megabyte(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'email' => 'member@example.com',
+            'phone' => '13800000000',
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('settings.account.edit'))
+            ->put(route('settings.account.profile.update'), [
+                'name' => $user->name,
+                'email' => 'member@example.com',
+                'phone' => '13800000000',
+                'avatar_type' => 'uploaded',
+                'avatar_style' => 'classic_letter',
+                'avatar_upload' => UploadedFile::fake()->create('avatar.gif', 1200, 'image/gif'),
+                'avatar_url' => '',
+                'bio' => '',
+            ])
+            ->assertRedirect(route('settings.account.edit'))
+            ->assertSessionHasErrors('avatar_upload');
     }
 }

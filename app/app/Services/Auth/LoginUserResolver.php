@@ -46,6 +46,7 @@ class LoginUserResolver
                 'phone' => $phone,
                 'role' => User::ROLE_MEMBER,
                 'avatar_url' => $avatarUrl,
+                'avatar_type' => $avatarUrl !== null ? 'external' : 'generated',
                 'email_verified_at' => $emailVerified ? now() : null,
                 'phone_verified_at' => $phoneVerified ? now() : null,
                 'last_seen_at' => now(),
@@ -64,6 +65,9 @@ class LoginUserResolver
             'email' => $user->email ?: $email,
             'phone' => $user->phone ?: $phone,
             'avatar_url' => $user->avatar_url ?: $avatarUrl,
+            'avatar_type' => filled($user->avatar_url)
+                ? ($user->avatar_type ?: 'external')
+                : ($avatarUrl !== null ? 'external' : ($user->avatar_type ?: 'generated')),
             'email_verified_at' => $emailVerified ? ($user->email_verified_at ?? now()) : $user->email_verified_at,
             'phone_verified_at' => $phoneVerified ? ($user->phone_verified_at ?? now()) : $user->phone_verified_at,
             'last_seen_at' => now(),
