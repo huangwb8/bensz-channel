@@ -33,6 +33,21 @@
 - 修复了频道管理页夜间模式下新增频道表单发白的问题：此前 `from-gray-50 → to-white` 渐变未被暗色主题覆盖，导致表单背景保持浅色、白色标签对比度异常；现在暗色模式会自动映射到深色渐变，频道管理与同类后台表单显示恢复正常
 - 修复了首次仅保存 CDN 设置时站点配置写入失败的问题：`app/app/Support/SiteSettingsManager.php` 现会为未显式提交的 `article_image_max_mb` 回退到运行时默认值，避免 `site_settings` 首次插入时触发非空约束；`app/tests/Feature/Admin/CdnSettingsTest.php` 同步增加断言覆盖该回归
 
+## [1.39.1] - 2026-03-15
+
+### Added（新增）
+
+- 新增了头像生成回归测试：`app/tests/Unit/Support/AvatarPresenterTest.php` 现会锁定默认头像 SVG 的转义行为与渐变 ID 唯一性，防止后续再次出现 DOM 冲突或注入风险
+
+### Changed（变更）
+
+- 优化了评论区文案契约：`app/resources/views/articles/show.blade.php` 与 `app/resources/views/articles/partials/comment-item.blade.php` 现恢复“回复这条评论”以及“粘贴图片或不大于 500MB 的视频”等明确提示，与现有测试和上传限制保持一致
+- 更新了项目版本号：`app/config.toml` 已同步推进到 `1.39.1`
+
+### Fixed（修复）
+
+- 修复了默认 SVG 头像的安全与渲染隐患：`app/app/Support/AvatarPresenter.php` 现会转义用户派生字符，并为渐变定义生成基于种子的唯一 ID，避免特殊字符破坏 SVG 结构以及多头像同页时出现 ID 冲突
+
 ## [1.39.0] - 2026-03-15
 
 ### Added（新增）

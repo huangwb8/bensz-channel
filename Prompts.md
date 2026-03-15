@@ -3,6 +3,12 @@
 - 本地测试用启动后访问：
   - 站点首页：http://localhost:6542
   - Mailpit：http://localhost:8025
+- 检查程序问题
+
+```
+使用 auto-test-code skill 对本程序进行检查。
+```
+
 - 发布release
 
 ```
