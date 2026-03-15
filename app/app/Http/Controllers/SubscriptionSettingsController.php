@@ -53,6 +53,7 @@ class SubscriptionSettingsController extends Controller
         $validated = $request->validate([
             'email_all_articles' => ['nullable', 'boolean'],
             'email_mentions' => ['nullable', 'boolean'],
+            'email_comment_replies' => ['nullable', 'boolean'],
             'channel_ids' => ['nullable', 'array'],
             'channel_ids.*' => ['integer', 'exists:channels,id'],
         ]);
@@ -62,6 +63,7 @@ class SubscriptionSettingsController extends Controller
         $preference->update([
             'email_all_articles' => (bool) ($validated['email_all_articles'] ?? false),
             'email_mentions' => (bool) ($validated['email_mentions'] ?? false),
+            'email_comment_replies' => (bool) ($validated['email_comment_replies'] ?? false),
         ]);
 
         $channelIds = collect($validated['channel_ids'] ?? [])->map(fn (mixed $id) => (int) $id)->unique()->values()->all();

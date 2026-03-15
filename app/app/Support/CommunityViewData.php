@@ -5,7 +5,9 @@ namespace App\Support;
 use App\Models\Article;
 use App\Models\Channel;
 use App\Models\Comment;
+use App\Models\CommentSubscription;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 class CommunityViewData
 {
@@ -89,10 +91,26 @@ class CommunityViewData
         $article->load([
             'channel',
             'author',
-            'comments.user',
         ]);
 
         $articleBody = $this->articleBodyFormatter->format($article->html_body);
+        $comments = Comment::query()
+            ->where('article_id', $article->id)
+            ->where('is_visible', true)
+            ->with('user')
+            ->orderBy('created_at')
+            ->get();
+        $commentTree = $this->buildCommentTree($comments);
+        $currentUser = request()->user();
+        $subscribedCommentIds = $currentUser instanceof User
+            ? CommentSubscription::query()
+                ->where('user_id', $currentUser->id)
+                ->where('is_active', true)
+                ->whereIn('comment_id', $comments->pluck('id')->all())
+                ->pluck('comment_id')
+                ->map(fn (mixed $id): int => (int) $id)
+                ->all()
+            : [];
 
         return [
             ...$this->chrome($article->channel, $article),
@@ -100,6 +118,9 @@ class CommunityViewData
             'currentChannel' => $article->channel,
             'article' => $article,
             'articleBody' => $articleBody,
+            'commentTree' => $commentTree,
+            'commentCount' => $comments->count(),
+            'subscribedCommentIds' => $subscribedCommentIds,
             'relatedArticles' => Article::query()
                 ->published()
                 ->where('channel_id', $article->channel_id)
@@ -109,6 +130,27 @@ class CommunityViewData
                 ->limit(5)
                 ->get(),
         ];
+    }
+
+    /**
+     * @param  Collection<int, Comment>  $comments
+     * @return Collection<int, Comment>
+     */
+    private function buildCommentTree(Collection $comments): Collection
+    {
+        $grouped = $comments->groupBy(fn (Comment $comment) => $comment->parent_id ?? 0);
+
+        $build = function (int $parentId = 0) use (&$build, $grouped): Collection {
+            return collect($grouped->get($parentId, []))
+                ->map(function (Comment $comment) use (&$build): Comment {
+                    $comment->setRelation('threadChildren', $build($comment->id));
+
+                    return $comment;
+                })
+                ->values();
+        };
+
+        return $build();
     }
 
     public function chrome(?Channel $currentChannel = null, ?Article $currentArticle = null): array

@@ -47,6 +47,14 @@
                             <div class="mt-1 text-sm text-gray-500">当有人在文章评论中使用 @ 提到你时，通过邮件提醒你。</div>
                         </div>
                     </label>
+
+                    <label class="flex items-start gap-3 rounded-lg border border-gray-200 p-4">
+                        <input type="checkbox" name="email_comment_replies" value="1" class="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" @checked((bool) old('email_comment_replies', $preference->email_comment_replies))>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">接收评论回复提醒</div>
+                            <div class="mt-1 text-sm text-gray-500">当有人回复你发布或订阅的评论线程时，通过邮件提醒你；你也可以在评论区对单条评论暂停提醒。</div>
+                        </div>
+                    </label>
                 </section>
 
                 <section class="space-y-4">

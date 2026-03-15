@@ -4,6 +4,7 @@ namespace Tests\Feature\Comments;
 
 use App\Models\Article;
 use App\Models\Channel;
+use App\Models\Comment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -38,6 +39,44 @@ class CommentPostingTest extends TestCase
         ]);
     }
 
+    public function test_member_can_reply_to_existing_comment(): void
+    {
+        [$article] = $this->createArticleFixture();
+        $originalAuthor = User::factory()->create([
+            'name' => '原评论作者',
+            'role' => User::ROLE_MEMBER,
+        ]);
+        $replier = User::factory()->create([
+            'name' => '回复者',
+            'role' => User::ROLE_MEMBER,
+        ]);
+
+        $comment = Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $originalAuthor->id,
+            'markdown_body' => '第一条评论',
+            'html_body' => '<p>第一条评论</p>',
+            'is_visible' => true,
+        ]);
+
+        $this->actingAs($replier)
+            ->post(route('articles.comments.store', $article), [
+                'body' => '这是对第一条评论的回复',
+                'parent_id' => $comment->id,
+            ])
+            ->assertRedirect();
+
+        $reply = Comment::query()
+            ->where('article_id', $article->id)
+            ->where('user_id', $replier->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($reply);
+        $this->assertSame($comment->id, $reply->parent_id);
+        $this->assertSame($comment->id, $reply->root_id);
+    }
+
     public function test_article_page_does_not_render_channel_subscription_buttons(): void
     {
         [$article] = $this->createArticleFixture();
@@ -62,6 +101,29 @@ class CommentPostingTest extends TestCase
             ->assertSee(route('uploads.videos.store'), false)
             ->assertSee('Ctrl', false)
             ->assertSee('粘贴图片或不大于 500MB 的视频', false);
+    }
+
+    public function test_article_page_renders_reply_actions_and_comment_subscription_controls(): void
+    {
+        [$article] = $this->createArticleFixture();
+        $member = User::factory()->create([
+            'name' => '评论用户',
+            'role' => User::ROLE_MEMBER,
+        ]);
+
+        Comment::query()->create([
+            'article_id' => $article->id,
+            'user_id' => $member->id,
+            'markdown_body' => '可以继续讨论',
+            'html_body' => '<p>可以继续讨论</p>',
+            'is_visible' => true,
+        ]);
+
+        $this->actingAs($member)
+            ->get(route('articles.show', [$article->channel, $article]))
+            ->assertOk()
+            ->assertSee('回复这条评论')
+            ->assertSee('暂停此评论后续提醒');
     }
 
     private function createArticleFixture(): array

@@ -6,24 +6,26 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class UserNotificationPreference extends Model
+class CommentSubscription extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'comment_id',
         'user_id',
-        'email_all_articles',
-        'email_mentions',
-        'email_comment_replies',
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
-            'email_all_articles' => 'bool',
-            'email_mentions' => 'bool',
-            'email_comment_replies' => 'bool',
+            'is_active' => 'bool',
         ];
+    }
+
+    public function comment(): BelongsTo
+    {
+        return $this->belongsTo(Comment::class);
     }
 
     public function user(): BelongsTo

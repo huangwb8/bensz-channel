@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CommentSubscriptionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\RssFeedController;
@@ -46,6 +47,8 @@ Route::get('/feeds/channels/{channel}.xml', [RssFeedController::class, 'channel'
 
 Route::middleware(['auth', 'not-banned'])->group(function (): void {
     Route::post('/articles/{article}/comments', [CommentController::class, 'store'])->name('articles.comments.store');
+    Route::post('/comments/{comment}/subscriptions', [CommentSubscriptionController::class, 'store'])->name('comments.subscriptions.store');
+    Route::delete('/comments/{comment}/subscriptions', [CommentSubscriptionController::class, 'destroy'])->name('comments.subscriptions.destroy');
     Route::post('/uploads/images', [ImageUploadController::class, 'store'])
         ->middleware('throttle:30,1')
         ->name('uploads.images.store');

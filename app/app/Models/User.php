@@ -30,6 +30,8 @@ class User extends Authenticatable
         'phone',
         'role',
         'avatar_url',
+        'avatar_type',
+        'avatar_style',
         'bio',
         'password',
         'last_seen_at',
@@ -87,6 +89,11 @@ class User extends Authenticatable
         return $this->hasMany(SocialAccount::class);
     }
 
+    public function commentSubscriptions(): HasMany
+    {
+        return $this->hasMany(CommentSubscription::class);
+    }
+
     public function notificationPreference(): HasOne
     {
         return $this->hasOne(UserNotificationPreference::class);
@@ -132,6 +139,11 @@ class User extends Authenticatable
     public function wantsMentionEmails(): bool
     {
         return $this->ensureNotificationPreference()->email_mentions;
+    }
+
+    public function wantsCommentReplyEmails(): bool
+    {
+        return $this->ensureNotificationPreference()->email_comment_replies;
     }
 
     public function isAdmin(): bool

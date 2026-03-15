@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Contracts\Auth\OtpAuthGateway;
+use App\Models\Comment;
 use App\Models\User;
 use App\Services\Auth\BetterAuthGateway;
 use App\Services\Auth\LegacyOtpGateway;
@@ -44,6 +45,19 @@ class AppServiceProvider extends ServiceProvider
 
         User::created(function (User $user): void {
             $user->notificationPreference()->firstOrCreate();
+        });
+
+        Comment::created(function (Comment $comment): void {
+            if ($comment->root_id === null) {
+                $comment->forceFill([
+                    'root_id' => $comment->parent?->root_id ?: $comment->parent_id ?: $comment->id,
+                ])->saveQuietly();
+            }
+
+            $comment->subscriptions()->firstOrCreate(
+                ['user_id' => $comment->user_id],
+                ['is_active' => true],
+            );
         });
 
         Gate::define('access-admin', fn (User $user) => $user->isAdmin());

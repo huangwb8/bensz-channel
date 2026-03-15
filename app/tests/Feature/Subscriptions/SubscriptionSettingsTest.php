@@ -19,6 +19,7 @@ class SubscriptionSettingsTest extends TestCase
             'user_id' => $user->id,
             'email_all_articles' => true,
             'email_mentions' => true,
+            'email_comment_replies' => true,
         ]);
     }
 
@@ -30,6 +31,7 @@ class SubscriptionSettingsTest extends TestCase
             ->get(route('settings.subscriptions.edit'))
             ->assertOk()
             ->assertSee('SMTP 邮件提醒')
+            ->assertSee('接收评论回复提醒')
             ->assertDontSee('管理员 SMTP 配置')
             ->assertDontSee('SMTP 服务器');
     }
@@ -44,6 +46,7 @@ class SubscriptionSettingsTest extends TestCase
             ->put(route('settings.subscriptions.update'), [
                 'email_all_articles' => false,
                 'email_mentions' => false,
+                'email_comment_replies' => false,
                 'channel_ids' => [$engineering->id],
             ])
             ->assertRedirect(route('settings.subscriptions.edit'));
@@ -52,6 +55,7 @@ class SubscriptionSettingsTest extends TestCase
             'user_id' => $member->id,
             'email_all_articles' => false,
             'email_mentions' => false,
+            'email_comment_replies' => false,
         ]);
 
         $this->assertDatabaseHas('channel_email_subscriptions', [

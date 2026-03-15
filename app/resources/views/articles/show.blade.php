@@ -49,9 +49,7 @@
             </div>
             <!-- 作者信息 -->
             <div class="mt-4 flex items-center gap-3">
-                <span class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-sm font-semibold text-blue-700">
-                    {{ mb_substr($article->author->name, 0, 1) }}
-                </span>
+                <x-user-avatar :user="$article->author" class="h-10 w-10" />
                 <div>
                     <p class="text-sm font-medium text-gray-900">{{ $article->author->name }}</p>
                     <p class="text-xs text-gray-500">{{ $article->author->isAdmin() ? '管理员' : '成员' }}</p>
@@ -139,12 +137,13 @@
     <section id="comments" class="mt-6 rounded-xl border border-gray-200 bg-white p-5">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-gray-900">评论区</h2>
-            <span class="text-sm text-gray-500">{{ $article->comments->count() }} 条评论</span>
+            <span class="text-sm text-gray-500">{{ $commentCount }} 条评论</span>
         </div>
 
         @auth
             <form action="{{ route('articles.comments.store', $article) }}" method="POST" class="mt-5 space-y-4">
                 @csrf
+                <input type="hidden" name="parent_id" value="">
                 <div>
                     <label for="body" class="mb-2 block text-sm font-medium text-gray-700">发表评论（支持 Markdown）</label>
                     <div class="markdown-upload-shell" data-markdown-upload-shell>
@@ -179,22 +178,13 @@
 
         <!-- 评论列表 -->
         <div class="mt-6 space-y-4">
-            @forelse($article->comments as $comment)
-                <div class="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-2">
-                            <span class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-semibold text-blue-700">
-                                {{ mb_substr($comment->user->name, 0, 1) }}
-                            </span>
-                            <div>
-                                <span class="text-sm font-medium text-gray-900">{{ $comment->user->name }}</span>
-                                <span class="ml-2 text-xs text-gray-400">{{ $comment->user->isAdmin() ? '管理员' : '成员' }}</span>
-                            </div>
-                        </div>
-                        <span class="text-xs text-gray-400">{{ $comment->created_at->diffForHumans() }}</span>
-                    </div>
-                    <div class="markdown-body mt-3 text-sm">{!! $comment->html_body !!}</div>
-                </div>
+            @forelse($commentTree as $comment)
+                @include('articles.partials.comment-item', [
+                    'comment' => $comment,
+                    'article' => $article,
+                    'subscribedCommentIds' => $subscribedCommentIds,
+                    'depth' => 0,
+                ])
             @empty
                 <div class="rounded-lg border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
                     还没有评论，欢迎发表第一条看法。
