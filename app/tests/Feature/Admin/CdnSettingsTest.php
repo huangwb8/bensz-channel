@@ -28,6 +28,8 @@ class CdnSettingsTest extends TestCase
             ->assertSee('保存仅更新草稿')
             ->assertSee('应用 CDN')
             ->assertSee('停止 CDN')
+            ->assertSee('btn-warning', false)
+            ->assertSee('btn-danger', false)
             ->assertSee('工作日志');
     }
 

@@ -152,11 +152,11 @@
             <div class="flex flex-wrap items-center gap-3">
                 <button type="submit" class="btn-primary inline-flex items-center justify-center">保存 CDN 设置</button>
                 <button type="button" class="btn-secondary inline-flex items-center justify-center" data-cdn-apply>应用 CDN</button>
-                <button type="button" class="inline-flex items-center justify-center rounded-lg border border-amber-200 px-4 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-50" data-cdn-stop>停止 CDN</button>
+                <button type="button" class="btn-warning inline-flex items-center justify-center" data-cdn-stop>停止 CDN</button>
                 <button type="button" class="btn-secondary inline-flex items-center justify-center" data-cdn-test>测试连接</button>
                 <button type="button" class="btn-secondary inline-flex items-center justify-center" data-cdn-diff>查看差异</button>
                 <button type="button" class="btn-secondary inline-flex items-center justify-center" data-cdn-sync>立即同步</button>
-                <button type="button" class="inline-flex items-center justify-center rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50" data-cdn-clear>清空远程</button>
+                <button type="button" class="btn-danger inline-flex items-center justify-center" data-cdn-clear>清空远程</button>
             </div>
 
             <div id="cdn-action-result" class="hidden rounded-lg border px-4 py-3 text-sm"></div>

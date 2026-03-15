@@ -46,6 +46,9 @@ class ThemeStylesheetTest extends TestCase
         $this->assertStringContainsString('.two-factor-verify-card', $stylesheet);
         $this->assertStringContainsString('.cdn-runtime-panel', $stylesheet);
         $this->assertStringContainsString("[data-theme='dark'] .cdn-runtime-panel", $stylesheet);
+        $this->assertStringContainsString('.btn-warning', $stylesheet);
+        $this->assertStringContainsString('.btn-danger', $stylesheet);
+        $this->assertStringContainsString('.top-nav-mobile-hidden', $stylesheet);
         $this->assertStringContainsString('var(--color-surface-elevated)', $stylesheet);
     }
 
