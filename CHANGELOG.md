@@ -6,6 +6,20 @@
 
 ## [Unreleased]
 
+## [1.40.2] - 2026-03-15
+
+### Changed（变更）
+
+- 重新设计了文章详情页桌面端目录布局：`app/resources/views/articles/show.blade.php` 现将桌面目录从文章卡片内部提升为页面级右侧轨道，左侧统一承载正文、推荐与评论，右侧 `article-toc-desktop` 自身直接使用 `lg:sticky lg:top-24` 固定在视口中，避免浏览器对嵌套 grid/card sticky 的兼容差异导致目录继续随正文一起滚走
+- 更新了文章目录回归契约与版本号：`app/tests/Feature/Articles/ArticleTocTest.php` 现锁定页面级双栏布局与桌面目录侧栏的 sticky 类名，`app/config.toml` 已同步推进到 `1.40.2`
+
+## [1.40.1] - 2026-03-15
+
+### Changed（变更）
+
+- 优化了文章详情页桌面端目录侧栏的布局约束：`app/resources/views/articles/show.blade.php` 现让文章容器在 `lg` 及以上断点恢复 `overflow-visible`，并让 `article-toc-desktop` 使用 `lg:self-start` 按内容高度对齐，确保长文滚动时右侧目录保持粘性可见、无需回滚到顶部再跳转章节
+- 更新了文章目录回归契约与版本号：`app/tests/Feature/Articles/ArticleTocTest.php` 现新增桌面端 sticky 相关类名断言，`app/config.toml` 已同步推进到 `1.40.1`
+
 ## [1.40.0] - 2026-03-15
 
 ### Added（新增）
