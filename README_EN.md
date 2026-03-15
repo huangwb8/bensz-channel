@@ -27,10 +27,10 @@ Bensz Channel is a web community platform built with **Laravel + Better Auth + P
 - 👥 **User Management**: Complete user registration, login, permission management, and ban system
 - 🔐 **Multiple Login Methods**: Email verification code, email password, WeChat/QQ QR code login
 - 📝 **Markdown Support**: Articles and comments support Markdown rendering with paste-to-upload images and videos up to 500MB
-- 📧 **Subscription Notifications**: SMTP email subscription and RSS feeds
+- 📧 **Subscription Notifications**: SMTP email subscriptions, admin activity alerts, and RSS feeds
 - ⚡ **Static Page Optimization**: Guest access automatically uses pre-built static HTML + Gzip compression
 - ☁️ **Dual-Mode CDN**: Supports both origin-pull CDN and object-storage CDN, with draft saving, manual apply/stop, connection testing, diff preview, manual sync, and detailed work logs
-- 🎨 **Admin Dashboard**: Complete management for channels, articles, users, and site settings
+- 🎨 **Admin Dashboard**: Complete management for channels, articles, comments, users, and site settings
 - 🚀 **One-Click Deployment**: Docker Compose launches all services with one command
 
 ---

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Vibe;
 
 use App\Http\Controllers\Controller;
 use App\Models\Comment;
+use App\Support\CommentModerationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -26,21 +27,21 @@ class CommentController extends Controller
         return response()->json($comments);
     }
 
-    public function destroy(Comment $comment): JsonResponse
+    public function destroy(Comment $comment, CommentModerationService $commentModerationService): JsonResponse
     {
-        $comment->delete();
+        $commentModerationService->delete($comment);
 
         return response()->json(['ok' => true]);
     }
 
-    public function update(Request $request, Comment $comment): JsonResponse
+    public function update(Request $request, Comment $comment, CommentModerationService $commentModerationService): JsonResponse
     {
         $validated = $request->validate([
             'is_visible' => ['required', 'boolean'],
         ]);
 
-        $comment->update($validated);
+        $comment = $commentModerationService->updateVisibility($comment, (bool) $validated['is_visible']);
 
-        return response()->json(['comment' => $comment->fresh()]);
+        return response()->json(['comment' => $comment]);
     }
 }

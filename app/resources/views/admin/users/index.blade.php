@@ -17,6 +17,7 @@
             </div>
             <div class="icon-action-group">
                 <x-icon-button :href="route('admin.articles.index')" icon="document" label="文章管理" title="文章管理" />
+                <x-icon-button :href="route('admin.comments.index')" icon="chat-bubble-left-right" label="评论管理" title="评论管理" />
                 <x-icon-button :href="route('admin.channels.index')" icon="folder" label="频道管理" title="频道管理" />
             </div>
         </div>

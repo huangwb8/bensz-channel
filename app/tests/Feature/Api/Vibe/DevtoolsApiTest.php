@@ -36,6 +36,7 @@ class DevtoolsApiTest extends TestCase
         $staticPageBuilder = Mockery::mock(StaticPageBuilder::class);
         $staticPageBuilder->shouldReceive('rebuildAll')->andReturnNull();
         $staticPageBuilder->shouldReceive('rebuildArticle')->andReturnNull();
+        $staticPageBuilder->shouldReceive('rebuildAfterComment')->andReturnNull();
         $staticPageBuilder->shouldReceive('rebuildDeletedArticle')->andReturnNull();
         $staticPageBuilder->shouldReceive('captureArticleState')->andReturn([]);
         $this->app->instance(StaticPageBuilder::class, $staticPageBuilder);

@@ -3,6 +3,7 @@
 namespace App\Services\Auth;
 
 use App\Models\User;
+use App\Support\AdminActivityNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -10,6 +11,10 @@ use Illuminate\Validation\ValidationException;
 
 class LoginUserResolver
 {
+    public function __construct(
+        private readonly AdminActivityNotifier $adminActivityNotifier,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $identity
      */
@@ -45,6 +50,11 @@ class LoginUserResolver
                 'phone_verified_at' => $phoneVerified ? now() : null,
                 'last_seen_at' => now(),
             ]);
+
+            $this->adminActivityNotifier->sendUserRegistered(
+                $user,
+                $phone !== null ? '手机验证码登录' : '邮箱验证码登录',
+            );
 
             return $user;
         }

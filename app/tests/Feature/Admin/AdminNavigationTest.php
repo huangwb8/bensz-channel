@@ -24,6 +24,7 @@ class AdminNavigationTest extends TestCase
             '站点设置',
             'CDN 设置',
             '管理文章',
+            '管理评论',
             '管理频道',
             '管理用户',
             '订阅设置',

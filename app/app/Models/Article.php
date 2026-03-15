@@ -61,6 +61,13 @@ class Article extends Model
         return $this->hasMany(Comment::class)->latest();
     }
 
+    public function refreshCommentCount(): void
+    {
+        $this->forceFill([
+            'comment_count' => $this->comments()->count(),
+        ])->save();
+    }
+
     public function scopePublished(Builder $query): Builder
     {
         return $query

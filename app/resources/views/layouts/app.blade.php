@@ -139,6 +139,9 @@
                                     <a href="{{ route('admin.articles.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
                                         📝 管理文章
                                     </a>
+                                    <a href="{{ route('admin.comments.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
+                                        💬 管理评论
+                                    </a>
                                     <a href="{{ route('admin.channels.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" role="menuitem">
                                         📁 管理频道
                                     </a>

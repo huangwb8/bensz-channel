@@ -9,6 +9,7 @@
                     <p class="mt-1 text-sm text-gray-500">管理所有频道的文章内容，支持批量选择删除，并可一键切换置顶 / 精华状态。</p>
                 </div>
                 <div class="icon-action-group">
+                    <x-icon-button :href="route('admin.comments.index')" icon="chat-bubble-left-right" label="评论管理" title="评论管理" />
                     <x-icon-button :href="route('admin.users.index')" icon="users" label="用户管理" title="用户管理" />
                     <x-icon-button :href="route('admin.channels.index')" icon="folder" label="频道管理" title="频道管理" />
                     <x-icon-button :href="route('admin.articles.create')" icon="plus" label="新建文章" title="新建文章" variant="primary" />

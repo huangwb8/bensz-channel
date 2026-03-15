@@ -5,9 +5,14 @@ namespace App\Services\Auth;
 use App\Data\SocialAuthIdentity;
 use App\Models\SocialAccount;
 use App\Models\User;
+use App\Support\AdminActivityNotifier;
 
 class SocialAccountResolver
 {
+    public function __construct(
+        private readonly AdminActivityNotifier $adminActivityNotifier,
+    ) {}
+
     public function resolve(SocialAuthIdentity $identity): User
     {
         $socialAccount = SocialAccount::query()
@@ -35,6 +40,11 @@ class SocialAccountResolver
                 'role' => User::ROLE_MEMBER,
                 'last_seen_at' => now(),
             ]);
+
+            $this->adminActivityNotifier->sendUserRegistered(
+                $user,
+                $this->providerLabel($identity->provider),
+            );
         }
 
         $this->touchUser($user, $identity);
@@ -73,5 +83,14 @@ class SocialAccountResolver
         }
 
         $user->fill($payload)->save();
+    }
+
+    private function providerLabel(string $provider): string
+    {
+        return match ($provider) {
+            'wechat' => '微信扫码登录',
+            'qq' => 'QQ 扫码登录',
+            default => strtoupper($provider).' 登录',
+        };
     }
 }

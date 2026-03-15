@@ -115,9 +115,7 @@ class ManagedUserService
             ->whereIn('id', $articleIds->all())
             ->get()
             ->each(function (Article $article): void {
-                $article->update([
-                    'comment_count' => $article->allComments()->count(),
-                ]);
+                $article->refreshCommentCount();
             });
     }
 }

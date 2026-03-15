@@ -9,6 +9,7 @@
             </div>
             <div class="icon-action-group">
                 <x-icon-button :href="route('admin.articles.index')" icon="document" label="文章管理" title="文章管理" />
+                <x-icon-button :href="route('admin.comments.index')" icon="chat-bubble-left-right" label="评论管理" title="评论管理" />
                 <x-icon-button :href="route('admin.users.index')" icon="users" label="用户管理" title="用户管理" />
             </div>
         </div>

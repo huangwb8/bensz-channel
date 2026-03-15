@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Comment;
+use App\Support\AdminActivityNotifier;
 use App\Support\CommentMentionNotifier;
 use App\Support\MarkdownRenderer;
 use App\Support\StaticPageBuilder;
@@ -15,6 +16,7 @@ class CommentController extends Controller
     public function store(
         Request $request,
         Article $article,
+        AdminActivityNotifier $adminActivityNotifier,
         CommentMentionNotifier $commentMentionNotifier,
         MarkdownRenderer $markdownRenderer,
         StaticPageBuilder $staticPageBuilder,
@@ -36,10 +38,8 @@ class CommentController extends Controller
         ]);
 
         $commentMentionNotifier->send($comment);
-
-        $article->update([
-            'comment_count' => $article->allComments()->count(),
-        ]);
+        $adminActivityNotifier->sendCommentPosted($comment);
+        $article->refreshCommentCount();
 
         $staticPageBuilder->rebuildAfterComment($article->fresh(['channel']));
 

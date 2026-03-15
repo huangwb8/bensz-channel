@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\Admin\ArticleController as AdminArticleController;
 use App\Http\Controllers\Admin\ChannelController as AdminChannelController;
+use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 use App\Http\Controllers\Admin\CdnSettingsController as AdminCdnSettingsController;
 use App\Http\Controllers\Admin\DevtoolsController as AdminDevtoolsController;
 use App\Http\Controllers\Admin\SiteSettingsController as AdminSiteSettingsController;
@@ -94,6 +95,10 @@ Route::prefix('admin')->middleware(['auth', 'not-banned', 'admin'])->name('admin
     Route::patch('/articles/{article}/pin', [AdminArticleController::class, 'togglePin'])->name('articles.pin');
     Route::patch('/articles/{article}/feature', [AdminArticleController::class, 'toggleFeature'])->name('articles.feature');
     Route::delete('/articles/{article}', [AdminArticleController::class, 'destroy'])->name('articles.destroy');
+
+    Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
+    Route::patch('/comments/{comment}/visibility', [AdminCommentController::class, 'updateVisibility'])->name('comments.visibility');
+    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
 
     // DevTools — Vibe Coding remote management
     Route::get('/devtools', [AdminDevtoolsController::class, 'index'])->name('devtools.index');

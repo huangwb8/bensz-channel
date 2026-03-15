@@ -33,6 +33,25 @@
 - 修复了频道管理页夜间模式下新增频道表单发白的问题：此前 `from-gray-50 → to-white` 渐变未被暗色主题覆盖，导致表单背景保持浅色、白色标签对比度异常；现在暗色模式会自动映射到深色渐变，频道管理与同类后台表单显示恢复正常
 - 修复了首次仅保存 CDN 设置时站点配置写入失败的问题：`app/app/Support/SiteSettingsManager.php` 现会为未显式提交的 `article_image_max_mb` 回退到运行时默认值，避免 `site_settings` 首次插入时触发非空约束；`app/tests/Feature/Admin/CdnSettingsTest.php` 同步增加断言覆盖该回归
 
+## [1.37.0] - 2026-03-15
+
+### Added（新增）
+
+- 新增了后台评论管理页：`app/app/Http/Controllers/Admin/CommentController.php`、`app/resources/views/admin/comments/index.blade.php` 与 `app/routes/web.php` 现提供 `admin/comments` 入口，支持按评论内容 / 用户 / 文章 / 显隐状态筛选，并可直接查看、隐藏、恢复和删除评论
+- 新增了管理员活动邮件通知：`app/app/Support/AdminActivityNotifier.php`、`app/app/Notifications/AdminNewUserRegisteredNotification.php` 与 `app/app/Notifications/AdminCommentPostedNotification.php` 现会在新用户首次注册和用户发布评论时向 `ADMIN_EMAIL` 发送通知邮件
+- 新增了评论管理与管理员通知回归测试：`app/tests/Feature/Admin/AdminCommentManagementTest.php`、`app/tests/Feature/Notifications/AdminActivityNotificationTest.php` 与相关导航 / DevTools / API 测试已覆盖后台入口、评论操作副作用和管理员邮件发送链路
+
+### Changed（变更）
+
+- 优化了后台管理导航：`app/resources/views/layouts/app.blade.php`、`app/resources/views/admin/articles/index.blade.php`、`app/resources/views/admin/channels/index.blade.php`、`app/resources/views/admin/users/index.blade.php`、`app/resources/views/admin/site-settings/edit.blade.php` 与 `app/resources/views/admin/devtools/index.blade.php` 现统一加入“评论管理”快捷入口，并将其放到“管理文章”和“管理频道”之间
+- 优化了评论治理链路：`app/app/Support/CommentModerationService.php`、`app/app/Http/Controllers/CommentController.php`、`app/app/Http/Controllers/Api/Vibe/CommentController.php`、`app/app/Models/Article.php` 与 `app/app/Support/ManagedUserService.php` 现统一按“可见评论数”刷新 `articles.comment_count`，并在评论显隐 / 删除后触发静态页增量重建
+- 更新了项目文档与版本号：`README.md`、`README_EN.md`、`docs/开发者文档.md` 与 `app/config.toml` 已同步补充评论管理、管理员 SMTP 活动通知说明，并将项目版本推进到 `1.37.0`
+
+### Fixed（修复）
+
+- 修复了后台缺少评论治理闭环的问题：此前管理员只能间接处理评论，无法集中筛选、隐藏或删除用户评论；现在后台已提供独立评论管理入口和完整操作闭环
+- 修复了管理员无法及时获知新用户注册和评论动态的问题：此前 SMTP 仅服务于订阅通知和验证码，管理员不会收到关键运营事件提醒；现在相关事件会自动投递到管理员邮箱
+
 ## [1.36.0] - 2026-03-12
 
 ### Added（新增）
