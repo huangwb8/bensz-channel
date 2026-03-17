@@ -11,6 +11,7 @@
                 <x-icon-button :href="route('admin.articles.index')" icon="document" label="文章管理" title="文章管理" />
                 <x-icon-button :href="route('admin.comments.index')" icon="chat-bubble-left-right" label="评论管理" title="评论管理" />
                 <x-icon-button :href="route('admin.channels.index')" icon="folder" label="频道管理" title="频道管理" />
+                <x-icon-button :href="route('admin.tags.index')" icon="tag" label="标签管理" title="标签管理" />
                 <x-icon-button :href="route('admin.users.index')" icon="users" label="用户管理" title="用户管理" />
             </div>
         </div>
@@ -54,7 +55,7 @@
             </div>
         </dl>
         <div class="mt-3 text-xs text-blue-700">
-            <p>可用端点：<code class="font-mono">GET /api/vibe/ping</code> · <code class="font-mono">GET /api/vibe/channels</code> · <code class="font-mono">GET /api/vibe/articles</code> · <code class="font-mono">GET /api/vibe/comments</code> · <code class="font-mono">GET /api/vibe/users</code></p>
+            <p>可用端点：<code class="font-mono">GET /api/vibe/ping</code> · <code class="font-mono">GET /api/vibe/channels</code> · <code class="font-mono">GET /api/vibe/articles</code> · <code class="font-mono">GET /api/vibe/tags</code> · <code class="font-mono">GET /api/vibe/comments</code> · <code class="font-mono">GET /api/vibe/users</code></p>
         </div>
     </section>
 

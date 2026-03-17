@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Channel;
+use App\Models\Tag;
 use DOMDocument;
 use Illuminate\Support\Collection;
 
@@ -24,6 +25,16 @@ class RssFeedBuilder
             title: config('community.site.name').' · '.$channel->name,
             description: $channel->description ?: '订阅 '.$channel->name.' 的最新文章',
             siteUrl: route('channels.show', $channel),
+            articles: $articles,
+        );
+    }
+
+    public function buildForTag(Tag $tag, Collection $articles): string
+    {
+        return $this->build(
+            title: config('community.site.name').' · #'.$tag->name,
+            description: $tag->description ?: '订阅标签 '.$tag->name.' 的最新文章',
+            siteUrl: route('home'),
             articles: $articles,
         );
     }
@@ -53,6 +64,11 @@ class RssFeedBuilder
             $item->appendChild($dom->createElement('guid', route('articles.show', [$article->channel, $article])));
             $item->appendChild($dom->createElement('pubDate', optional($article->published_at)->toRssString() ?: now()->toRssString()));
             $item->appendChild($dom->createElement('description', $article->excerpt ?: strip_tags($article->html_body)));
+
+            foreach ($article->tags ?? [] as $tag) {
+                $item->appendChild($dom->createElement('category', $tag->name));
+            }
+
             $channelElement->appendChild($item);
         }
 

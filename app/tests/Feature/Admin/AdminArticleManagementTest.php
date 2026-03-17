@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Article;
 use App\Models\Channel;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -25,6 +26,8 @@ class AdminArticleManagementTest extends TestCase
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $channel = $this->createChannel();
+        $laravelTag = $this->createTag('Laravel', 'laravel');
+        $releaseTag = $this->createTag('发布公告', 'release-note');
 
         $this->actingAs($admin)
             ->post(route('admin.articles.store'), [
@@ -38,6 +41,7 @@ class AdminArticleManagementTest extends TestCase
                 'is_published' => 1,
                 'is_pinned' => 1,
                 'is_featured' => 1,
+                'tag_ids' => [$laravelTag->id, $releaseTag->id],
             ])
             ->assertRedirect(route('admin.articles.index'));
 
@@ -46,6 +50,16 @@ class AdminArticleManagementTest extends TestCase
             'title' => '后台发文测试',
             'is_pinned' => true,
             'is_featured' => true,
+        ]);
+
+        $this->assertDatabaseHas('article_tag', [
+            'article_id' => Article::query()->where('slug', 'admin-post-test')->value('id'),
+            'tag_id' => $laravelTag->id,
+        ]);
+
+        $this->assertDatabaseHas('article_tag', [
+            'article_id' => Article::query()->where('slug', 'admin-post-test')->value('id'),
+            'tag_id' => $releaseTag->id,
         ]);
     }
 
@@ -106,10 +120,13 @@ class AdminArticleManagementTest extends TestCase
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $channel = $this->createChannel();
+        $oldTag = $this->createTag('旧标签', 'legacy-tag');
+        $newTag = $this->createTag('新标签', 'new-tag');
         $article = $this->createArticle($admin, $channel, [
             'title' => '旧标题',
             'slug' => 'old-title',
         ]);
+        $article->tags()->attach($oldTag);
 
         $this->actingAs($admin)
             ->put(route('admin.articles.update', $article), [
@@ -123,6 +140,7 @@ class AdminArticleManagementTest extends TestCase
                 'is_published' => 1,
                 'is_pinned' => 1,
                 'is_featured' => 1,
+                'tag_ids' => [$newTag->id],
             ])
             ->assertRedirect(route('admin.articles.index'));
 
@@ -133,6 +151,16 @@ class AdminArticleManagementTest extends TestCase
             'excerpt' => '新的摘要',
             'is_pinned' => true,
             'is_featured' => true,
+        ]);
+
+        $this->assertDatabaseMissing('article_tag', [
+            'article_id' => $article->id,
+            'tag_id' => $oldTag->id,
+        ]);
+
+        $this->assertDatabaseHas('article_tag', [
+            'article_id' => $article->id,
+            'tag_id' => $newTag->id,
         ]);
     }
 
@@ -365,5 +393,14 @@ class AdminArticleManagementTest extends TestCase
             'is_pinned' => false,
             'is_featured' => false,
         ], $overrides));
+    }
+
+    private function createTag(string $name, string $slug): Tag
+    {
+        return Tag::query()->create([
+            'name' => $name,
+            'slug' => $slug,
+            'description' => $name.' 描述',
+        ]);
     }
 }

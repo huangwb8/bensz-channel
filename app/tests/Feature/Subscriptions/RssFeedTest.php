@@ -4,6 +4,7 @@ namespace Tests\Feature\Subscriptions;
 
 use App\Models\Article;
 use App\Models\Channel;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -82,6 +83,27 @@ class RssFeedTest extends TestCase
         $response->assertSee('精华开发文章', false);
         $response->assertSee(route('articles.show', [$featuredArticle->channel, $featuredArticle]), false);
         $response->assertDontSee('普通反馈文章', false);
+    }
+
+    public function test_tag_rss_feed_only_contains_articles_with_that_tag(): void
+    {
+        $tag = Tag::query()->create([
+            'name' => 'Laravel',
+            'slug' => 'laravel',
+            'description' => 'Laravel 相关文章',
+        ]);
+        [$taggedArticle] = $this->createArticleFixture('Laravel 文章', 'laravel-article');
+        [$untaggedArticle] = $this->createArticleFixture('普通文章', 'plain-article', 'general', '综合');
+
+        $taggedArticle->tags()->attach($tag);
+
+        $response = $this->get(route('feeds.tags.show', $tag));
+
+        $response->assertOk();
+        $response->assertSee('Laravel 文章', false);
+        $response->assertSee(route('articles.show', [$taggedArticle->channel, $taggedArticle]), false);
+        $response->assertDontSee('普通文章', false);
+        $response->assertDontSee(route('articles.show', [$untaggedArticle->channel, $untaggedArticle]), false);
     }
 
     private function createArticleFixture(

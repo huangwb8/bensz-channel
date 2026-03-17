@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Vibe\AgentController;
 use App\Http\Controllers\Api\Vibe\ArticleController as VibeArticleController;
 use App\Http\Controllers\Api\Vibe\ChannelController as VibeChannelController;
 use App\Http\Controllers\Api\Vibe\CommentController as VibeCommentController;
+use App\Http\Controllers\Api\Vibe\TagController as VibeTagController;
 use App\Http\Controllers\Api\Vibe\UserController as VibeUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,12 @@ Route::prefix('vibe')->middleware('vibe-api')->name('vibe.')->group(function ():
     Route::post('/articles', [VibeArticleController::class, 'store'])->name('articles.store');
     Route::put('/articles/{article}', [VibeArticleController::class, 'update'])->name('articles.update');
     Route::delete('/articles/{article}', [VibeArticleController::class, 'destroy'])->name('articles.destroy');
+
+    // Tags
+    Route::get('/tags', [VibeTagController::class, 'index'])->name('tags.index');
+    Route::post('/tags', [VibeTagController::class, 'store'])->name('tags.store');
+    Route::put('/tags/{tag}', [VibeTagController::class, 'update'])->name('tags.update');
+    Route::delete('/tags/{tag}', [VibeTagController::class, 'destroy'])->name('tags.destroy');
 
     // Comments
     Route::get('/comments', [VibeCommentController::class, 'index'])->name('comments.index');

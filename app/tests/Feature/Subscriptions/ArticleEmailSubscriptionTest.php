@@ -3,6 +3,7 @@
 namespace Tests\Feature\Subscriptions;
 
 use App\Models\Channel;
+use App\Models\Tag;
 use App\Models\User;
 use App\Notifications\ArticlePublishedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -91,6 +92,48 @@ class ArticleEmailSubscriptionTest extends TestCase
             ->assertRedirect(route('admin.articles.index'));
 
         Notification::assertNotSentTo($subscriber, ArticlePublishedNotification::class);
+    }
+
+    public function test_tag_subscribers_receive_article_email_when_matching_tag_is_published(): void
+    {
+        Notification::fake();
+
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $channel = Channel::factory()->create(['name' => '公告', 'slug' => 'notice']);
+        $matchingTag = Tag::query()->create([
+            'name' => 'Laravel',
+            'slug' => 'laravel',
+            'description' => 'Laravel 相关文章',
+        ]);
+        $otherTag = Tag::query()->create([
+            'name' => 'Release',
+            'slug' => 'release',
+            'description' => '发布公告',
+        ]);
+        $matchedSubscriber = User::factory()->create(['role' => User::ROLE_MEMBER]);
+        $unmatchedSubscriber = User::factory()->create(['role' => User::ROLE_MEMBER]);
+
+        $matchedSubscriber->notificationPreference->update(['email_all_articles' => false]);
+        $matchedSubscriber->emailTagSubscriptions()->create(['tag_id' => $matchingTag->id]);
+        $unmatchedSubscriber->notificationPreference->update(['email_all_articles' => false]);
+        $unmatchedSubscriber->emailTagSubscriptions()->create(['tag_id' => $otherTag->id]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.articles.store'), [
+                'channel_id' => $channel->id,
+                'title' => '标签订阅通知测试',
+                'slug' => 'tag-subscription-mail-test',
+                'excerpt' => '摘要',
+                'markdown_body' => '正文',
+                'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
+                'published_at' => now()->format('Y-m-d H:i:s'),
+                'is_published' => 1,
+                'tag_ids' => [$matchingTag->id],
+            ])
+            ->assertRedirect(route('admin.articles.index'));
+
+        Notification::assertSentTo($matchedSubscriber, ArticlePublishedNotification::class);
+        Notification::assertNotSentTo($unmatchedSubscriber, ArticlePublishedNotification::class);
     }
 
     private function createArticleFixture(): array

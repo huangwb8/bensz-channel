@@ -3,6 +3,7 @@
 namespace Tests\Feature\Subscriptions;
 
 use App\Models\Channel;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -41,6 +42,16 @@ class SubscriptionSettingsTest extends TestCase
         $member = User::factory()->create(['role' => User::ROLE_MEMBER]);
         $engineering = Channel::factory()->create(['name' => '开发交流', 'slug' => 'engineering']);
         $feedback = Channel::factory()->create(['name' => '反馈建议', 'slug' => 'feedback']);
+        $laravelTag = Tag::query()->create([
+            'name' => 'Laravel',
+            'slug' => 'laravel',
+            'description' => 'Laravel 相关文章',
+        ]);
+        $releaseTag = Tag::query()->create([
+            'name' => 'Release',
+            'slug' => 'release',
+            'description' => '发布公告',
+        ]);
 
         $this->actingAs($member)
             ->put(route('settings.subscriptions.update'), [
@@ -48,6 +59,7 @@ class SubscriptionSettingsTest extends TestCase
                 'email_mentions' => false,
                 'email_comment_replies' => false,
                 'channel_ids' => [$engineering->id],
+                'tag_ids' => [$laravelTag->id],
             ])
             ->assertRedirect(route('settings.subscriptions.edit'));
 
@@ -66,6 +78,16 @@ class SubscriptionSettingsTest extends TestCase
         $this->assertDatabaseMissing('channel_email_subscriptions', [
             'user_id' => $member->id,
             'channel_id' => $feedback->id,
+        ]);
+
+        $this->assertDatabaseHas('tag_email_subscriptions', [
+            'user_id' => $member->id,
+            'tag_id' => $laravelTag->id,
+        ]);
+
+        $this->assertDatabaseMissing('tag_email_subscriptions', [
+            'user_id' => $member->id,
+            'tag_id' => $releaseTag->id,
         ]);
     }
 }

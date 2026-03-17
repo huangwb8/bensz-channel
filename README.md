@@ -4,7 +4,7 @@
 
 **现代化 Web 社区平台 - 频道管理、实时互动、内容沉淀一体化解决方案**
 
-[![Version](https://img.shields.io/badge/version-1.36.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
+[![Version](https://img.shields.io/badge/version-1.41.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
 [![Platform](https://img.shields.io/badge/platform-Docker-lightgrey.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -27,7 +27,8 @@ Bensz Channel 是一个基于 **Laravel + Better Auth + PostgreSQL + Redis + Doc
 - 👥 **用户管理**：完整的用户注册、登录、权限管理与封禁系统
 - 🔐 **多种登录方式**：邮箱验证码、邮箱密码、微信/QQ 扫码登录
 - 📝 **Markdown 支持**：文章与评论支持 Markdown 渲染，支持粘贴图片与不大于 500MB 的视频自动上传
-- 📧 **订阅通知**：SMTP 邮件订阅、管理员活动提醒与 RSS 订阅
+- 🏷️ **标签体系**：每篇文章可绑定多个管理员定义的标签，支持后台统一维护
+- 📧 **订阅通知**：SMTP 邮件订阅、管理员活动提醒与 RSS 订阅，支持按版块与标签筛选
 - ⚡ **静态页面优化**：游客访问自动使用预构建静态 HTML + Gzip 压缩
 - ☁️ **双模式 CDN**：同时支持回源型 CDN 与对象存储型 CDN，后台支持草稿保存、手动应用/停止、连接测试、差异预览、手动同步与详细工作日志
 - 🎨 **管理后台**：完整的频道、文章、评论、用户、站点设置管理
@@ -292,13 +293,14 @@ install-bensz-skills --source https://github.com/huangwb8/bensz-devtools
 ### 内容管理
 - Markdown 文章与评论
 - 粘贴图片与不大于 500MB 的视频自动上传
+- 每篇文章可绑定 1 个或多个管理员定义标签
 - 文章置顶与精华标记
 - 自动生成目录 TOC
 
 ### 订阅功能
-- SMTP 邮件订阅（全部/指定版块）
+- SMTP 邮件订阅（全部/指定版块/指定标签）
 - 评论 @ 提醒
-- RSS 订阅（全部/单个版块）
+- RSS 订阅（全部/单个版块/指定标签）
 
 ### 性能优化
 - 游客访问自动使用静态 HTML

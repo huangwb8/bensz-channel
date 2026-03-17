@@ -10,6 +10,7 @@ use App\Models\CommentSubscription;
 use App\Models\MailSetting;
 use App\Models\SiteSetting;
 use App\Models\SocialAccount;
+use App\Models\Tag;
 use App\Models\User;
 use App\Models\UserNotificationPreference;
 use App\Support\DataBackupManager;
@@ -114,6 +115,15 @@ class AdminDataBackupRestoreTest extends TestCase
             'channel_id' => $channel->id,
         ]);
 
+        $tag = Tag::query()->create([
+            'name' => 'Laravel',
+            'slug' => 'laravel',
+            'description' => 'Laravel 相关文章',
+        ]);
+
+        $article->tags()->attach($tag);
+        $member->emailTagSubscriptions()->create(['tag_id' => $tag->id]);
+
         $archivePath = app(DataBackupManager::class)->createBackupArchive();
 
         SiteSetting::query()->update([
@@ -127,6 +137,7 @@ class AdminDataBackupRestoreTest extends TestCase
         CommentSubscription::query()->delete();
         Comment::query()->delete();
         Article::query()->delete();
+        Tag::query()->delete();
         ChannelEmailSubscription::query()->delete();
         Channel::query()->delete();
         SocialAccount::query()->delete();
@@ -196,6 +207,17 @@ class AdminDataBackupRestoreTest extends TestCase
         $this->assertDatabaseHas(ChannelEmailSubscription::class, [
             'user_id' => $member->id,
             'channel_id' => $channel->id,
+        ]);
+        $this->assertDatabaseHas('tags', [
+            'slug' => 'laravel',
+        ]);
+        $this->assertDatabaseHas('article_tag', [
+            'article_id' => $article->id,
+            'tag_id' => $tag->id,
+        ]);
+        $this->assertDatabaseHas('tag_email_subscriptions', [
+            'user_id' => $member->id,
+            'tag_id' => $tag->id,
         ]);
     }
 }

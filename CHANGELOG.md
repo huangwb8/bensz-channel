@@ -6,6 +6,22 @@
 
 ## [Unreleased]
 
+## [1.41.0] - 2026-03-17
+
+### Added（新增）
+
+- 新增了文章标签体系：`app/database/migrations/2026_03_17_000000_create_tags_table.php`、`app/database/migrations/2026_03_17_000001_create_article_tag_table.php`、`app/app/Models/Tag.php` 与 `app/app/Http/Controllers/Admin/TagController.php` 现支持管理员创建、编辑、删除标签，文章可绑定多个标签，后台新增独立“标签管理”入口
+- 新增了按标签订阅能力：`app/database/migrations/2026_03_17_000002_create_tag_email_subscriptions_table.php`、`app/app/Models/TagEmailSubscription.php`、`app/app/Http/Controllers/SubscriptionSettingsController.php` 与 `app/resources/views/settings/subscriptions.blade.php` 现支持成员按标签接收新文章邮件提醒
+- 新增了标签 RSS 订阅：`app/app/Http/Controllers/RssFeedController.php`、`app/app/Support/RssFeedBuilder.php` 与 `app/routes/web.php` 现提供 `/feeds/tags/{tag-public-id}.xml` 公开订阅入口
+- 新增了 DevTools 标签远程管理接口：`app/app/Http/Controllers/Api/Vibe/TagController.php`、`app/routes/api.php` 与 `app/tests/Feature/Api/Vibe/DevtoolsApiTest.php` 现支持通过 Vibe API 管理标签，并在文章 API 中同步读写 `tag_ids`
+
+### Changed（变更）
+
+- 优化了文章发布与展示链路：`app/app/Http/Controllers/Admin/ArticleController.php`、`app/app/Http/Controllers/Api/Vibe/ArticleController.php`、`app/app/Support/CommunityViewData.php` 以及首页 / 频道页 / 文章页视图现全面支持多标签渲染与编辑
+- 优化了订阅通知规则：`app/app/Support/ArticleSubscriptionNotifier.php` 与 `app/app/Models/User.php` 现将“全部版块 / 指定版块 / 指定标签”统一为同一判定链路，任一命中即可发送文章发布邮件
+- 优化了备份恢复覆盖范围：`app/app/Support/DataBackupManager.php` 与 `app/tests/Feature/Admin/AdminDataBackupRestoreTest.php` 现将 `tags`、`article_tag`、`tag_email_subscriptions` 纳入核心数据备份恢复
+- 更新了文档与版本号：`README.md`、`README_EN.md`、`docs/开发者文档.md` 与 `app/config.toml` 已同步补充标签管理、标签订阅与标签 RSS 说明，并将项目版本推进到 `1.41.0`
+
 ## [1.40.2] - 2026-03-15
 
 ### Changed（变更）

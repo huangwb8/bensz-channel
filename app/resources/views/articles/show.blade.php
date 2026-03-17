@@ -35,6 +35,24 @@
                         <div class="min-w-0 flex-1">
                             <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">{{ $article->title }}</h1>
                             <p class="mt-3 text-gray-600">{{ $article->excerpt }}</p>
+                            @if($article->tags->isNotEmpty())
+                                <div class="mt-4 flex flex-wrap items-center gap-2">
+                                    @foreach($article->tags as $tag)
+                                        <span class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                                            <span>#{{ $tag->name }}</span>
+                                            <button
+                                                type="button"
+                                                data-copy-rss="{{ route('feeds.tags.show', $tag) }}"
+                                                class="inline-flex items-center text-orange-600 transition-colors hover:text-orange-700"
+                                                title="复制标签 RSS 链接"
+                                            >
+                                                <x-icon name="rss" class="h-3.5 w-3.5" />
+                                                <span class="sr-only">复制标签 RSS</span>
+                                            </button>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
 
                         @if(auth()->user()?->isAdmin())
@@ -103,6 +121,13 @@
                                 <div class="flex items-center justify-between gap-4">
                                     <div class="min-w-0 flex-1">
                                         <div class="truncate font-medium text-gray-900">{{ $related->title }}</div>
+                                        @if($related->tags->isNotEmpty())
+                                            <div class="mt-2 flex flex-wrap gap-2">
+                                                @foreach($related->tags as $tag)
+                                                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">#{{ $tag->name }}</span>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                         <div class="mt-1 text-xs text-gray-500">{{ optional($related->published_at)->format('Y-m-d') }}</div>
                                     </div>
                                     <span class="shrink-0 text-xs text-gray-400">{{ $related->comment_count }} 评论</span>

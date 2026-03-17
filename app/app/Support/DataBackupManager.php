@@ -14,7 +14,7 @@ class DataBackupManager
 {
     private const FORMAT_NAME = 'bensz-channel-core-backup';
 
-    private const FORMAT_VERSION = 2;
+    private const FORMAT_VERSION = 3;
 
     private const BACKUP_TABLES = [
         'site_settings',
@@ -23,10 +23,13 @@ class DataBackupManager
         'social_accounts',
         'user_notification_preferences',
         'channels',
+        'tags',
         'articles',
+        'article_tag',
         'comments',
         'comment_subscriptions',
         'channel_email_subscriptions',
+        'tag_email_subscriptions',
         'devtools_api_keys',
     ];
 

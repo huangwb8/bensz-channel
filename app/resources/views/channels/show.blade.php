@@ -51,6 +51,13 @@
                         <p class="text-sm text-gray-600 line-clamp-2 mb-3">
                             {{ $article->excerpt }}
                         </p>
+                        @if($article->tags->isNotEmpty())
+                            <div class="mb-3 flex flex-wrap gap-2">
+                                @foreach($article->tags as $tag)
+                                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">#{{ $tag->name }}</span>
+                                @endforeach
+                            </div>
+                        @endif
                         <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
                             <span class="flex items-center gap-1">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

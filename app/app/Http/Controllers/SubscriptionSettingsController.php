@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Channel;
+use App\Models\Tag;
 use App\Support\MailSettingsManager;
 use App\Support\SmtpConnectivityTester;
 use Illuminate\Contracts\View\View;
@@ -25,7 +26,9 @@ class SubscriptionSettingsController extends Controller
             'pageTitle' => '订阅设置',
             'preference' => $preference,
             'channels' => Channel::query()->ordered()->get(),
+            'tags' => Tag::query()->ordered()->get(),
             'selectedChannelIds' => $user->emailChannelSubscriptions()->pluck('channel_id')->all(),
+            'selectedTagIds' => $user->emailTagSubscriptions()->pluck('tag_id')->all(),
         ];
 
         if ($user->isAdmin()) {
@@ -56,6 +59,8 @@ class SubscriptionSettingsController extends Controller
             'email_comment_replies' => ['nullable', 'boolean'],
             'channel_ids' => ['nullable', 'array'],
             'channel_ids.*' => ['integer', 'exists:channels,id'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['integer', 'exists:tags,id'],
         ]);
 
         $preference = $user->ensureNotificationPreference();
@@ -67,12 +72,20 @@ class SubscriptionSettingsController extends Controller
         ]);
 
         $channelIds = collect($validated['channel_ids'] ?? [])->map(fn (mixed $id) => (int) $id)->unique()->values()->all();
+        $tagIds = collect($validated['tag_ids'] ?? [])->map(fn (mixed $id) => (int) $id)->unique()->values()->all();
 
         $user->emailChannelSubscriptions()->delete();
+        $user->emailTagSubscriptions()->delete();
 
         if ($channelIds !== []) {
             $user->emailChannelSubscriptions()->createMany(
                 collect($channelIds)->map(fn (int $channelId) => ['channel_id' => $channelId])->all(),
+            );
+        }
+
+        if ($tagIds !== []) {
+            $user->emailTagSubscriptions()->createMany(
+                collect($tagIds)->map(fn (int $tagId) => ['tag_id' => $tagId])->all(),
             );
         }
 

@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\Channel;
 use App\Models\Comment;
 use App\Models\DevtoolsApiKey;
+use App\Models\Tag;
 use App\Models\User;
 use App\Support\ArticleSubscriptionNotifier;
 use App\Support\MarkdownRenderer;
@@ -163,6 +164,66 @@ class DevtoolsApiTest extends TestCase
         $response->assertJsonCount(1, 'data');
         $response->assertJsonPath('data.0.id', $hidden->id);
         $response->assertJsonPath('data.0.is_published', false);
+    }
+
+    public function test_tags_can_be_managed_and_attached_to_articles_via_vibe_api(): void
+    {
+        $channel = $this->createChannel();
+
+        $createTag = $this->withHeaders($this->headers())
+            ->postJson('/api/vibe/tags', [
+                'name' => 'Laravel',
+                'slug' => 'laravel',
+                'description' => 'Laravel 相关文章',
+            ]);
+
+        $createTag->assertCreated()
+            ->assertJsonPath('tag.name', 'Laravel')
+            ->assertJsonPath('tag.slug', 'laravel');
+
+        $tagId = $createTag->json('tag.id');
+
+        $createArticle = $this->withHeaders($this->headers())
+            ->postJson('/api/vibe/articles', [
+                'channel_id' => $channel->id,
+                'title' => '带标签文章',
+                'slug' => 'tagged-article',
+                'markdown_body' => '测试正文',
+                'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
+                'is_published' => true,
+                'tag_ids' => [$tagId],
+            ]);
+
+        $createArticle->assertCreated()
+            ->assertJsonPath('article.title', '带标签文章')
+            ->assertJsonPath('article.tags.0.id', $tagId);
+
+        $articleId = $createArticle->json('article.id');
+
+        $this->withHeaders($this->headers())
+            ->putJson("/api/vibe/tags/{$tagId}", [
+                'name' => 'Laravel 12',
+                'slug' => 'laravel-12',
+            ])
+            ->assertOk()
+            ->assertJsonPath('tag.name', 'Laravel 12')
+            ->assertJsonPath('tag.slug', 'laravel-12');
+
+        $this->withHeaders($this->headers())
+            ->getJson("/api/vibe/articles/{$articleId}")
+            ->assertOk()
+            ->assertJsonPath('article.tags.0.slug', 'laravel-12');
+
+        $this->withHeaders($this->headers())
+            ->deleteJson("/api/vibe/tags/{$tagId}")
+            ->assertOk()
+            ->assertJsonPath('ok', true);
+
+        $this->assertDatabaseMissing('tags', ['id' => $tagId]);
+        $this->assertDatabaseMissing('article_tag', [
+            'article_id' => $articleId,
+            'tag_id' => $tagId,
+        ]);
     }
 
     public function test_comments_can_be_filtered_updated_and_deleted(): void

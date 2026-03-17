@@ -4,7 +4,7 @@
 
 **Modern Web Community Platform - Integrated Solution for Channel Management, Real-time Interaction, and Content Curation**
 
-[![Version](https://img.shields.io/badge/version-1.36.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
+[![Version](https://img.shields.io/badge/version-1.41.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
 [![Platform](https://img.shields.io/badge/platform-Docker-lightgrey.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -27,7 +27,8 @@ Bensz Channel is a web community platform built with **Laravel + Better Auth + P
 - 👥 **User Management**: Complete user registration, login, permission management, and ban system
 - 🔐 **Multiple Login Methods**: Email verification code, email password, WeChat/QQ QR code login
 - 📝 **Markdown Support**: Articles and comments support Markdown rendering with paste-to-upload images and videos up to 500MB
-- 📧 **Subscription Notifications**: SMTP email subscriptions, admin activity alerts, and RSS feeds
+- 🏷️ **Tag System**: Each article can carry multiple admin-defined tags, managed centrally in the dashboard
+- 📧 **Subscription Notifications**: SMTP email subscriptions, admin activity alerts, and RSS feeds with channel/tag targeting
 - ⚡ **Static Page Optimization**: Guest access automatically uses pre-built static HTML + Gzip compression
 - ☁️ **Dual-Mode CDN**: Supports both origin-pull CDN and object-storage CDN, with draft saving, manual apply/stop, connection testing, diff preview, manual sync, and detailed work logs
 - 🎨 **Admin Dashboard**: Complete management for channels, articles, comments, users, and site settings
@@ -292,13 +293,14 @@ install-bensz-skills --source https://github.com/huangwb8/bensz-devtools
 ### Content Management
 - Markdown articles and comments
 - Paste-to-upload images and videos up to 500MB
+- Each article can include one or more admin-defined tags
 - Article pinning and featured marking
 - Auto-generated table of contents (TOC)
 
 ### Subscription Features
-- SMTP email subscription (all/specific channels)
+- SMTP email subscription (all/specific channels/specific tags)
 - Comment @ mentions
-- RSS feeds (all/individual channels)
+- RSS feeds (all/individual channels/specific tags)
 
 ### Performance Optimization
 - Guest access automatically uses static HTML

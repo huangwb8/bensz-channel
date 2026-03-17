@@ -11,14 +11,14 @@ class ArticleSubscriptionNotifier
 {
     public function send(Article $article): void
     {
-        $article->loadMissing('channel');
+        $article->loadMissing('channel', 'tags');
 
         $recipients = User::query()
             ->whereNotNull('email')
             ->whereKeyNot($article->author_id)
-            ->with(['notificationPreference', 'emailChannelSubscriptions'])
+            ->with(['notificationPreference', 'emailChannelSubscriptions', 'emailTagSubscriptions'])
             ->get()
-            ->filter(fn (User $user) => $user->subscribesToChannelArticles($article->channel_id));
+            ->filter(fn (User $user) => $user->subscribesToArticle($article));
 
         if ($recipients->isEmpty()) {
             return;

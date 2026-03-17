@@ -12,6 +12,7 @@
                     <x-icon-button :href="route('admin.comments.index')" icon="chat-bubble-left-right" label="评论管理" title="评论管理" />
                     <x-icon-button :href="route('admin.users.index')" icon="users" label="用户管理" title="用户管理" />
                     <x-icon-button :href="route('admin.channels.index')" icon="folder" label="频道管理" title="频道管理" />
+                    <x-icon-button :href="route('admin.tags.index')" icon="tag" label="标签管理" title="标签管理" />
                     <x-icon-button :href="route('admin.articles.create')" icon="plus" label="新建文章" title="新建文章" variant="primary" />
                 </div>
             </div>
@@ -86,6 +87,13 @@
                                 </div>
                                 <h3 class="text-lg font-semibold text-gray-900">{{ $article->title }}</h3>
                                 <p class="mt-2 line-clamp-2 text-sm text-gray-500">{{ $article->excerpt }}</p>
+                                @if($article->tags->isNotEmpty())
+                                    <div class="mt-3 flex flex-wrap gap-2">
+                                        @foreach($article->tags as $tag)
+                                            <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">#{{ $tag->name }}</span>
+                                        @endforeach
+                                    </div>
+                                @endif
                                 <div class="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-400">
                                     <span>{{ optional($article->published_at)->format('Y-m-d H:i') }}</span>
                                     <span>作者 {{ $article->author->name }}</span>

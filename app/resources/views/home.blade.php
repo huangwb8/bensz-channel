@@ -54,6 +54,13 @@
                         </a>
                     </h2>
                     <p class="mt-1 text-sm text-gray-600 line-clamp-2">{{ $pinnedArticle->excerpt }}</p>
+                    @if($pinnedArticle->tags->isNotEmpty())
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach($pinnedArticle->tags as $tag)
+                                <span class="inline-flex items-center rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-medium text-gray-700">#{{ $tag->name }}</span>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
                 <a href="{{ route('articles.show', [$pinnedArticle->channel, $pinnedArticle]) }}" class="shrink-0 inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
                     查看详情
@@ -102,6 +109,13 @@
                             <p class="text-sm text-gray-600 line-clamp-2 mb-3">
                                 {{ $article->excerpt }}
                             </p>
+                            @if($article->tags->isNotEmpty())
+                                <div class="mb-3 flex flex-wrap gap-2">
+                                    @foreach($article->tags as $tag)
+                                        <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">#{{ $tag->name }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
                             <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
                                 <span class="flex items-center gap-1">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -83,6 +83,13 @@
         </svg>
         @break
 
+    @case('tag')
+        <svg {{ $attributes->merge(['viewBox' => '0 0 24 24', 'fill' => 'none', 'stroke' => 'currentColor']) }}>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.568 3.25H5.625A2.375 2.375 0 0 0 3.25 5.625v3.943a2.375 2.375 0 0 0 .696 1.68l8.111 8.11a2.375 2.375 0 0 0 3.36 0l3.94-3.939a2.375 2.375 0 0 0 0-3.36l-8.11-8.11a2.375 2.375 0 0 0-1.68-.699Z" />
+            <circle cx="7.75" cy="7.75" r="1.25" stroke-width="1.8" />
+        </svg>
+        @break
+
     @case('chat-bubble-left-right')
         <svg {{ $attributes->merge(['viewBox' => '0 0 24 24', 'fill' => 'none', 'stroke' => 'currentColor']) }}>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7.5 8.25h9m-9 3h5.25M6.375 18.75 3.75 21V5.625A2.625 2.625 0 0 1 6.375 3h11.25a2.625 2.625 0 0 1 2.625 2.625v8.25a2.625 2.625 0 0 1-2.625 2.625H6.375Z" />

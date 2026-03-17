@@ -57,6 +57,28 @@
                 <input type="text" name="excerpt" class="input-field h-11" value="{{ old('excerpt', $article->excerpt) }}" placeholder="留空则自动根据正文提取">
             </div>
 
+            <div>
+                <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
+                    <label class="block text-sm font-medium text-gray-700">标签</label>
+                    <a href="{{ route('admin.tags.index') }}" class="text-xs font-medium text-blue-600 hover:text-blue-700">管理标签</a>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    @forelse($tags as $tag)
+                        <label class="flex items-start gap-3 rounded-lg border border-gray-200 p-4">
+                            <input type="checkbox" name="tag_ids[]" value="{{ $tag->id }}" class="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" @checked(in_array($tag->id, old('tag_ids', $selectedTagIds), true))>
+                            <div class="min-w-0">
+                                <div class="text-sm font-medium text-gray-900">#{{ $tag->name }}</div>
+                                <div class="mt-1 text-sm text-gray-500">{{ $tag->description ?: '无标签描述。' }}</div>
+                            </div>
+                        </label>
+                    @empty
+                        <div class="rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500 sm:col-span-2 lg:col-span-3">
+                            暂无可用标签，请先前往“标签管理”创建。
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
             <div class="grid gap-5 lg:grid-cols-2">
                 <div>
                     <label class="mb-2 block text-sm font-medium text-gray-700">封面渐变类</label>

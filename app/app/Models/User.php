@@ -104,6 +104,11 @@ class User extends Authenticatable
         return $this->hasMany(ChannelEmailSubscription::class);
     }
 
+    public function emailTagSubscriptions(): HasMany
+    {
+        return $this->hasMany(TagEmailSubscription::class);
+    }
+
     public function ensureNotificationPreference(): UserNotificationPreference
     {
         $preference = $this->relationLoaded('notificationPreference')
@@ -134,6 +139,29 @@ class User extends Authenticatable
             : $this->emailChannelSubscriptions()->get();
 
         return $subscriptions->contains(fn (ChannelEmailSubscription $subscription) => $subscription->channel_id === $channelId);
+    }
+
+    public function subscribesToArticleTags(Article $article): bool
+    {
+        $tagIds = $article->relationLoaded('tags')
+            ? $article->getRelation('tags')->pluck('id')
+            : $article->tags()->pluck('tags.id');
+
+        if ($tagIds->isEmpty()) {
+            return false;
+        }
+
+        $subscriptions = $this->relationLoaded('emailTagSubscriptions')
+            ? $this->getRelation('emailTagSubscriptions')
+            : $this->emailTagSubscriptions()->get();
+
+        return $subscriptions->contains(fn (TagEmailSubscription $subscription) => $tagIds->contains($subscription->tag_id));
+    }
+
+    public function subscribesToArticle(Article $article): bool
+    {
+        return $this->subscribesToChannelArticles($article->channel_id)
+            || $this->subscribesToArticleTags($article);
     }
 
     public function wantsMentionEmails(): bool

@@ -86,6 +86,39 @@
                     </div>
                 </section>
 
+                <section class="space-y-4">
+                    <div>
+                        <h2 class="text-base font-medium text-gray-900">指定标签订阅</h2>
+                        <p class="mt-1 text-sm text-gray-500">当“全部版块”关闭时，只要文章命中你勾选的任意标签，也会收到邮件提醒。</p>
+                    </div>
+
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        @forelse($tags as $tag)
+                            <label class="flex items-start gap-3 rounded-lg border border-gray-200 p-4">
+                                <input type="checkbox" name="tag_ids[]" value="{{ $tag->id }}" class="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" @checked(in_array($tag->id, old('tag_ids', $selectedTagIds), true))>
+                                <div class="min-w-0">
+                                    <div class="text-sm font-medium text-gray-900">#{{ $tag->name }}</div>
+                                    <div class="mt-1 text-sm text-gray-500">{{ $tag->description ?: '订阅命中该标签的新文章邮件。' }}</div>
+                                    <button
+                                        data-copy-rss="{{ route('feeds.tags.show', $tag) }}"
+                                        class="mt-2 inline-flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 transition-colors"
+                                        title="点击复制 RSS 订阅链接"
+                                    >
+                                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+                                        </svg>
+                                        <span>RSS 链接</span>
+                                    </button>
+                                </div>
+                            </label>
+                        @empty
+                            <div class="rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500 sm:col-span-2">
+                                当前还没有可订阅的标签，管理员创建后会自动出现在这里。
+                            </div>
+                        @endforelse
+                    </div>
+                </section>
+
                 <div class="flex justify-end">
                     <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
                         保存订阅设置

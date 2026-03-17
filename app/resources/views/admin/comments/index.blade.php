@@ -12,6 +12,7 @@
                     <x-icon-button :href="route('admin.articles.index')" icon="document" label="文章管理" title="文章管理" />
                     <x-icon-button :href="route('admin.channels.index')" icon="folder" label="频道管理" title="频道管理" />
                     <x-icon-button :href="route('admin.users.index')" icon="users" label="用户管理" title="用户管理" />
+                    <x-icon-button :href="route('admin.tags.index')" icon="tag" label="标签管理" title="标签管理" />
                 </div>
             </div>
 

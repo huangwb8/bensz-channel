@@ -22,15 +22,22 @@ class ArticlePublishedNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        $this->article->loadMissing('channel', 'tags');
         $articleUrl = route('articles.show', [$this->article->channel, $this->article]);
+        $tagNames = $this->article->tags->pluck('name')->all();
 
-        return (new MailMessage)
+        $mailMessage = (new MailMessage)
             ->subject('【'.$this->article->channel->name.'】有新文章：'.$this->article->title)
             ->greeting('你好，'.$notifiable->name.'！')
             ->line('你订阅的版块有新文章发布。')
             ->line($this->article->title)
             ->line($this->article->excerpt ?: '点击查看完整内容。')
-            ->action('查看文章', $articleUrl)
-            ->line('如需调整邮件提醒，可在站内“订阅设置”中随时关闭。');
+            ->action('查看文章', $articleUrl);
+
+        if ($tagNames !== []) {
+            $mailMessage->line('标签：'.implode(' / ', $tagNames));
+        }
+
+        return $mailMessage->line('如需调整邮件提醒，可在站内“订阅设置”中随时关闭。');
     }
 }

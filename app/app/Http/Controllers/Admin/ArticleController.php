@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\Channel;
+use App\Models\Tag;
 use App\Support\ArticleSubscriptionNotifier;
 use App\Support\MarkdownRenderer;
 use App\Support\StaticPageBuilder;
@@ -21,7 +22,7 @@ class ArticleController extends Controller
     {
         return view('admin.articles.index', [
             'articles' => Article::query()
-                ->with(['channel', 'author'])
+                ->with(['channel', 'author', 'tags'])
                 ->orderByDesc('is_pinned')
                 ->orderByDesc('is_featured')
                 ->latest()
@@ -40,6 +41,8 @@ class ArticleController extends Controller
                 'published_at' => now(),
             ]),
             'channels' => Channel::query()->assignableArticleChannels()->ordered()->get(),
+            'tags' => Tag::query()->ordered()->get(),
+            'selectedTagIds' => [],
             'formAction' => route('admin.articles.store'),
             'formMethod' => 'POST',
         ]);
@@ -54,17 +57,20 @@ class ArticleController extends Controller
         $validated = $this->validateArticle($request);
 
         $article = Article::query()->create([
-            ...$validated,
+            ...$this->articleAttributes($validated),
             'author_id' => $request->user()->id,
             'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
             'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
         ]);
 
+        $article->tags()->sync($validated['tag_ids'] ?? []);
+        $article->load(['channel', 'author', 'tags']);
+
         if ($this->isLiveArticle($article)) {
             $articleSubscriptionNotifier->send($article);
         }
 
-        $staticPageBuilder->rebuildArticle($article->fresh(['channel']));
+        $staticPageBuilder->rebuildArticle($article->fresh(['channel', 'tags']));
 
         return to_route('admin.articles.index')->with('status', '文章已发布。');
     }
@@ -72,8 +78,10 @@ class ArticleController extends Controller
     public function edit(Article $article): View
     {
         return view('admin.articles.form', [
-            'article' => $article,
+            'article' => $article->loadMissing('tags'),
             'channels' => Channel::query()->assignableArticleChannels()->ordered()->get(),
+            'tags' => Tag::query()->ordered()->get(),
+            'selectedTagIds' => $article->tags()->pluck('tags.id')->all(),
             'formAction' => route('admin.articles.update', $article),
             'formMethod' => 'PUT',
         ]);
@@ -91,16 +99,18 @@ class ArticleController extends Controller
         $validated = $this->validateArticle($request, $article);
 
         $article->update([
-            ...$validated,
+            ...$this->articleAttributes($validated),
             'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
             'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
         ]);
+        $article->tags()->sync($validated['tag_ids'] ?? []);
+        $article->load(['channel', 'author', 'tags']);
 
         if (! $wasLive && $this->isLiveArticle($article->fresh())) {
-            $articleSubscriptionNotifier->send($article->fresh(['channel', 'author']));
+            $articleSubscriptionNotifier->send($article->fresh(['channel', 'author', 'tags']));
         }
 
-        $staticPageBuilder->rebuildArticle($article->fresh(['channel']), $before);
+        $staticPageBuilder->rebuildArticle($article->fresh(['channel', 'tags']), $before);
 
         return to_route('admin.articles.index')->with('status', '文章已更新。');
     }
@@ -201,6 +211,8 @@ class ArticleController extends Controller
             'is_published' => ['nullable', 'boolean'],
             'is_pinned' => ['nullable', 'boolean'],
             'is_featured' => ['nullable', 'boolean'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['integer', 'exists:tags,id'],
         ]);
 
         $validated['slug'] = Str::slug($validated['slug'] ?: $validated['title']);
@@ -210,6 +222,13 @@ class ArticleController extends Controller
         $validated['published_at'] = $validated['published_at'] ?? now();
 
         return $validated;
+    }
+
+    private function articleAttributes(array $validated): array
+    {
+        return collect($validated)
+            ->except('tag_ids')
+            ->all();
     }
 
     private function isLiveArticle(Article $article): bool

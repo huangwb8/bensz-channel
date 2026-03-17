@@ -45,7 +45,7 @@ class CommunityViewData
         $pinnedArticle = Article::query()
             ->published()
             ->pinned()
-            ->with(['channel', 'author'])
+            ->with(['channel', 'author', 'tags'])
             ->latestPublished()
             ->first();
 
@@ -56,7 +56,7 @@ class CommunityViewData
             'latestArticles' => Article::query()
                 ->published()
                 ->when($pinnedArticle instanceof Article, fn ($query) => $query->whereKeyNot($pinnedArticle->id))
-                ->with(['channel', 'author'])
+                ->with(['channel', 'author', 'tags'])
                 ->latestPublished()
                 ->limit(12)
                 ->get(),
@@ -67,7 +67,7 @@ class CommunityViewData
     {
         $articleQuery = Article::query()
             ->published()
-            ->with(['channel', 'author'])
+            ->with(['channel', 'author', 'tags'])
             ->latestPublished();
 
         if ($channel->isFeaturedChannel()) {
@@ -91,6 +91,7 @@ class CommunityViewData
         $article->load([
             'channel',
             'author',
+            'tags',
         ]);
 
         $articleBody = $this->articleBodyFormatter->format($article->html_body);
@@ -129,7 +130,7 @@ class CommunityViewData
                 ->published()
                 ->where('channel_id', $article->channel_id)
                 ->whereKeyNot($article->id)
-                ->with(['channel', 'author'])
+                ->with(['channel', 'author', 'tags'])
                 ->latestPublished()
                 ->limit(5)
                 ->get(),

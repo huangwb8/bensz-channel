@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 use App\Http\Controllers\Admin\CdnSettingsController as AdminCdnSettingsController;
 use App\Http\Controllers\Admin\DevtoolsController as AdminDevtoolsController;
 use App\Http\Controllers\Admin\SiteSettingsController as AdminSiteSettingsController;
+use App\Http\Controllers\Admin\TagController as AdminTagController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\Auth\LoginController;
@@ -45,6 +46,7 @@ Route::get('/channels/{channel}', [ChannelController::class, 'show'])->name('cha
 Route::get('/channels/{channel}/articles/{article}', [ArticleController::class, 'show'])->name('articles.show');
 Route::get('/feeds/articles.xml', [RssFeedController::class, 'all'])->name('feeds.articles');
 Route::get('/feeds/channels/{channel}.xml', [RssFeedController::class, 'channel'])->name('feeds.channels.show');
+Route::get('/feeds/tags/{tag}.xml', [RssFeedController::class, 'tag'])->name('feeds.tags.show');
 
 Route::middleware(['auth', 'not-banned'])->group(function (): void {
     Route::post('/articles/{article}/comments', [CommentController::class, 'store'])->name('articles.comments.store');
@@ -100,6 +102,11 @@ Route::prefix('admin')->middleware(['auth', 'not-banned', 'admin'])->name('admin
     Route::patch('/articles/{article}/pin', [AdminArticleController::class, 'togglePin'])->name('articles.pin');
     Route::patch('/articles/{article}/feature', [AdminArticleController::class, 'toggleFeature'])->name('articles.feature');
     Route::delete('/articles/{article}', [AdminArticleController::class, 'destroy'])->name('articles.destroy');
+
+    Route::get('/tags', [AdminTagController::class, 'index'])->name('tags.index');
+    Route::post('/tags', [AdminTagController::class, 'store'])->name('tags.store');
+    Route::put('/tags/{tag}', [AdminTagController::class, 'update'])->name('tags.update');
+    Route::delete('/tags/{tag}', [AdminTagController::class, 'destroy'])->name('tags.destroy');
 
     Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
     Route::patch('/comments/{comment}/visibility', [AdminCommentController::class, 'updateVisibility'])->name('comments.visibility');

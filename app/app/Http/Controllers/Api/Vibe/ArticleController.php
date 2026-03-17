@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Vibe;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\Channel;
+use App\Models\Tag;
 use App\Support\ArticleSubscriptionNotifier;
 use App\Support\MarkdownRenderer;
 use App\Support\StaticPageBuilder;
@@ -17,7 +18,7 @@ class ArticleController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Article::query()->with(['channel:id,public_id,name,slug', 'author:id,name']);
+        $query = Article::query()->with(['channel:id,public_id,name,slug', 'author:id,name', 'tags:id,public_id,name,slug']);
 
         if ($request->filled('channel_id')) {
             $query->where('channel_id', $request->integer('channel_id'));
@@ -35,6 +36,10 @@ class ArticleController extends Controller
             $query->where('is_featured', $request->boolean('featured'));
         }
 
+        if ($request->filled('tag_id')) {
+            $query->whereHas('tags', fn ($tagQuery) => $tagQuery->whereKey($request->integer('tag_id')));
+        }
+
         $articles = $query->latest()->paginate(20);
 
         return response()->json($articles);
@@ -44,7 +49,7 @@ class ArticleController extends Controller
     {
         $article = $this->resolveArticle($article);
 
-        return response()->json(['article' => $article->load(['channel:id,public_id,name,slug', 'author:id,name'])]);
+        return response()->json(['article' => $article->load(['channel:id,public_id,name,slug', 'author:id,name', 'tags:id,public_id,name,slug'])]);
     }
 
     public function store(
@@ -58,19 +63,21 @@ class ArticleController extends Controller
         $apiKey = $request->attributes->get('devtools_api_key');
 
         $article = Article::query()->create([
-            ...$validated,
+            ...$this->articleAttributes($validated),
             'author_id' => $apiKey->user_id,
             'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
             'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
         ]);
+        $article->tags()->sync($validated['tag_ids'] ?? []);
+        $article->load(['channel', 'author', 'tags']);
 
         if ($this->isLiveArticle($article)) {
             $articleSubscriptionNotifier->send($article);
         }
 
-        $staticPageBuilder->rebuildArticle($article->fresh(['channel']));
+        $staticPageBuilder->rebuildArticle($article->fresh(['channel', 'tags']));
 
-        return response()->json(['article' => $article->load(['channel:id,public_id,name,slug', 'author:id,name'])], 201);
+        return response()->json(['article' => $article->load(['channel:id,public_id,name,slug', 'author:id,name', 'tags:id,public_id,name,slug'])], 201);
     }
 
     public function update(
@@ -86,6 +93,7 @@ class ArticleController extends Controller
         $validated = $this->validateArticle($request, $article);
 
         $payload = $validated;
+        unset($payload['tag_ids']);
 
         if (array_key_exists('markdown_body', $validated)) {
             $payload['html_body'] = $markdownRenderer->toHtml($validated['markdown_body']);
@@ -97,13 +105,18 @@ class ArticleController extends Controller
 
         $article->update($payload);
 
+        if (array_key_exists('tag_ids', $validated)) {
+            $article->tags()->sync($validated['tag_ids'] ?? []);
+        }
+        $article->load(['channel', 'author', 'tags']);
+
         if (! $wasLive && $this->isLiveArticle($article->fresh())) {
-            $articleSubscriptionNotifier->send($article->fresh(['channel', 'author']));
+            $articleSubscriptionNotifier->send($article->fresh(['channel', 'author', 'tags']));
         }
 
-        $staticPageBuilder->rebuildArticle($article->fresh(['channel']), $before);
+        $staticPageBuilder->rebuildArticle($article->fresh(['channel', 'tags']), $before);
 
-        return response()->json(['article' => $article->fresh(['channel:id,public_id,name,slug', 'author:id,name'])]);
+        return response()->json(['article' => $article->fresh(['channel:id,public_id,name,slug', 'author:id,name', 'tags:id,public_id,name,slug'])]);
     }
 
     public function destroy(string $article, StaticPageBuilder $staticPageBuilder): JsonResponse
@@ -143,6 +156,8 @@ class ArticleController extends Controller
             'is_published' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'boolean'],
             'is_pinned' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'boolean'],
             'is_featured' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'boolean'],
+            'tag_ids' => [$isUpdate ? 'sometimes' : 'nullable', 'nullable', 'array'],
+            'tag_ids.*' => ['integer', 'exists:tags,id'],
         ]);
 
         if (array_key_exists('slug', $validated) || array_key_exists('title', $validated) || ! $isUpdate) {
@@ -174,6 +189,13 @@ class ArticleController extends Controller
         }
 
         return $validated;
+    }
+
+    private function articleAttributes(array $validated): array
+    {
+        return collect($validated)
+            ->except('tag_ids')
+            ->all();
     }
 
     private function resolveArticle(string $identifier): Article
