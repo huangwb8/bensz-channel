@@ -31,6 +31,14 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 
 ---
 
+新增SEO优化：
+
+- 提供常见搜索引擎或其它SEO优化的功能。 具体我也不太懂，你自己搞。
+
+使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
+
+---
+
 新增标签功能：
 
 - 每个文章都可以添加1个或多个标签
