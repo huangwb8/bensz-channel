@@ -116,6 +116,20 @@ class AdminArticleManagementTest extends TestCase
             ->assertSee('精华频道只负责聚合展示', false);
     }
 
+    public function test_admin_article_edit_page_is_marked_noindex(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $channel = $this->createChannel();
+        $article = $this->createArticle($admin, $channel);
+
+        $this->actingAs($admin)
+            ->get(route('admin.articles.edit', $article))
+            ->assertOk()
+            ->assertSee('<meta name="robots" content="noindex, nofollow">', false)
+            ->assertDontSee('<link rel="canonical"', false)
+            ->assertDontSee('"@type":"Article"', false);
+    }
+
     public function test_admin_can_update_article(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);

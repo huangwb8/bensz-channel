@@ -36,6 +36,26 @@ class StaticHtmlCachingConfigTest extends TestCase
         }
     }
 
+    public function test_static_html_routes_bypass_snapshot_when_a_refresh_is_pending(): void
+    {
+        $configPath = dirname(base_path()).'/docker/nginx/default.conf';
+
+        $this->assertFileExists($configPath);
+
+        $config = (string) file_get_contents($configPath);
+
+        $this->assertStringContainsString(
+            'if (-f /var/www/html/storage/app/static-build.pending) {',
+            $config,
+            '静态快照待刷新时必须禁用静态直出。'
+        );
+        $this->assertStringContainsString(
+            'set $serve_static 0;',
+            $config,
+            '待刷新标记命中后必须立即回源动态页。'
+        );
+    }
+
     private function extractLocationBlock(string $config, string $signature): string
     {
         $offset = strpos($config, $signature);

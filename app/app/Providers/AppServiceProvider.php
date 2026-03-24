@@ -10,6 +10,7 @@ use App\Services\Auth\LegacyOtpGateway;
 use App\Support\CanonicalUrlManager;
 use App\Support\CommunityViewData;
 use App\Support\MailSettingsManager;
+use App\Support\Seo\SeoMetadataFactory;
 use App\Support\SiteSettingsManager;
 use App\Support\StableUserIdManager;
 use Illuminate\Support\Facades\Gate;
@@ -63,10 +64,16 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('access-admin', fn (User $user) => $user->isAdmin());
 
         View::composer(['layouts.app', 'layouts.auth'], function ($view): void {
-            $view->with(array_merge(
+            $data = array_merge(
                 app(CommunityViewData::class)->layout(),
                 $view->getData(),
-            ));
+            );
+
+            if (($data['seo'] ?? null) === null) {
+                $data['seo'] = app(SeoMetadataFactory::class)->forCurrentRequest($data, $view->getName());
+            }
+
+            $view->with($data);
         });
     }
 }

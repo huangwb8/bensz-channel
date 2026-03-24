@@ -7,8 +7,11 @@ use App\Jobs\ProcessStaticSiteBuildJob;
 use App\Models\Article;
 use App\Models\Channel;
 use App\Support\Cdn\CdnWorkLogManager;
+use App\Support\CanonicalUrlManager;
+use App\Support\Seo\SiteDiscoveryService;
 use Carbon\CarbonImmutable;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Queue;
 use RuntimeException;
 use Throwable;
 
@@ -21,6 +24,8 @@ class StaticPageBuilder
         private readonly Filesystem $filesystem,
         private readonly \App\Support\Cdn\CdnSyncService $cdnSyncService,
         private readonly CdnWorkLogManager $cdnWorkLogManager,
+        private readonly SiteDiscoveryService $siteDiscoveryService,
+        private readonly CanonicalUrlManager $canonicalUrlManager,
     ) {}
 
     public function buildAll(?callable $progress = null): array
@@ -31,6 +36,8 @@ class StaticPageBuilder
     public function buildPayload(array $payload, ?callable $progress = null): array
     {
         $startedAt = CarbonImmutable::now();
+        $this->canonicalUrlManager->apply();
+        $this->markBuildPending();
 
         if (! config('community.static.enabled')) {
             $this->cdnWorkLogManager->record([
@@ -47,6 +54,8 @@ class StaticPageBuilder
                 'started_at' => $startedAt,
                 'finished_at' => CarbonImmutable::now(),
             ]);
+
+            $this->clearBuildPendingIfSafe();
 
             return $this->makeSummary();
         }
@@ -83,6 +92,8 @@ class StaticPageBuilder
                 'started_at' => $startedAt,
                 'finished_at' => CarbonImmutable::now(),
             ]);
+
+            $this->clearBuildPendingIfSafe();
 
             return $summary;
         } catch (Throwable $exception) {
@@ -127,6 +138,7 @@ class StaticPageBuilder
         }
 
         $normalized = $this->normalizePayload($payload);
+        $this->markBuildPending();
         ProcessStaticSiteBuildJob::dispatch($normalized)->onQueue($this->queueName());
 
         $this->cdnWorkLogManager->record([
@@ -337,6 +349,36 @@ class StaticPageBuilder
         return (string) config('community.static.queue', 'static-builds');
     }
 
+    private function markBuildPending(): void
+    {
+        $path = $this->pendingMarkerPath();
+        $this->filesystem->ensureDirectoryExists(dirname($path));
+        $this->filesystem->put($path, CarbonImmutable::now()->toIso8601String());
+    }
+
+    private function clearBuildPendingIfSafe(): void
+    {
+        if ($this->hasQueuedBuilds()) {
+            return;
+        }
+
+        $path = $this->pendingMarkerPath();
+
+        if ($this->filesystem->exists($path)) {
+            $this->filesystem->delete($path);
+        }
+    }
+
+    private function hasQueuedBuilds(): bool
+    {
+        try {
+            return Queue::size($this->queueName()) > 0;
+        } catch (Throwable) {
+            // 不确定队列是否还有积压时，保守地继续回源动态页，避免访客读到旧静态内容。
+            return true;
+        }
+    }
+
     private function buildFull(?callable $progress = null): array
     {
         $summary = $this->makeSummary();
@@ -359,6 +401,8 @@ class StaticPageBuilder
             $summary,
             $touched,
         );
+        $this->storeTextFile('robots.txt', $this->siteDiscoveryService->robotsTxt(), $manifest, $summary, $touched);
+        $this->storeTextFile('sitemap.xml', $this->siteDiscoveryService->sitemapXml(), $manifest, $summary, $touched);
 
         $channelTotal = Channel::query()->count();
         $this->notify($progress, "正在构建频道页面（共 {$channelTotal} 个）...");
@@ -421,6 +465,9 @@ class StaticPageBuilder
                 $touched,
             );
         }
+
+        $this->storeTextFile('robots.txt', $this->siteDiscoveryService->robotsTxt(), $manifest, $summary, $touched);
+        $this->storeTextFile('sitemap.xml', $this->siteDiscoveryService->sitemapXml(), $manifest, $summary, $touched);
 
         if ($payload['channel_ids'] !== []) {
             $channels = Channel::query()->whereKey($payload['channel_ids'])->get()->keyBy('id');
@@ -606,10 +653,22 @@ class StaticPageBuilder
             $directory !== ''
             && str_starts_with($directory, $outputRoot)
             && $directory !== $outputRoot
-            && $this->filesystem->isDirectory($directory)
-            && $this->filesystem->files($directory) === []
-            && $this->filesystem->directories($directory) === []
         ) {
+            if (! $this->filesystem->isDirectory($directory)) {
+                break;
+            }
+
+            try {
+                $files = $this->filesystem->files($directory);
+                $directories = $this->filesystem->directories($directory);
+            } catch (Throwable) {
+                break;
+            }
+
+            if ($files !== [] || $directories !== []) {
+                break;
+            }
+
             $this->filesystem->deleteDirectory($directory);
             $directory = dirname($directory);
         }
@@ -646,6 +705,43 @@ class StaticPageBuilder
         return trim($html);
     }
 
+    private function storeTextFile(string $relativePath, string $contents, array &$manifest, array &$summary, array &$touched): void
+    {
+        $this->storeFile($relativePath, $contents, $manifest, $summary, $touched);
+    }
+
+    private function storeFile(string $relativePath, string $contents, array &$manifest, array &$summary, array &$touched): void
+    {
+        $relativePath = ltrim($relativePath, '/');
+        $path = $this->absolutePath($relativePath);
+        $hash = sha1($contents);
+
+        $touched[$relativePath] = true;
+
+        if (
+            ($manifest[$relativePath] ?? null) === $hash
+            && $this->filesystem->exists($path)
+            && $this->filesystem->exists($path.'.gz')
+        ) {
+            $summary['skipped']++;
+
+            return;
+        }
+
+        $this->filesystem->ensureDirectoryExists(dirname($path));
+
+        $gzipped = gzencode($contents, $this->gzipLevel());
+
+        if ($gzipped === false) {
+            throw new RuntimeException('静态文件 Gzip 压缩失败。');
+        }
+
+        $this->filesystem->put($path, $contents);
+        $this->filesystem->put($path.'.gz', $gzipped);
+        $manifest[$relativePath] = $hash;
+        $summary['built']++;
+    }
+
     private function loadManifest(): array
     {
         $path = $this->manifestPath();
@@ -670,6 +766,11 @@ class StaticPageBuilder
     private function manifestPath(): string
     {
         return storage_path('app/static-build-manifest.json');
+    }
+
+    private function pendingMarkerPath(): string
+    {
+        return storage_path('app/static-build.pending');
     }
 
     private function outputRoot(): string

@@ -6,6 +6,18 @@
 
 ## [Unreleased]
 
+### Added（新增）
+
+- 新增了统一 SEO 元数据能力：`app/app/Support/Seo/SeoMetadataFactory.php`、`app/resources/views/partials/seo-meta.blade.php` 与 `app/tests/Feature/Seo/PageSeoTest.php` 现为首页、频道页、文章页统一输出 canonical、Open Graph、Twitter Card、JSON-LD 结构化数据和 RSS alternate link，并为登录等非公开页面默认加上 `noindex, nofollow`
+- 新增了站点发现入口：`app/app/Http/Controllers/SiteDiscoveryController.php`、`app/app/Support/Seo/SiteDiscoveryService.php` 与 `app/routes/web.php` 现提供 `/robots.txt` 与 `/sitemap.xml` 动态入口，自动暴露首页、公开频道、公开文章与公开 RSS 订阅链接
+- 新增了静态快照待刷新保护：`app/app/Support/StaticPageBuilder.php`、`docker/nginx/default.conf` 与 `app/tests/Feature/Static/StaticBuildOptimizationTest.php` / `app/tests/Feature/Static/StaticHtmlCachingConfigTest.php` 现会在异步静态重建排队时写入 `storage/app/static-build.pending` 标记，访客请求会临时回源 Laravel 动态页，直到新静态快照构建完成后再恢复静态直出
+
+### Changed（变更）
+
+- 优化了静态站点 SEO 完整性：`app/app/Support/StaticPageBuilder.php` 与 `app/tests/Feature/Static/StaticBuildTest.php` 现会在每次全量/增量构建时同步产出 `static/robots.txt`、`static/sitemap.xml` 以及带完整 SEO head 的静态 HTML，确保游客静态访问与动态渲染保持一致
+- 优化了 Nginx 对搜索引擎入口的处理：`docker/nginx/default.conf` 现优先直出 `static/robots.txt` 与 `static/sitemap.xml`，缺失时再回退到 Laravel 动态路由，避免重部署后静态/动态入口不一致
+- 优化了访客内容一致性：当后台内容刚更新但静态快照仍在队列中等待重建时，站点不再继续返回旧静态 HTML，而是自动回源最新动态页，避免出现“游客旧、登录后新、退出后才新”的短暂不一致窗口
+
 ## [1.41.0] - 2026-03-17
 
 ### Added（新增）

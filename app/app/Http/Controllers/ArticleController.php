@@ -20,10 +20,12 @@ class ArticleController extends Controller
             return to_route('articles.show', [$article->channel, $article], 301);
         }
 
-        if (! $article->is_published || blank($article->published_at) || $article->published_at->isFuture()) {
+        $isIndexable = $article->is_published && filled($article->published_at) && ! $article->published_at->isFuture();
+
+        if (! $isIndexable) {
             abort_unless(request()->user()?->isAdmin(), 404);
         }
 
-        return view('articles.show', $viewData->article($article));
+        return view('articles.show', $viewData->article($article, $isIndexable));
     }
 }

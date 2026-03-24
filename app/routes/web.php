@@ -19,11 +19,14 @@ use App\Http\Controllers\CommentSubscriptionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\RssFeedController;
+use App\Http\Controllers\SiteDiscoveryController;
 use App\Http\Controllers\SubscriptionSettingsController;
 use App\Http\Controllers\VideoUploadController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('/robots.txt', [SiteDiscoveryController::class, 'robots'])->name('robots');
+Route::get('/sitemap.xml', [SiteDiscoveryController::class, 'sitemap'])->name('sitemap');
 
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/auth/code', [LoginController::class, 'sendCode'])->name('auth.code.send');

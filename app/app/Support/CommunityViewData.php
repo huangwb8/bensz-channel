@@ -7,12 +7,14 @@ use App\Models\Channel;
 use App\Models\Comment;
 use App\Models\CommentSubscription;
 use App\Models\User;
+use App\Support\Seo\SeoMetadataFactory;
 use Illuminate\Support\Collection;
 
 class CommunityViewData
 {
     public function __construct(
         private readonly ArticleBodyFormatter $articleBodyFormatter,
+        private readonly SeoMetadataFactory $seoMetadataFactory,
     ) {
     }
 
@@ -37,6 +39,7 @@ class CommunityViewData
             'pageTitle' => null,
             'currentChannel' => $currentChannel,
             'currentArticle' => $currentArticle,
+            'seo' => null,
         ];
     }
 
@@ -52,6 +55,7 @@ class CommunityViewData
         return [
             ...$this->chrome(),
             'pageTitle' => null,
+            'seo' => $this->seoMetadataFactory->forHome(),
             'pinnedArticle' => $pinnedArticle,
             'latestArticles' => Article::query()
                 ->published()
@@ -80,13 +84,14 @@ class CommunityViewData
             ...$this->chrome($channel),
             'pageTitle' => $channel->name,
             'currentChannel' => $channel,
+            'seo' => $this->seoMetadataFactory->forChannel($channel),
             'channelArticles' => $articleQuery
                 ->limit(20)
                 ->get(),
         ];
     }
 
-    public function article(Article $article): array
+    public function article(Article $article, bool $indexable = true): array
     {
         $article->load([
             'channel',
@@ -121,6 +126,7 @@ class CommunityViewData
             'pageTitle' => $article->title,
             'currentChannel' => $article->channel,
             'article' => $article,
+            'seo' => $this->seoMetadataFactory->forArticle($article, $indexable),
             'articleBody' => $articleBody,
             'commentTree' => $commentTree,
             'commentCount' => $comments->count(),

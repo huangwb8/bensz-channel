@@ -14,6 +14,10 @@ class StaticBuildTest extends TestCase
 
     public function test_static_build_command_generates_guest_pages(): void
     {
+        config([
+            'app.url' => 'https://community.example.com',
+        ]);
+
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $channel = Channel::query()->create([
             'name' => '公告',
@@ -44,7 +48,13 @@ class StaticBuildTest extends TestCase
 
         $this->assertFileExists($articlePath);
         $this->assertFileExists($articlePath.'.gz');
+        $this->assertFileExists(public_path('static/robots.txt'));
+        $this->assertFileExists(public_path('static/sitemap.xml'));
         $this->assertStringContainsString('文章目录', file_get_contents($articlePath));
         $this->assertStringContainsString('href="#overview"', file_get_contents($articlePath));
+        $this->assertStringContainsString('rel="canonical" href="https://community.example.com/channels/'.$channel->public_id.'/articles/'.$article->public_id.'"', file_get_contents($articlePath));
+        $this->assertStringContainsString('"@type":"Article"', file_get_contents($articlePath));
+        $this->assertStringContainsString('Sitemap: https://community.example.com/sitemap.xml', file_get_contents(public_path('static/robots.txt')));
+        $this->assertStringContainsString('https://community.example.com/channels/'.$channel->public_id.'/articles/'.$article->public_id, file_get_contents(public_path('static/sitemap.xml')));
     }
 }

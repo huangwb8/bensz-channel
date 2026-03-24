@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\StaticPageBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class StaticBuildOptimizationTest extends TestCase
@@ -77,6 +78,34 @@ class StaticBuildOptimizationTest extends TestCase
             ->assertSuccessful();
 
         Bus::assertDispatched(ProcessStaticSiteBuildJob::class);
+    }
+
+    public function test_queueing_async_build_marks_snapshot_pending_until_a_build_completes(): void
+    {
+        config([
+            'community.static.enabled' => true,
+            'community.static.async' => true,
+            'community.static.output_dir' => 'static',
+        ]);
+
+        Bus::fake();
+
+        $builder = app(StaticPageBuilder::class);
+        $pendingMarker = storage_path('app/static-build.pending');
+
+        File::delete($pendingMarker);
+
+        $builder->queuePayload(['home' => true]);
+
+        $this->assertFileExists($pendingMarker);
+
+        config([
+            'community.static.async' => false,
+        ]);
+
+        $builder->buildPayload(['home' => true]);
+
+        $this->assertFileDoesNotExist($pendingMarker);
     }
 
     private function createChannel(string $name, string $slug, int $sortOrder): Channel
