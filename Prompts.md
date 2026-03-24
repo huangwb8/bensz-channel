@@ -12,7 +12,7 @@
 - 发布release
 
 ```
-/git-commit;  创建tag；/git-publish-release 。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub 。  
+创建tag；/git-commit; /git-publish-release。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub 。  
 ```
 
 - 保持skill的最新兼容性
