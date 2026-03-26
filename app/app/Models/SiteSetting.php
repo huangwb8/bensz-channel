@@ -34,6 +34,7 @@ class SiteSetting extends Model
         'app_name',
         'site_name',
         'site_tagline',
+        'timezone',
         'auth_enabled_methods',
         'cdn_asset_url',
         'cdn_mode',

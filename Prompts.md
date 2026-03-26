@@ -3,6 +3,12 @@
 - 本地测试用启动后访问：
   - 站点首页：http://localhost:6542
   - Mailpit：http://localhost:8025
+- 优化方案
+
+```
+使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
+```
+
 - 检查程序问题
 
 ```
@@ -12,7 +18,7 @@
 - 发布release
 
 ```
-创建tag；/git-commit; /git-publish-release。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub 。  
+创建tag v1.42.1；/git-commit; /git-publish-release。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub 。  
 ```
 
 - 保持skill的最新兼容性
@@ -28,6 +34,14 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 ```
 
 # 日常
+
+---
+
+时区优化：
+
+- 目前，无法选择项目的时区。 我希望管理员在站点设置里可以设置时区。 默认是北京时间。 这个时区确定了文章生成的时间等各种重要时间。 
+
+使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
 
 ---
 

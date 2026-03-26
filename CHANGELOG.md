@@ -6,6 +6,20 @@
 
 ## [Unreleased]
 
+## [1.42.1] - 2026-03-27
+
+### Added（新增）
+
+- 新增了站点时区设置能力：`app/database/migrations/2026_03_26_120000_add_timezone_to_site_settings_table.php`、`app/app/Support/SiteSettingsManager.php`、`app/app/Http/Controllers/Admin/SiteSettingsController.php` 与 `app/resources/views/admin/site-settings/edit.blade.php` 现支持管理员在后台选择项目时区，默认使用 `Asia/Shanghai`，并提供常用时区与完整 IANA 时区列表
+- 新增了时区运行态回归测试：`app/tests/Unit/Support/SiteSettingsManagerTest.php`、`app/tests/Feature/Admin/AdminSiteSettingsTest.php` 与 `app/tests/Feature/Admin/AdminDataBackupRestoreTest.php` 现锁定时区配置的保存、生效与备份恢复链路
+
+### Changed（变更）
+
+- 优化了全站时间口径：`app/config/app.php`、`app/config.toml`、`app/.env.example` 与 `config/.env.example` 现默认使用北京时间 `Asia/Shanghai`，后台覆盖后会同步更新 Laravel 运行时配置与 PHP 默认时区，确保文章发布时间自动填充、页面时间格式、相对时间、RSS、SEO 与备份时间戳统一使用站点时区
+- 更新了文档与版本号：`README.md`、`README_EN.md`、`docs/开发者文档.md` 与 `app/config.toml` 已同步补充站点时区说明，并将项目版本推进到 `1.42.1`
+
+## [1.42.0] - 2026-03-24
+
 ### Added（新增）
 
 - 新增了统一 SEO 元数据能力：`app/app/Support/Seo/SeoMetadataFactory.php`、`app/resources/views/partials/seo-meta.blade.php` 与 `app/tests/Feature/Seo/PageSeoTest.php` 现为首页、频道页、文章页统一输出 canonical、Open Graph、Twitter Card、JSON-LD 结构化数据和 RSS alternate link，并为登录等非公开页面默认加上 `noindex, nofollow`

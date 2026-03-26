@@ -25,7 +25,7 @@
                 <p class="mt-1 text-sm text-gray-500">保存后会立即覆盖运行时配置，并自动重建游客静态页与登录页展示。</p>
             </div>
             <div class="rounded-full px-3 py-1 text-xs font-semibold {{ $siteSettingsUsingOverrides ? 'bg-green-50 text-green-700 ring-1 ring-green-200' : 'bg-gray-100 text-gray-600 ring-1 ring-gray-200' }}">
-                {{ $siteSettingsUsingOverrides ? '当前使用站点后台覆盖配置' : '当前使用 config/config.toml 默认值' }}
+                {{ $siteSettingsUsingOverrides ? '当前使用站点后台覆盖配置' : '当前使用 app/config.toml 默认值' }}
             </div>
         </div>
 
@@ -53,6 +53,23 @@
                 <label for="site_tagline" class="mb-2 block text-sm font-medium text-gray-700">SITE_TAGLINE</label>
                 <textarea id="site_tagline" name="site_tagline" rows="3" class="input-field min-h-[96px] py-3" placeholder="类 QQ 频道的 Web 社区原型，支持静态游客访问与成员互动">{{ old('site_tagline', $siteSettingsForm['site_tagline']) }}</textarea>
                 <p class="mt-2 text-xs text-gray-500">用于首页、副标题与页脚说明展示。</p>
+            </div>
+
+            <div>
+                <label for="timezone" class="mb-2 block text-sm font-medium text-gray-700">项目时区</label>
+                <select id="timezone" name="timezone" class="input-field h-11">
+                    <optgroup label="常用时区">
+                        @foreach($timezoneOptionGroups['preferred'] as $timezoneValue => $timezoneLabel)
+                            <option value="{{ $timezoneValue }}" @selected(old('timezone', $siteSettingsForm['timezone']) === $timezoneValue)>{{ $timezoneLabel }}</option>
+                        @endforeach
+                    </optgroup>
+                    <optgroup label="全部 IANA 时区">
+                        @foreach($timezoneOptionGroups['all'] as $timezoneValue => $timezoneLabel)
+                            <option value="{{ $timezoneValue }}" @selected(old('timezone', $siteSettingsForm['timezone']) === $timezoneValue)>{{ $timezoneLabel }}</option>
+                        @endforeach
+                    </optgroup>
+                </select>
+                <p class="mt-2 text-xs text-gray-500">默认使用北京时间 <code>Asia/Shanghai</code>。保存后会统一影响文章发布时间自动填充、页面时间格式、相对时间、RSS、SEO 与备份时间戳。</p>
             </div>
 
             <div>
@@ -154,7 +171,7 @@
             </section>
 
             <div class="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                建议：如果你只是临时调整审查文案或开放方式，优先在这里修改；`config/config.toml` 仍保留作为启动默认值来源。
+                建议：如果你只是临时调整审查文案或开放方式，优先在这里修改；`app/config.toml` 仍保留作为启动默认值来源。
             </div>
 
             <div class="flex justify-end">

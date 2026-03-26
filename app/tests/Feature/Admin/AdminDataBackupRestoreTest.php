@@ -38,6 +38,7 @@ class AdminDataBackupRestoreTest extends TestCase
             'app_name' => 'Original App',
             'site_name' => 'Original Site',
             'site_tagline' => 'Original Tagline',
+            'timezone' => 'America/Los_Angeles',
             'auth_enabled_methods' => ['email_code', 'qq_qr'],
             'cdn_asset_url' => 'https://cdn.original.test',
             'theme_mode' => 'dark',
@@ -173,6 +174,7 @@ class AdminDataBackupRestoreTest extends TestCase
         $this->assertDatabaseHas(SiteSetting::class, [
             'app_name' => 'Original App',
             'site_name' => 'Original Site',
+            'timezone' => 'America/Los_Angeles',
         ]);
         $mailSetting = MailSetting::query()->first();
         $this->assertNotNull($mailSetting);

@@ -3,7 +3,7 @@
 
 [project]
 name = "bensz-channel"
-version = "1.41.0"
+version = "1.42.1"
 description = "现代化 Web 社区平台，基于 PHP、PostgreSQL、Docker 构建，适合团队协作与知识分享"
 repository_url = "https://github.com/huangwb8/bensz-channel"
 
@@ -25,6 +25,7 @@ APP_FALLBACK_LOCALE = "zh_CN"
 APP_FAKER_LOCALE = "zh_CN"
 APP_MAINTENANCE_DRIVER = "file"
 APP_URL = "http://localhost:6542"
+APP_TIMEZONE = "Asia/Shanghai"
 
 # 站点信息
 SITE_NAME = "Bensz Channel"

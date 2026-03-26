@@ -1,5 +1,11 @@
 <?php
 
+$appTimezone = (string) env('APP_TIMEZONE', 'Asia/Shanghai');
+
+if (! in_array($appTimezone, timezone_identifiers_list(), true)) {
+    $appTimezone = 'Asia/Shanghai';
+}
+
 return [
 
     /*
@@ -67,7 +73,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => $appTimezone,
 
     /*
     |--------------------------------------------------------------------------

@@ -22,6 +22,8 @@ class AdminSiteSettingsTest extends TestCase
             ->assertSee('APP_NAME')
             ->assertSee('SITE_NAME')
             ->assertSee('SITE_TAGLINE')
+            ->assertSee('项目时区')
+            ->assertSee('Asia/Shanghai')
             ->assertSee('文章图片上传上限')
             ->assertSee('视频上传上限')
             ->assertSee('主题模式')
@@ -94,6 +96,7 @@ class AdminSiteSettingsTest extends TestCase
                 'app_name' => 'Bensz Channel Admin',
                 'site_name' => 'Bensz Community',
                 'site_tagline' => '一个支持静态游客访问与成员互动的频道式社区。',
+                'timezone' => 'America/New_York',
                 'article_image_max_mb' => 32,
                 'article_video_max_mb' => 1024,
                 'theme_mode' => 'auto',
@@ -107,6 +110,7 @@ class AdminSiteSettingsTest extends TestCase
             'app_name' => 'Bensz Channel Admin',
             'site_name' => 'Bensz Community',
             'site_tagline' => '一个支持静态游客访问与成员互动的频道式社区。',
+            'timezone' => 'America/New_York',
             'theme_mode' => 'auto',
             'theme_day_start' => '06:30',
             'theme_night_start' => '20:30',

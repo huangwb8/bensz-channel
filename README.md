@@ -4,7 +4,7 @@
 
 **现代化 Web 社区平台 - 频道管理、实时互动、内容沉淀一体化解决方案**
 
-[![Version](https://img.shields.io/badge/version-1.41.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
+[![Version](https://img.shields.io/badge/version-1.42.1-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
 [![Platform](https://img.shields.io/badge/platform-Docker-lightgrey.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -31,7 +31,7 @@ Bensz Channel 是一个基于 **Laravel + Better Auth + PostgreSQL + Redis + Doc
 - 📧 **订阅通知**：SMTP 邮件订阅、管理员活动提醒与 RSS 订阅，支持按版块与标签筛选
 - ⚡ **静态页面优化**：游客访问自动使用预构建静态 HTML + Gzip 压缩
 - ☁️ **双模式 CDN**：同时支持回源型 CDN 与对象存储型 CDN，后台支持草稿保存、手动应用/停止、连接测试、差异预览、手动同步与详细工作日志
-- 🎨 **管理后台**：完整的频道、文章、评论、用户、站点设置管理
+- 🎨 **管理后台**：完整的频道、文章、评论、用户、站点设置管理，支持在后台统一配置项目时区
 - 🚀 **一键部署**：Docker Compose 一键启动所有服务
 
 ---

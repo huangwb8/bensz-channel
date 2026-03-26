@@ -4,13 +4,19 @@ namespace App\Support;
 
 use App\Enums\CdnMode;
 use App\Models\SiteSetting;
+use Carbon\CarbonImmutable;
+use DateTimeImmutable;
+use DateTimeZone;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 class SiteSettingsManager
 {
     private const CACHE_KEY = 'site_settings.current';
+
+    private const DEFAULT_TIMEZONE = 'Asia/Shanghai';
 
     private const AVAILABLE_AUTH_METHODS = [
         'email_code',
@@ -24,6 +30,16 @@ class SiteSettingsManager
         'email_password',
         'wechat_qr',
         'qq_qr',
+    ];
+
+    private const PREFERRED_TIMEZONES = [
+        'Asia/Shanghai' => '北京时间',
+        'Asia/Singapore' => '新加坡时间',
+        'Asia/Tokyo' => '东京时间',
+        'Europe/London' => '伦敦时间',
+        'Europe/Paris' => '巴黎时间',
+        'America/New_York' => '纽约时间',
+        'America/Los_Angeles' => '洛杉矶时间',
     ];
 
     public function current(): ?SiteSetting
@@ -43,6 +59,7 @@ class SiteSettingsManager
             'app_name' => $setting?->app_name ?? (string) config('app.name'),
             'site_name' => $setting?->site_name ?? (string) config('community.site.name'),
             'site_tagline' => $setting?->site_tagline ?? (string) config('community.site.tagline'),
+            'timezone' => $this->normalizeTimezone($setting?->timezone),
             'auth_enabled_methods' => $this->normalizeAuthMethods($setting?->auth_enabled_methods),
             'theme_mode' => $setting?->theme_mode ?? (string) config('community.theme.mode', 'auto'),
             'theme_day_start' => $setting?->theme_day_start ?? (string) config('community.theme.day_start', '07:00'),
@@ -108,6 +125,7 @@ class SiteSettingsManager
                 filled($setting->app_name)
                 || filled($setting->site_name)
                 || filled($setting->site_tagline)
+                || filled($setting->timezone)
                 || $setting->auth_enabled_methods !== null
                 || filled($setting->theme_mode)
                 || filled($setting->theme_day_start)
@@ -151,41 +169,101 @@ class SiteSettingsManager
         return $this->enabledQrProvidersFromMethods($this->enabledAuthMethods());
     }
 
+    /**
+     * @return array{preferred: array<string, string>, all: array<string, string>}
+     */
+    public function timezoneOptionGroups(): array
+    {
+        static $groups;
+
+        if ($groups !== null) {
+            return $groups;
+        }
+
+        $now = new DateTimeImmutable('now');
+        $identifiers = DateTimeZone::listIdentifiers();
+        $preferred = [];
+
+        foreach (self::PREFERRED_TIMEZONES as $identifier => $label) {
+            if (in_array($identifier, $identifiers, true)) {
+                $preferred[$identifier] = $this->timezoneLabel($identifier, $label, $now);
+            }
+        }
+
+        $all = [];
+
+        foreach ($identifiers as $identifier) {
+            if (array_key_exists($identifier, $preferred)) {
+                continue;
+            }
+
+            $all[$identifier] = $this->timezoneLabel($identifier, null, $now);
+        }
+
+        return $groups = [
+            'preferred' => $preferred,
+            'all' => $all,
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function availableTimezoneIdentifiers(): array
+    {
+        $groups = $this->timezoneOptionGroups();
+
+        return [
+            ...array_keys($groups['preferred']),
+            ...array_keys($groups['all']),
+        ];
+    }
+
     public function save(array $validated): SiteSetting
     {
         $setting = SiteSetting::query()->firstOrNew(['id' => 1]);
-        $setting->fill([
-            'app_name' => $this->resolvedValue($validated, 'app_name', fn () => $this->nullableString($validated['app_name'] ?? null), $setting->app_name),
-            'site_name' => $this->resolvedValue($validated, 'site_name', fn () => $this->nullableString($validated['site_name'] ?? null), $setting->site_name),
-            'site_tagline' => $this->resolvedValue($validated, 'site_tagline', fn () => $this->nullableString($validated['site_tagline'] ?? null), $setting->site_tagline),
-            'auth_enabled_methods' => $this->resolvedValue($validated, 'auth_enabled_methods', fn () => $this->normalizeAuthMethods($validated['auth_enabled_methods'] ?? null), $setting->auth_enabled_methods),
-            'cdn_asset_url' => $this->resolvedValue($validated, 'cdn_asset_url', fn () => $this->normalizeUrl($validated['cdn_asset_url'] ?? null), $setting->cdn_asset_url),
-            'cdn_mode' => $this->resolvedValue($validated, 'cdn_mode', fn () => $this->normalizeCdnMode($validated['cdn_mode'] ?? null), $setting->cdn_mode?->value ?? CdnMode::ORIGIN->value),
-            'cdn_storage_provider' => $this->resolvedValue($validated, 'cdn_storage_provider', fn () => $this->nullableString($validated['cdn_storage_provider'] ?? null), $setting->cdn_storage_provider),
-            'cdn_storage_access_key' => $this->resolvedSecretValue($validated, 'cdn_storage_access_key', $setting->cdn_storage_access_key),
-            'cdn_storage_secret_key' => $this->resolvedSecretValue($validated, 'cdn_storage_secret_key', $setting->cdn_storage_secret_key),
-            'cdn_storage_bucket' => $this->resolvedValue($validated, 'cdn_storage_bucket', fn () => $this->nullableString($validated['cdn_storage_bucket'] ?? null), $setting->cdn_storage_bucket),
-            'cdn_storage_region' => $this->resolvedValue($validated, 'cdn_storage_region', fn () => $this->nullableString($validated['cdn_storage_region'] ?? null), $setting->cdn_storage_region),
-            'cdn_storage_endpoint' => $this->resolvedValue($validated, 'cdn_storage_endpoint', fn () => $this->normalizeUrl($validated['cdn_storage_endpoint'] ?? null), $setting->cdn_storage_endpoint),
-            'cdn_sync_enabled' => $this->resolvedValue($validated, 'cdn_sync_enabled', fn () => $this->normalizeBoolean($validated['cdn_sync_enabled'] ?? null, false), $setting->cdn_sync_enabled ?? false),
-            'cdn_sync_on_build' => $this->resolvedValue($validated, 'cdn_sync_on_build', fn () => $this->normalizeBoolean($validated['cdn_sync_on_build'] ?? null, true), $setting->cdn_sync_on_build ?? true),
-            'theme_mode' => $this->resolvedValue($validated, 'theme_mode', fn () => $this->normalizeThemeMode($validated['theme_mode'] ?? null), $setting->theme_mode),
-            'theme_day_start' => $this->resolvedValue($validated, 'theme_day_start', fn () => $this->normalizeThemeTime($validated['theme_day_start'] ?? null, '07:00'), $setting->theme_day_start),
-            'theme_night_start' => $this->resolvedValue($validated, 'theme_night_start', fn () => $this->normalizeThemeTime($validated['theme_night_start'] ?? null, '19:00'), $setting->theme_night_start),
-            'article_image_max_mb' => $this->resolvedValue(
-                $validated,
-                'article_image_max_mb',
-                fn () => $this->normalizeImageMaxMb($validated['article_image_max_mb'] ?? null),
-                $setting->article_image_max_mb ?? $this->normalizeImageMaxMb(config('community.uploads.article_image_max_mb', 50)),
-            ),
-            'article_video_max_mb' => $this->resolvedValue(
-                $validated,
-                'article_video_max_mb',
-                fn () => $this->normalizeVideoMaxMb($validated['article_video_max_mb'] ?? null),
-                $setting->article_video_max_mb ?? $this->normalizeVideoMaxMb(config('community.uploads.video_max_mb', 500)),
-            ),
-        ]);
-        $setting->save();
+        $currentTimezone = $this->normalizeTimezone($setting->timezone);
+        $nextTimezone = $this->resolvedValue($validated, 'timezone', fn () => $this->normalizeTimezone($validated['timezone'] ?? null), $currentTimezone);
+
+        DB::transaction(function () use ($setting, $validated, $currentTimezone, $nextTimezone): void {
+            $setting->fill([
+                'app_name' => $this->resolvedValue($validated, 'app_name', fn () => $this->nullableString($validated['app_name'] ?? null), $setting->app_name),
+                'site_name' => $this->resolvedValue($validated, 'site_name', fn () => $this->nullableString($validated['site_name'] ?? null), $setting->site_name),
+                'site_tagline' => $this->resolvedValue($validated, 'site_tagline', fn () => $this->nullableString($validated['site_tagline'] ?? null), $setting->site_tagline),
+                'timezone' => $nextTimezone,
+                'auth_enabled_methods' => $this->resolvedValue($validated, 'auth_enabled_methods', fn () => $this->normalizeAuthMethods($validated['auth_enabled_methods'] ?? null), $setting->auth_enabled_methods),
+                'cdn_asset_url' => $this->resolvedValue($validated, 'cdn_asset_url', fn () => $this->normalizeUrl($validated['cdn_asset_url'] ?? null), $setting->cdn_asset_url),
+                'cdn_mode' => $this->resolvedValue($validated, 'cdn_mode', fn () => $this->normalizeCdnMode($validated['cdn_mode'] ?? null), $setting->cdn_mode?->value ?? CdnMode::ORIGIN->value),
+                'cdn_storage_provider' => $this->resolvedValue($validated, 'cdn_storage_provider', fn () => $this->nullableString($validated['cdn_storage_provider'] ?? null), $setting->cdn_storage_provider),
+                'cdn_storage_access_key' => $this->resolvedSecretValue($validated, 'cdn_storage_access_key', $setting->cdn_storage_access_key),
+                'cdn_storage_secret_key' => $this->resolvedSecretValue($validated, 'cdn_storage_secret_key', $setting->cdn_storage_secret_key),
+                'cdn_storage_bucket' => $this->resolvedValue($validated, 'cdn_storage_bucket', fn () => $this->nullableString($validated['cdn_storage_bucket'] ?? null), $setting->cdn_storage_bucket),
+                'cdn_storage_region' => $this->resolvedValue($validated, 'cdn_storage_region', fn () => $this->nullableString($validated['cdn_storage_region'] ?? null), $setting->cdn_storage_region),
+                'cdn_storage_endpoint' => $this->resolvedValue($validated, 'cdn_storage_endpoint', fn () => $this->normalizeUrl($validated['cdn_storage_endpoint'] ?? null), $setting->cdn_storage_endpoint),
+                'cdn_sync_enabled' => $this->resolvedValue($validated, 'cdn_sync_enabled', fn () => $this->normalizeBoolean($validated['cdn_sync_enabled'] ?? null, false), $setting->cdn_sync_enabled ?? false),
+                'cdn_sync_on_build' => $this->resolvedValue($validated, 'cdn_sync_on_build', fn () => $this->normalizeBoolean($validated['cdn_sync_on_build'] ?? null, true), $setting->cdn_sync_on_build ?? true),
+                'theme_mode' => $this->resolvedValue($validated, 'theme_mode', fn () => $this->normalizeThemeMode($validated['theme_mode'] ?? null), $setting->theme_mode),
+                'theme_day_start' => $this->resolvedValue($validated, 'theme_day_start', fn () => $this->normalizeThemeTime($validated['theme_day_start'] ?? null, '07:00'), $setting->theme_day_start),
+                'theme_night_start' => $this->resolvedValue($validated, 'theme_night_start', fn () => $this->normalizeThemeTime($validated['theme_night_start'] ?? null, '19:00'), $setting->theme_night_start),
+                'article_image_max_mb' => $this->resolvedValue(
+                    $validated,
+                    'article_image_max_mb',
+                    fn () => $this->normalizeImageMaxMb($validated['article_image_max_mb'] ?? null),
+                    $setting->article_image_max_mb ?? $this->normalizeImageMaxMb(config('community.uploads.article_image_max_mb', 50)),
+                ),
+                'article_video_max_mb' => $this->resolvedValue(
+                    $validated,
+                    'article_video_max_mb',
+                    fn () => $this->normalizeVideoMaxMb($validated['article_video_max_mb'] ?? null),
+                    $setting->article_video_max_mb ?? $this->normalizeVideoMaxMb(config('community.uploads.video_max_mb', 500)),
+                ),
+            ]);
+            $setting->save();
+
+            if ($currentTimezone !== $nextTimezone) {
+                $this->shiftStoredTimestamps($currentTimezone, $nextTimezone);
+            }
+        });
 
         $this->forgetCached();
 
@@ -228,6 +306,10 @@ class SiteSettingsManager
     public function applyConfiguredSettings(): void
     {
         $setting = $this->current();
+        $timezone = $this->normalizeTimezone($setting?->timezone);
+
+        config(['app.timezone' => $timezone]);
+        date_default_timezone_set($timezone);
 
         if ($setting instanceof SiteSetting) {
             if (filled($setting->app_name)) {
@@ -389,6 +471,23 @@ class SiteSettingsManager
         return in_array($mode, ['light', 'dark', 'auto'], true) ? $mode : 'auto';
     }
 
+    private function normalizeTimezone(mixed $value): string
+    {
+        $timezone = is_string($value) ? trim($value) : '';
+
+        if ($timezone !== '' && in_array($timezone, $this->availableTimezoneIdentifiers(), true)) {
+            return $timezone;
+        }
+
+        $configuredTimezone = config('app.timezone');
+
+        if (is_string($configuredTimezone) && in_array($configuredTimezone, $this->availableTimezoneIdentifiers(), true)) {
+            return $configuredTimezone;
+        }
+
+        return self::DEFAULT_TIMEZONE;
+    }
+
     private function normalizeThemeTime(mixed $value, string $fallback): string
     {
         if (! is_string($value)) {
@@ -512,5 +611,157 @@ class SiteSettingsManager
         }
 
         return $providers;
+    }
+
+    private function shiftStoredTimestamps(string $fromTimezone, string $toTimezone): void
+    {
+        if ($fromTimezone === $toTimezone) {
+            return;
+        }
+
+        $driver = DB::getDriverName();
+
+        if ($driver === 'pgsql') {
+            $this->shiftStoredTimestampsForPostgres($fromTimezone, $toTimezone);
+
+            return;
+        }
+
+        if ($driver === 'sqlite') {
+            $this->shiftStoredTimestampsForSqlite($fromTimezone, $toTimezone);
+        }
+    }
+
+    private function shiftStoredTimestampsForPostgres(string $fromTimezone, string $toTimezone): void
+    {
+        foreach ($this->postgresTimestampColumnsByTable() as $table => $columns) {
+            $assignments = [];
+            $bindings = [];
+
+            foreach ($columns as $column) {
+                $quotedColumn = $this->quoteIdentifier($column);
+                $assignments[] = "{$quotedColumn} = case when {$quotedColumn} is null then null else ({$quotedColumn} AT TIME ZONE ? AT TIME ZONE ?) end";
+                $bindings[] = $fromTimezone;
+                $bindings[] = $toTimezone;
+            }
+
+            if ($assignments === []) {
+                continue;
+            }
+
+            DB::statement(
+                'UPDATE '.$this->quoteIdentifier($table).' SET '.implode(', ', $assignments),
+                $bindings,
+            );
+        }
+    }
+
+    private function shiftStoredTimestampsForSqlite(string $fromTimezone, string $toTimezone): void
+    {
+        foreach ($this->sqliteTimestampColumnsByTable() as $table => $columns) {
+            $rows = DB::table($table)
+                ->select(array_merge([DB::raw('rowid as _rowid')], $columns))
+                ->get();
+
+            foreach ($rows as $row) {
+                $updates = [];
+
+                foreach ($columns as $column) {
+                    $value = $row->{$column} ?? null;
+
+                    if ($value === null || $value === '') {
+                        continue;
+                    }
+
+                    $updates[$column] = CarbonImmutable::parse((string) $value, $fromTimezone)
+                        ->setTimezone($toTimezone)
+                        ->format('Y-m-d H:i:s');
+                }
+
+                if ($updates === []) {
+                    continue;
+                }
+
+                DB::table($table)
+                    ->whereRaw('rowid = ?', [$row->_rowid])
+                    ->update($updates);
+            }
+        }
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    private function postgresTimestampColumnsByTable(): array
+    {
+        $rows = DB::select("
+            select table_name, column_name
+            from information_schema.columns
+            where table_schema = current_schema()
+              and data_type = 'timestamp without time zone'
+              and table_name <> 'migrations'
+            order by table_name, ordinal_position
+        ");
+
+        $grouped = [];
+
+        foreach ($rows as $row) {
+            $grouped[$row->table_name][] = $row->column_name;
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    private function sqliteTimestampColumnsByTable(): array
+    {
+        $tables = DB::select("
+            select name
+            from sqlite_master
+            where type = 'table'
+              and name not like 'sqlite_%'
+              and name <> 'migrations'
+            order by name
+        ");
+
+        $grouped = [];
+
+        foreach ($tables as $table) {
+            $columns = DB::select('pragma table_info('.$this->quoteSqliteIdentifier($table->name).')');
+
+            foreach ($columns as $column) {
+                $type = strtolower((string) ($column->type ?? ''));
+
+                if (str_contains($type, 'timestamp') || str_contains($type, 'datetime')) {
+                    $grouped[$table->name][] = $column->name;
+                }
+            }
+        }
+
+        return $grouped;
+    }
+
+    private function quoteIdentifier(string $identifier): string
+    {
+        return '"'.str_replace('"', '""', $identifier).'"';
+    }
+
+    private function quoteSqliteIdentifier(string $identifier): string
+    {
+        return "'".str_replace("'", "''", $identifier)."'";
+    }
+
+    private function timezoneLabel(string $identifier, ?string $displayName, DateTimeImmutable $now): string
+    {
+        $timezone = new DateTimeZone($identifier);
+        $offsetSeconds = $timezone->getOffset($now);
+        $hours = intdiv(abs($offsetSeconds), 3600);
+        $minutes = intdiv(abs($offsetSeconds) % 3600, 60);
+        $offset = sprintf('UTC%s%02d:%02d', $offsetSeconds >= 0 ? '+' : '-', $hours, $minutes);
+        $name = $displayName !== null ? $displayName.' · ' : '';
+
+        return "{$name}{$identifier} ({$offset})";
     }
 }

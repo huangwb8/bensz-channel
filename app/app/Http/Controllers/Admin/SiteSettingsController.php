@@ -23,6 +23,7 @@ class SiteSettingsController extends Controller
             'pageTitle' => '站点设置',
             'siteSettingsForm' => $siteSettingsManager->siteFormData(),
             'siteSettingsUsingOverrides' => $siteSettingsManager->siteUsingOverrides(),
+            'timezoneOptionGroups' => $siteSettingsManager->timezoneOptionGroups(),
             'themeModeOptions' => [
                 'auto' => '自动（按时间段切换）',
                 'light' => '固定白天模式',
@@ -92,6 +93,7 @@ class SiteSettingsController extends Controller
             'app_name' => ['required', 'string', 'max:120'],
             'site_name' => ['required', 'string', 'max:120'],
             'site_tagline' => ['required', 'string', 'max:255'],
+            'timezone' => ['required', 'string', Rule::in($siteSettingsManager->availableTimezoneIdentifiers())],
             'article_image_max_mb' => ['required', 'integer', 'min:1', 'max:100'],
             'article_video_max_mb' => ['required', 'integer', 'min:1', 'max:10240'],
             'theme_mode' => ['required', Rule::in(['auto', 'light', 'dark'])],

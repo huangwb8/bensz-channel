@@ -14,6 +14,7 @@ use App\Support\Seo\SeoMetadataFactory;
 use App\Support\SiteSettingsManager;
 use App\Support\StableUserIdManager;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,6 +40,10 @@ class AppServiceProvider extends ServiceProvider
         app(SiteSettingsManager::class)->applyConfiguredSettings();
         app(MailSettingsManager::class)->applyConfiguredSettings();
         app(CanonicalUrlManager::class)->apply();
+
+        Queue::before(static function (): void {
+            app(SiteSettingsManager::class)->applyConfiguredSettings();
+        });
 
         User::creating(function (User $user): void {
             app(StableUserIdManager::class)->ensureAssigned($user);
