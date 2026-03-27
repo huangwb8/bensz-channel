@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Added（新增）
+
+- 新增了 DevTools 文章上传阻塞排查记录：`plans/2026-03-27-vibe-article-upload-investigation.md` 现整理 `bensz-channel` 与 `bensz-channel-vibe-config` 双侧代码证据、测试结果与根因判断，用于说明文章重复上传更像是“服务端同步副作用 + skill 非幂等重试”叠加导致的时序问题
+
 ## [1.42.1] - 2026-03-27
 
 ### Added（新增）
