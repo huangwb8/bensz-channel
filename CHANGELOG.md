@@ -6,9 +6,19 @@
 
 ## [Unreleased]
 
+## [1.43.0] - 2026-03-27
+
 ### Added（新增）
 
 - 新增了 DevTools 文章上传阻塞排查记录：`plans/2026-03-27-vibe-article-upload-investigation.md` 现整理 `bensz-channel` 与 `bensz-channel-vibe-config` 双侧代码证据、测试结果与根因判断，用于说明文章重复上传更像是“服务端同步副作用 + skill 非幂等重试”叠加导致的时序问题
+- 新增了 DevTools 文章创建幂等保护：`app/database/migrations/2026_03_27_233000_create_devtools_idempotency_keys_table.php`、`app/app/Models/DevtoolsIdempotencyKey.php` 与 `app/app/Support/DevtoolsIdempotencyManager.php` 现支持 `POST /api/vibe/articles` 通过 `X-Idempotency-Key` 复用同一创建结果，并在同键不同请求体时返回 `409`
+- 新增了异步文章订阅通知作业：`app/app/Jobs/SendArticlePublishedNotificationsJob.php` 与 `app/app/Support/ArticleSubscriptionNotifier.php` 现将订阅用户筛选与通知投递搬到队列执行，降低文章发布请求的阻塞风险
+
+### Changed（变更）
+
+- 优化了文章发布稳定性：`app/app/Http/Controllers/Api/Vibe/ArticleController.php` 与 `app/app/Http/Controllers/Admin/ArticleController.php` 现统一在事务提交后再触发文章通知与静态页重建，并为中文标题无 slug 场景提供 `article-xxxxxxxx` 回退，减少空 slug 与重复发布问题
+- 优化了邮件传输默认值：`app/config/mail.php`、`app/config.toml`、`app/.env.example` 与 `config/.env.example` 现新增 `MAIL_TIMEOUT`（默认 `10` 秒），避免 SMTP 长时间挂起拖慢请求
+- 更新了项目文档与版本号：`README.md`、`README_EN.md`、`docs/开发者文档.md` 与 `app/config.toml` 已同步补充 DevTools 幂等发文、异步通知与 `MAIL_TIMEOUT` 说明，并将项目版本推进到 `1.43.0`
 
 ## [1.42.1] - 2026-03-27
 

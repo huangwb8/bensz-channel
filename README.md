@@ -4,7 +4,7 @@
 
 **现代化 Web 社区平台 - 频道管理、实时互动、内容沉淀一体化解决方案**
 
-[![Version](https://img.shields.io/badge/version-1.42.1-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
+[![Version](https://img.shields.io/badge/version-1.43.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
 [![Platform](https://img.shields.io/badge/platform-Docker-lightgrey.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -22,7 +22,7 @@ Bensz Channel 是一个基于 **Laravel + Better Auth + PostgreSQL + Redis + Doc
 
 ### 核心特性
 
-- 🤖 **AI 工具集成**：通过定制的 Agent Skill 支持 Claude Code/Codex CLI 远程管理内容，实现智能化社区运营
+- 🤖 **AI 工具集成**：通过定制的 Agent Skill 支持 Claude Code/Codex CLI 远程管理内容，远程发文默认携带幂等保护，降低网络抖动导致的重复发文风险
 - 🏠 **频道系统**：支持创建、管理多个主题频道，内置"精华"与"未分类"系统频道
 - 👥 **用户管理**：完整的用户注册、登录、权限管理与封禁系统
 - 🔐 **多种登录方式**：邮箱验证码、邮箱密码、微信/QQ 扫码登录
@@ -216,6 +216,7 @@ ADMIN_PASSWORD=your_admin_password_here
 # 邮件服务凭证（可选）
 MAIL_USERNAME=
 MAIL_PASSWORD=
+MAIL_TIMEOUT=10
 
 # AWS 凭证（可选）
 AWS_ACCESS_KEY_ID=

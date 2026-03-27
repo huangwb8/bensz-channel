@@ -7,11 +7,14 @@ use App\Models\Article;
 use App\Models\Channel;
 use App\Models\Tag;
 use App\Support\ArticleSubscriptionNotifier;
+use App\Support\DevtoolsIdempotencyManager;
 use App\Support\MarkdownRenderer;
 use App\Support\StaticPageBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Throwable;
 use Illuminate\Validation\Rule;
 
 class ArticleController extends Controller
@@ -57,27 +60,94 @@ class ArticleController extends Controller
         MarkdownRenderer $markdownRenderer,
         ArticleSubscriptionNotifier $articleSubscriptionNotifier,
         StaticPageBuilder $staticPageBuilder,
+        DevtoolsIdempotencyManager $devtoolsIdempotencyManager,
     ): JsonResponse {
+        $apiKey = $request->attributes->get('devtools_api_key');
+        $idempotencyKey = trim((string) $request->header('X-Idempotency-Key', ''));
+        $requestFingerprint = $idempotencyKey !== ''
+            ? $devtoolsIdempotencyManager->fingerprint($request->all())
+            : null;
+        $idempotencyRecord = null;
+
+        if ($idempotencyKey !== '' && $requestFingerprint !== null) {
+            $idempotencyRecord = $devtoolsIdempotencyManager->reserve($apiKey, 'articles.create', $idempotencyKey, $requestFingerprint);
+
+            if (! $idempotencyRecord->wasRecentlyCreated) {
+                if ($idempotencyRecord->request_fingerprint !== $requestFingerprint) {
+                    return $devtoolsIdempotencyManager->conflictResponse($idempotencyKey);
+                }
+
+                $completedRecord = $idempotencyRecord->isCompleted()
+                    ? $idempotencyRecord
+                    : $devtoolsIdempotencyManager->waitForCompletion($idempotencyRecord);
+
+                if ($completedRecord !== null) {
+                    return $devtoolsIdempotencyManager->replayResponse($completedRecord, $idempotencyKey);
+                }
+
+                return $devtoolsIdempotencyManager->inProgressResponse($idempotencyKey);
+            }
+        }
+
         $validated = $this->validateArticle($request);
 
-        $apiKey = $request->attributes->get('devtools_api_key');
+        try {
+            [$article, $responseBody] = DB::transaction(function () use (
+                $validated,
+                $apiKey,
+                $markdownRenderer,
+                $devtoolsIdempotencyManager,
+                $idempotencyRecord,
+                $requestFingerprint,
+            ): array {
+                $article = Article::query()->create([
+                    ...$this->articleAttributes($validated),
+                    'author_id' => $apiKey->user_id,
+                    'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
+                    'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
+                ]);
+                $article->tags()->sync($validated['tag_ids'] ?? []);
+                $article = $article->fresh(['channel:id,public_id,name,slug', 'author:id,name', 'tags:id,public_id,name,slug']);
 
-        $article = Article::query()->create([
-            ...$this->articleAttributes($validated),
-            'author_id' => $apiKey->user_id,
-            'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
-            'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
-        ]);
-        $article->tags()->sync($validated['tag_ids'] ?? []);
-        $article->load(['channel', 'author', 'tags']);
+                $responseBody = ['article' => $article?->toArray() ?? []];
 
-        if ($this->isLiveArticle($article)) {
+                if ($idempotencyRecord !== null && $requestFingerprint !== null) {
+                    $devtoolsIdempotencyManager->complete(
+                        $idempotencyRecord,
+                        $requestFingerprint,
+                        201,
+                        $responseBody,
+                        'article',
+                        $article?->id,
+                    );
+                }
+
+                return [$article, $responseBody];
+            });
+        } catch (Throwable $exception) {
+            if ($idempotencyRecord !== null && $idempotencyRecord->wasRecentlyCreated) {
+                $devtoolsIdempotencyManager->abandon($idempotencyRecord);
+            }
+
+            throw $exception;
+        }
+
+        if ($article instanceof Article && $this->isLiveArticle($article)) {
             $articleSubscriptionNotifier->send($article);
         }
 
-        $staticPageBuilder->rebuildArticle($article->fresh(['channel', 'tags']));
+        if ($article instanceof Article) {
+            $staticPageBuilder->rebuildArticle($article->fresh(['channel', 'tags']));
+        }
 
-        return response()->json(['article' => $article->load(['channel:id,public_id,name,slug', 'author:id,name', 'tags:id,public_id,name,slug'])], 201);
+        $response = response()->json($responseBody, 201);
+
+        if ($idempotencyKey !== '') {
+            $response->headers->set('X-Idempotency-Key', $idempotencyKey);
+            $response->headers->set('X-Idempotency-Replayed', 'false');
+        }
+
+        return $response;
     }
 
     public function update(
@@ -92,31 +162,34 @@ class ArticleController extends Controller
         $wasLive = $this->isLiveArticle($article);
         $validated = $this->validateArticle($request, $article);
 
-        $payload = $validated;
-        unset($payload['tag_ids']);
+        $article = DB::transaction(function () use ($article, $validated, $markdownRenderer): Article {
+            $payload = $validated;
+            unset($payload['tag_ids']);
 
-        if (array_key_exists('markdown_body', $validated)) {
-            $payload['html_body'] = $markdownRenderer->toHtml($validated['markdown_body']);
+            if (array_key_exists('markdown_body', $validated)) {
+                $payload['html_body'] = $markdownRenderer->toHtml($validated['markdown_body']);
 
-            if (! array_key_exists('excerpt', $validated) || $validated['excerpt'] === '') {
-                $payload['excerpt'] = $markdownRenderer->excerpt($validated['markdown_body']);
+                if (! array_key_exists('excerpt', $validated) || $validated['excerpt'] === '') {
+                    $payload['excerpt'] = $markdownRenderer->excerpt($validated['markdown_body']);
+                }
             }
-        }
 
-        $article->update($payload);
+            $article->update($payload);
 
-        if (array_key_exists('tag_ids', $validated)) {
-            $article->tags()->sync($validated['tag_ids'] ?? []);
-        }
-        $article->load(['channel', 'author', 'tags']);
+            if (array_key_exists('tag_ids', $validated)) {
+                $article->tags()->sync($validated['tag_ids'] ?? []);
+            }
 
-        if (! $wasLive && $this->isLiveArticle($article->fresh())) {
+            return $article->fresh(['channel:id,public_id,name,slug', 'author:id,name', 'tags:id,public_id,name,slug']);
+        });
+
+        if (! $wasLive && $this->isLiveArticle($article)) {
             $articleSubscriptionNotifier->send($article->fresh(['channel', 'author', 'tags']));
         }
 
         $staticPageBuilder->rebuildArticle($article->fresh(['channel', 'tags']), $before);
 
-        return response()->json(['article' => $article->fresh(['channel:id,public_id,name,slug', 'author:id,name', 'tags:id,public_id,name,slug'])]);
+        return response()->json(['article' => $article]);
     }
 
     public function destroy(string $article, StaticPageBuilder $staticPageBuilder): JsonResponse

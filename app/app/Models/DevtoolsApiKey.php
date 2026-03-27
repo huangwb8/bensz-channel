@@ -41,6 +41,11 @@ class DevtoolsApiKey extends Model
         return $this->hasMany(DevtoolsConnection::class, 'key_id');
     }
 
+    public function idempotencyKeys(): HasMany
+    {
+        return $this->hasMany(DevtoolsIdempotencyKey::class, 'key_id');
+    }
+
     public function isRevoked(): bool
     {
         return $this->revoked_at !== null;

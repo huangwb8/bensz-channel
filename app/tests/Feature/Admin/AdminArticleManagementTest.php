@@ -63,6 +63,29 @@ class AdminArticleManagementTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_create_article_with_chinese_title_without_explicit_slug(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $channel = $this->createChannel();
+
+        $this->actingAs($admin)
+            ->post(route('admin.articles.store'), [
+                'channel_id' => $channel->id,
+                'title' => '纯中文后台发文',
+                'slug' => '',
+                'excerpt' => '摘要',
+                'markdown_body' => "# 标题\n\n正文内容",
+                'cover_gradient' => 'from-violet-500 via-fuchsia-500 to-cyan-500',
+                'published_at' => now()->format('Y-m-d H:i:s'),
+                'is_published' => 1,
+            ])
+            ->assertRedirect(route('admin.articles.index'));
+
+        $article = Article::query()->latest('id')->firstOrFail();
+
+        $this->assertStringStartsWith('article-', $article->slug);
+    }
+
     public function test_admin_article_form_renders_clipboard_image_upload_hint(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);

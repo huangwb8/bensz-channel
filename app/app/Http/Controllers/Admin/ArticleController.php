@@ -56,15 +56,18 @@ class ArticleController extends Controller
     ): RedirectResponse {
         $validated = $this->validateArticle($request);
 
-        $article = Article::query()->create([
-            ...$this->articleAttributes($validated),
-            'author_id' => $request->user()->id,
-            'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
-            'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
-        ]);
+        $article = DB::transaction(function () use ($validated, $request, $markdownRenderer): Article {
+            $article = Article::query()->create([
+                ...$this->articleAttributes($validated),
+                'author_id' => $request->user()->id,
+                'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
+                'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
+            ]);
 
-        $article->tags()->sync($validated['tag_ids'] ?? []);
-        $article->load(['channel', 'author', 'tags']);
+            $article->tags()->sync($validated['tag_ids'] ?? []);
+
+            return $article->fresh(['channel', 'author', 'tags']);
+        });
 
         if ($this->isLiveArticle($article)) {
             $articleSubscriptionNotifier->send($article);
@@ -98,13 +101,16 @@ class ArticleController extends Controller
         $wasLive = $this->isLiveArticle($article);
         $validated = $this->validateArticle($request, $article);
 
-        $article->update([
-            ...$this->articleAttributes($validated),
-            'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
-            'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
-        ]);
-        $article->tags()->sync($validated['tag_ids'] ?? []);
-        $article->load(['channel', 'author', 'tags']);
+        $article = DB::transaction(function () use ($article, $validated, $markdownRenderer): Article {
+            $article->update([
+                ...$this->articleAttributes($validated),
+                'excerpt' => $validated['excerpt'] ?: $markdownRenderer->excerpt($validated['markdown_body']),
+                'html_body' => $markdownRenderer->toHtml($validated['markdown_body']),
+            ]);
+            $article->tags()->sync($validated['tag_ids'] ?? []);
+
+            return $article->fresh(['channel', 'author', 'tags']);
+        });
 
         if (! $wasLive && $this->isLiveArticle($article->fresh())) {
             $articleSubscriptionNotifier->send($article->fresh(['channel', 'author', 'tags']));
@@ -215,7 +221,7 @@ class ArticleController extends Controller
             'tag_ids.*' => ['integer', 'exists:tags,id'],
         ]);
 
-        $validated['slug'] = Str::slug($validated['slug'] ?: $validated['title']);
+        $validated['slug'] = $this->makeArticleSlug($validated['slug'] ?: $validated['title'], $article);
         $validated['is_published'] = (bool) ($validated['is_published'] ?? false);
         $validated['is_pinned'] = (bool) ($validated['is_pinned'] ?? false);
         $validated['is_featured'] = (bool) ($validated['is_featured'] ?? false);
@@ -236,5 +242,20 @@ class ArticleController extends Controller
         return $article->is_published
             && $article->published_at !== null
             && ! $article->published_at->isFuture();
+    }
+
+    private function makeArticleSlug(?string $source, ?Article $article = null): string
+    {
+        $slug = Str::slug((string) $source);
+
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        if ($article instanceof Article && $article->slug !== '') {
+            return $article->slug;
+        }
+
+        return 'article-'.Str::lower(Str::random(8));
     }
 }

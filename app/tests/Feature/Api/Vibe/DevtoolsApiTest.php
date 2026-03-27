@@ -146,6 +146,107 @@ class DevtoolsApiTest extends TestCase
         ]);
     }
 
+    public function test_article_create_replays_same_response_when_same_idempotency_key_is_reused(): void
+    {
+        $channel = $this->createChannel();
+        $headers = [
+            ...$this->headers(),
+            'X-Idempotency-Key' => 'article-create-same-key',
+        ];
+
+        $first = $this->withHeaders($headers)
+            ->postJson('/api/vibe/articles', [
+                'channel_id' => $channel->id,
+                'title' => '同一幂等键发文',
+                'markdown_body' => '第一次请求正文',
+                'is_published' => true,
+            ]);
+
+        $first->assertCreated()
+            ->assertHeader('X-Idempotency-Key', 'article-create-same-key')
+            ->assertHeader('X-Idempotency-Replayed', 'false');
+
+        $second = $this->withHeaders($headers)
+            ->postJson('/api/vibe/articles', [
+                'channel_id' => $channel->id,
+                'title' => '同一幂等键发文',
+                'markdown_body' => '第一次请求正文',
+                'is_published' => true,
+            ]);
+
+        $second->assertCreated()
+            ->assertHeader('X-Idempotency-Key', 'article-create-same-key')
+            ->assertHeader('X-Idempotency-Replayed', 'true')
+            ->assertJsonPath('article.id', $first->json('article.id'))
+            ->assertJsonPath('article.public_id', $first->json('article.public_id'));
+
+        $this->assertSame(1, Article::query()->count());
+    }
+
+    public function test_article_create_rejects_reusing_idempotency_key_for_different_payloads(): void
+    {
+        $channel = $this->createChannel();
+        $headers = [
+            ...$this->headers(),
+            'X-Idempotency-Key' => 'article-create-conflict-key',
+        ];
+
+        $this->withHeaders($headers)
+            ->postJson('/api/vibe/articles', [
+                'channel_id' => $channel->id,
+                'title' => '首次发文',
+                'markdown_body' => '第一次正文',
+                'is_published' => true,
+            ])
+            ->assertCreated();
+
+        $this->withHeaders($headers)
+            ->postJson('/api/vibe/articles', [
+                'channel_id' => $channel->id,
+                'title' => '二次发文',
+                'markdown_body' => '不同正文',
+                'is_published' => true,
+            ])
+            ->assertStatus(409)
+            ->assertJsonPath('error', 'idempotency_key_conflict');
+
+        $this->assertSame(1, Article::query()->count());
+    }
+
+    public function test_article_create_with_chinese_title_and_same_idempotency_key_only_creates_one_article(): void
+    {
+        $channel = $this->createChannel();
+        $headers = [
+            ...$this->headers(),
+            'X-Idempotency-Key' => 'article-create-chinese-title',
+        ];
+
+        $first = $this->withHeaders($headers)
+            ->postJson('/api/vibe/articles', [
+                'channel_id' => $channel->id,
+                'title' => '纯中文标题',
+                'markdown_body' => '中文正文',
+                'is_published' => true,
+            ]);
+
+        $second = $this->withHeaders($headers)
+            ->postJson('/api/vibe/articles', [
+                'channel_id' => $channel->id,
+                'title' => '纯中文标题',
+                'markdown_body' => '中文正文',
+                'is_published' => true,
+            ]);
+
+        $first->assertCreated();
+        $second->assertCreated()
+            ->assertJsonPath('article.id', $first->json('article.id'));
+
+        $article = Article::query()->firstOrFail();
+
+        $this->assertStringStartsWith('article-', $article->slug);
+        $this->assertSame(1, Article::query()->count());
+    }
+
     public function test_articles_list_honors_false_published_filter(): void
     {
         $channel = $this->createChannel();

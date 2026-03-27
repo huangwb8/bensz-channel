@@ -4,7 +4,7 @@
 
 **Modern Web Community Platform - Integrated Solution for Channel Management, Real-time Interaction, and Content Curation**
 
-[![Version](https://img.shields.io/badge/version-1.42.1-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
+[![Version](https://img.shields.io/badge/version-1.43.0-blue.svg)](https://github.com/huangwb8/bensz-channel/releases)
 [![Platform](https://img.shields.io/badge/platform-Docker-lightgrey.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -22,7 +22,7 @@ Bensz Channel is a web community platform built with **Laravel + Better Auth + P
 
 ### Key Features
 
-- 🤖 **AI Tool Integration**: Remote content management via custom Agent Skill for Claude Code/Codex CLI, enabling intelligent community operations
+- 🤖 **AI Tool Integration**: Remote content management via custom Agent Skill for Claude Code/Codex CLI, with idempotent article publishing to reduce duplicate posts during network jitter
 - 🏠 **Channel System**: Create and manage multiple topic channels with built-in "Featured" and "Uncategorized" system channels
 - 👥 **User Management**: Complete user registration, login, permission management, and ban system
 - 🔐 **Multiple Login Methods**: Email verification code, email password, WeChat/QQ QR code login
@@ -216,6 +216,7 @@ ADMIN_PASSWORD=your_admin_password_here
 # Mail service credentials (optional)
 MAIL_USERNAME=
 MAIL_PASSWORD=
+MAIL_TIMEOUT=10
 
 # AWS credentials (optional)
 AWS_ACCESS_KEY_ID=
