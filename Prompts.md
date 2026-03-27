@@ -37,6 +37,10 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 
 ---
 
+最近， 我使用 /Volumes/2T01/winE/Starup/bensz-devtools/skills/bensz-channel-vibe-config 时容易触发一个bug，就是文章的上传经常不能很顺畅地完成，导致多次重复上传。 我怀疑这种上传阻塞的根源是本项目的代码存在一些缺陷。 你看一下源代码，确认是本项目的代码问题，还是bensz-channel-vibe-config的代码问题。如果都没问题，也不用强求要修改。 你把相关的见解写在 ./plans 里。
+
+---
+
 时区优化：
 
 - 目前，无法选择项目的时区。 我希望管理员在站点设置里可以设置时区。 默认是北京时间。 这个时区确定了文章生成的时间等各种重要时间。 
