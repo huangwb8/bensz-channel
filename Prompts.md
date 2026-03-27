@@ -20,7 +20,7 @@
 - 发布release
 
 ```
-创建tag v1.42.1；/git-commit; /git-publish-release。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub 。  
+创建tag v1.42.2；/git-commit; /git-publish-release。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub 。  
 ```
 
 - 保持skill的最新兼容性
