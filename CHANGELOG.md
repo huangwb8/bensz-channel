@@ -6,6 +6,19 @@
 
 ## [Unreleased]
 
+## [1.43.1] - 2026-03-28
+
+### Added（新增）
+
+- 新增了桌面端文章目录交互脚本与测试：`app/resources/js/article-toc.js`、`app/resources/js/article-toc.test.js` 现为右侧 TOC 提供渐进增强的层级展开、平滑锚点跳转、hash 祖先链展开与折叠状态同步能力
+- 新增了递归目录节点 partial：`app/resources/views/articles/partials/toc-node.blade.php` 现以语义化树形结构渲染桌面端目录，支持独立折叠按钮、ARIA 控件关联与更清晰的层级分布
+
+### Changed（变更）
+
+- 优化了文章详情页右侧目录体验：`app/resources/views/articles/show.blade.php`、`app/resources/css/app.css` 与 `app/resources/js/app.js` 现让桌面端 TOC 默认只展示一级目录，点击目录项后按需展开下一层，配合平滑过渡动画、递进缩进和无 JS 回退，且保留现有 sticky 与锚点阅读体验
+- 优化了目录数据与回归覆盖：`app/app/Support/ArticleBodyFormatter.php`、`app/tests/Unit/Support/ArticleBodyFormatterTest.php`、`app/tests/Feature/Articles/ArticleTocTest.php` 与 `app/tests/Feature/Static/StaticBuildTest.php` 现补充树形目录数据结构以及文章页、静态导出页的 TOC 契约断言
+- 更新了项目版本号：`app/config.toml` 已同步推进到 `1.43.1`
+
 ## [1.43.0] - 2026-03-27
 
 ### Added（新增）

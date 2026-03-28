@@ -51,6 +51,9 @@ class StaticBuildTest extends TestCase
         $this->assertFileExists(public_path('static/robots.txt'));
         $this->assertFileExists(public_path('static/sitemap.xml'));
         $this->assertStringContainsString('文章目录', file_get_contents($articlePath));
+        $this->assertStringContainsString('article-toc-link-mobile', file_get_contents($articlePath));
+        $this->assertStringContainsString('data-article-toc', file_get_contents($articlePath));
+        $this->assertStringContainsString('data-toc-branch', file_get_contents($articlePath));
         $this->assertStringContainsString('href="#overview"', file_get_contents($articlePath));
         $this->assertStringContainsString('rel="canonical" href="https://community.example.com/channels/'.$channel->public_id.'/articles/'.$article->public_id.'"', file_get_contents($articlePath));
         $this->assertStringContainsString('"@type":"Article"', file_get_contents($articlePath));

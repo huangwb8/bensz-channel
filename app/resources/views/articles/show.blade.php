@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $desktopTocTree = $articleBody['tocTree'] ?? [];
+    @endphp
+
     <!-- 返回链接 -->
     <div class="mb-4">
         <a href="{{ route('channels.show', $article->channel) }}" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
@@ -84,15 +88,17 @@
                                 <span>文章目录</span>
                                 <span class="text-xs text-gray-500 transition group-open:rotate-180">⌄</span>
                             </summary>
-                            <nav class="mt-3 space-y-1">
+                            <nav class="article-toc-mobile-list mt-3">
                                 @foreach($articleBody['toc'] as $item)
                                     <a
                                         href="#{{ $item['id'] }}"
-                                        class="article-toc-link block rounded-xl px-3 py-2 text-sm text-gray-600 hover:bg-white hover:text-gray-900"
+                                        class="article-toc-link article-toc-link-mobile block rounded-xl px-3 py-2 text-sm text-gray-600 hover:bg-white hover:text-gray-900"
                                         style="--toc-level: {{ max(0, $item['level'] - 1) }}"
                                     >
-                                        <span class="font-medium text-gray-900">{{ $item['number'] }}</span>
-                                        <span>{{ $item['text'] }}</span>
+                                        <span class="article-toc-link-copy">
+                                            <span class="article-toc-number font-medium text-gray-900">{{ $item['number'] }}</span>
+                                            <span class="article-toc-text">{{ $item['text'] }}</span>
+                                        </span>
                                     </a>
                                 @endforeach
                             </nav>
@@ -218,17 +224,12 @@
             <aside class="article-toc-desktop hidden lg:block lg:sticky lg:top-24 lg:self-start">
                 <div class="article-toc-panel rounded-2xl border border-gray-200 bg-gray-50 p-4">
                     <h2 class="text-sm font-semibold text-gray-900">文章目录</h2>
-                    <nav class="mt-3 space-y-1">
-                        @foreach($articleBody['toc'] as $item)
-                            <a
-                                href="#{{ $item['id'] }}"
-                                class="article-toc-link block rounded-xl px-3 py-2 text-sm text-gray-600 hover:bg-white hover:text-gray-900"
-                                style="--toc-level: {{ max(0, $item['level'] - 1) }}"
-                            >
-                                <span class="font-medium text-gray-900">{{ $item['number'] }}</span>
-                                <span>{{ $item['text'] }}</span>
-                            </a>
-                        @endforeach
+                    <nav class="article-toc-tree mt-3" data-article-toc aria-label="文章目录导航">
+                        <ol class="article-toc-list">
+                            @foreach($desktopTocTree as $node)
+                                @include('articles.partials.toc-node', ['node' => $node])
+                            @endforeach
+                        </ol>
                     </nav>
                 </div>
             </aside>

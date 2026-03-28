@@ -11,7 +11,11 @@ use Illuminate\Support\Str;
 class ArticleBodyFormatter
 {
     /**
-     * @return array{html:string,toc:array<int, array{id:string,text:string,number:string,level:int}>}
+     * @return array{
+     *     html:string,
+     *     toc:array<int, array{id:string,text:string,number:string,level:int}>,
+     *     tocTree:array<int, array{id:string,text:string,number:string,level:int,children:array}>
+     * }
      */
     public function format(?string $html): array
     {
@@ -19,6 +23,7 @@ class ArticleBodyFormatter
             return [
                 'html' => '',
                 'toc' => [],
+                'tocTree' => [],
             ];
         }
 
@@ -38,6 +43,7 @@ class ArticleBodyFormatter
             return [
                 'html' => trim((string) $html),
                 'toc' => [],
+                'tocTree' => [],
             ];
         }
 
@@ -51,6 +57,7 @@ class ArticleBodyFormatter
             return [
                 'html' => $this->innerHtml($wrapper),
                 'toc' => [],
+                'tocTree' => [],
             ];
         }
 
@@ -108,6 +115,7 @@ class ArticleBodyFormatter
         return [
             'html' => $this->innerHtml($wrapper),
             'toc' => $toc,
+            'tocTree' => $this->buildTocTree($toc),
         ];
     }
 
@@ -196,5 +204,39 @@ class ArticleBodyFormatter
 
             return;
         }
+    }
+
+    /**
+     * @param  array<int, array{id:string,text:string,number:string,level:int}>  $toc
+     * @return array<int, array{id:string,text:string,number:string,level:int,children:array}>
+     */
+    private function buildTocTree(array $toc): array
+    {
+        $tree = [];
+        $stack = [];
+
+        foreach ($toc as $item) {
+            $node = [
+                ...$item,
+                'children' => [],
+            ];
+
+            while ($stack !== [] && $stack[array_key_last($stack)]['level'] >= $item['level']) {
+                array_pop($stack);
+            }
+
+            if ($stack === []) {
+                $tree[] = $node;
+                $stack[] = &$tree[array_key_last($tree)];
+
+                continue;
+            }
+
+            $parentIndex = array_key_last($stack);
+            $stack[$parentIndex]['children'][] = $node;
+            $stack[] = &$stack[$parentIndex]['children'][array_key_last($stack[$parentIndex]['children'])];
+        }
+
+        return $tree;
     }
 }

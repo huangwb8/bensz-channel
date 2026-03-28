@@ -1,5 +1,6 @@
 import './bootstrap';
 import QRCode from 'qrcode';
+import { initArticleTocs } from './article-toc';
 import { initMarkdownImageUploads, initMarkdownVideoEmbeds } from './markdown-image-upload';
 
 const syncInteractiveTitles = (root = document) => {
@@ -22,6 +23,7 @@ syncInteractiveTitles();
 
 initMarkdownImageUploads();
 initMarkdownVideoEmbeds();
+initArticleTocs();
 
 const mobileChannelTrigger = document.querySelector('[data-mobile-channel-trigger]');
 const mobileChannelDrawer = document.querySelector('[data-mobile-channel-drawer]');
