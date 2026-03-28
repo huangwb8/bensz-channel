@@ -20,7 +20,7 @@
 - 发布release
 
 ```
-创建tag v1.42.2；/git-commit; /git-publish-release。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub 。  
+创建tag v1.42.3；/git-commit; /git-publish-release。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub 。  
 ```
 
 - 保持skill的最新兼容性
@@ -36,6 +36,16 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 ```
 
 # 日常
+
+---
+
+如图，目前右侧的目录样式有优化空间。 我希望：
+
+- 展示到 # 层级； 其它层级暂时折叠起来
+- 用户点击 # 层级，然后  ## 层级才会展开； 这个过程中要有优雅的动画，这样用户不会感觉很生硬
+- 更深的层级应该应该缩进一定的距离，以方便用户看清不同层级的空间分布。 比如， ## 比 # 缩进一点； 而### 也比 ## 缩进一点。 以此类推。
+
+使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
 
 ---
 
