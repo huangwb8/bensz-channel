@@ -6,10 +6,20 @@
 
 ## [Unreleased]
 
+## [1.42.5] - 2026-05-31
+
 ### Added（新增）
 
 - 新增了中国大陆合规初步评估文档：`docs/law/中国大陆合规初步评估.md` 现基于源码功能和公开法规资料，记录 bensz-channel 作为 Web 社区、论坛社区与跟帖评论类信息服务的产品形态判断、主要合规要求、当前源码差距与上线前建议清单
 - 新增了个人频道模式评论开关源代码优化计划：`docs/plans/2026-05-10-personal-channel-comment-switch.md` 现规划默认关闭用户评论、后端硬拦截评论写入口、前台只读评论体验、历史评论治理边界与配套测试文档更新
+
+### Fixed（修复）
+
+- 修复了 RSS 订阅源在文章标题、摘要或标签名包含 `&`、`<` 等 XML 特殊字符时可能生成异常 XML 或访问失败的问题：`app/app/Support/RssFeedBuilder.php` 现统一通过文本节点写入 RSS 内容，`app/tests/Feature/Subscriptions/RssFeedTest.php` 已补充回归覆盖
+
+### Changed（变更）
+
+- 更新了项目版本号：`app/config.toml` 已同步推进到 `1.42.5`
 
 ## [1.42.4] - 2026-03-28
 

@@ -25,6 +25,28 @@ class RssFeedTest extends TestCase
         $response->assertSee(route('articles.show', [$article->channel, $article]), false);
     }
 
+    public function test_rss_feed_escapes_xml_special_characters(): void
+    {
+        [$article] = $this->createArticleFixture(
+            'A&B <公告>',
+            'notice-special-article',
+            excerpt: '摘要含 A&B <特殊字符>',
+        );
+        $tag = Tag::query()->create([
+            'name' => 'R&D <XML>',
+            'slug' => 'xml-special',
+            'description' => 'XML 特殊字符',
+        ]);
+        $article->tags()->attach($tag);
+
+        $response = $this->get(route('feeds.articles'));
+
+        $response->assertOk();
+        $response->assertSee('A&amp;B &lt;公告&gt;', false);
+        $response->assertSee('摘要含 A&amp;B &lt;特殊字符&gt;', false);
+        $response->assertSee('R&amp;D &lt;XML&gt;', false);
+    }
+
     public function test_channel_rss_feed_only_contains_articles_from_that_channel(): void
     {
         [$engineeringArticle, $engineeringChannel] = $this->createArticleFixture('开发文章', 'engineering-article', 'engineering', '开发交流');
@@ -111,6 +133,7 @@ class RssFeedTest extends TestCase
         string $slug,
         string $channelSlug = 'notice',
         string $channelName = '公告',
+        string $excerpt = '摘要',
     ): array {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $channel = Channel::factory()->create(['name' => $channelName, 'slug' => $channelSlug]);
@@ -119,7 +142,7 @@ class RssFeedTest extends TestCase
             'author_id' => $admin->id,
             'title' => $title,
             'slug' => $slug,
-            'excerpt' => '摘要',
+            'excerpt' => $excerpt,
             'markdown_body' => '正文',
             'html_body' => '<p>正文</p>',
             'is_published' => true,

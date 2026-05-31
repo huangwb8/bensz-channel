@@ -20,7 +20,7 @@
 - 发布release
 
 ```
-创建tag v1.42.4；/git-commit; /git-publish-release。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub 。  
+创建tag v1.42.5；/git-commit; /git-publish-release。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub （本地直接生成镜像并推送到 dockerhub，不要走github action路径） 。  
 ```
 
 - 保持skill的最新兼容性
@@ -535,7 +535,7 @@ SITE_TAGLINE = "类 QQ 频道的 Web 社区原型，支持静态游客访问与�
   - 微信扫码
   - QQ扫码
 
-使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
+  使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
 
 ---
 
@@ -562,7 +562,7 @@ SITE_TAGLINE = "类 QQ 频道的 Web 社区原型，支持静态游客访问与�
 - RSS功能
   - 用户可以选择通过SMTP订阅某个版块（包括全部）的文章
 
-SMTP仅限注册用户；而RSS则有一个链接就可以订阅。
+  SMTP仅限注册用户；而RSS则有一个链接就可以订阅。
 
 ---
 

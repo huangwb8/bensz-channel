@@ -51,27 +51,35 @@ class RssFeedBuilder
         $channelElement = $dom->createElement('channel');
         $rss->appendChild($channelElement);
 
-        $channelElement->appendChild($dom->createElement('title', $title));
-        $channelElement->appendChild($dom->createElement('link', $siteUrl));
-        $channelElement->appendChild($dom->createElement('description', $description));
-        $channelElement->appendChild($dom->createElement('language', 'zh-CN'));
-        $channelElement->appendChild($dom->createElement('lastBuildDate', now()->toRssString()));
+        $channelElement->appendChild($this->createTextElement($dom, 'title', $title));
+        $channelElement->appendChild($this->createTextElement($dom, 'link', $siteUrl));
+        $channelElement->appendChild($this->createTextElement($dom, 'description', $description));
+        $channelElement->appendChild($this->createTextElement($dom, 'language', 'zh-CN'));
+        $channelElement->appendChild($this->createTextElement($dom, 'lastBuildDate', now()->toRssString()));
 
         foreach ($articles as $article) {
             $item = $dom->createElement('item');
-            $item->appendChild($dom->createElement('title', $article->title));
-            $item->appendChild($dom->createElement('link', route('articles.show', [$article->channel, $article])));
-            $item->appendChild($dom->createElement('guid', route('articles.show', [$article->channel, $article])));
-            $item->appendChild($dom->createElement('pubDate', optional($article->published_at)->toRssString() ?: now()->toRssString()));
-            $item->appendChild($dom->createElement('description', $article->excerpt ?: strip_tags($article->html_body)));
+            $item->appendChild($this->createTextElement($dom, 'title', $article->title));
+            $item->appendChild($this->createTextElement($dom, 'link', route('articles.show', [$article->channel, $article])));
+            $item->appendChild($this->createTextElement($dom, 'guid', route('articles.show', [$article->channel, $article])));
+            $item->appendChild($this->createTextElement($dom, 'pubDate', optional($article->published_at)->toRssString() ?: now()->toRssString()));
+            $item->appendChild($this->createTextElement($dom, 'description', $article->excerpt ?: strip_tags($article->html_body)));
 
             foreach ($article->tags ?? [] as $tag) {
-                $item->appendChild($dom->createElement('category', $tag->name));
+                $item->appendChild($this->createTextElement($dom, 'category', $tag->name));
             }
 
             $channelElement->appendChild($item);
         }
 
         return $dom->saveXML() ?: '';
+    }
+
+    private function createTextElement(DOMDocument $dom, string $name, string $value): \DOMElement
+    {
+        $element = $dom->createElement($name);
+        $element->appendChild($dom->createTextNode($value));
+
+        return $element;
     }
 }
