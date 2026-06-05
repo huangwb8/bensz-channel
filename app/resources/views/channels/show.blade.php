@@ -9,7 +9,7 @@
                 <p class="text-sm text-gray-500">{{ $currentChannel->description }}</p>
             </div>
             <div class="ml-auto flex flex-wrap items-center justify-end gap-2 text-sm text-gray-500">
-                <span>共 {{ $channelArticles->count() }} 篇文章</span>
+                <span>共 {{ $channelArticles->total() }} 篇文章</span>
                 <button
                     data-copy-rss="{{ route('feeds.channels.show', $currentChannel) }}"
                     class="icon-action"
@@ -87,5 +87,7 @@
                 <p>这个频道还没有内容，稍后再来看看。</p>
             </div>
         @endforelse
+
+        @include('partials.pagination', ['paginator' => $channelArticles])
     </section>
 @endsection

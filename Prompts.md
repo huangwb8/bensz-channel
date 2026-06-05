@@ -20,7 +20,7 @@
 - 发布release
 
 ```
-创建tag v1.42.5；/git-commit; /git-publish-release。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub （本地直接生成镜像并推送到 dockerhub，不要走github action路径） 。  
+创建tag v1.42.6；/git-commit; /git-publish-release。 然后触发一次docker image构建的github action，切实地将最新的image推送至 docker hub （本地直接生成镜像并推送到 dockerhub，不要走github action路径） 。  
 ```
 
 - 保持skill的最新兼容性
@@ -36,6 +36,10 @@ cd /docker/bensz-channel; docker compose down; docker compose pull; docker compo
 ```
 
 # 日常
+
+---
+
+在全部版块中，默认展示的是最新的12篇文章而不是全部文章（从新到旧排列）。这肯定不合适； 因为用户可能会想看较旧的文章。 请优化这个逻辑。
 
 ---
 

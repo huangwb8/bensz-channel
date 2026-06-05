@@ -82,7 +82,7 @@
                 @endif
             </h2>
             <span class="text-sm text-gray-500">
-                共 {{ $latestArticles->count() }} 篇
+                共 {{ $articleTotal }} 篇
             </span>
         </div>
 
@@ -146,5 +146,7 @@
                 </div>
             @endforelse
         </div>
+
+        @include('partials.pagination', ['paginator' => $latestArticles])
     </section>
 @endsection

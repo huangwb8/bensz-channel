@@ -56,6 +56,26 @@ class StaticHtmlCachingConfigTest extends TestCase
         );
     }
 
+    public function test_static_html_routes_bypass_snapshot_for_query_strings(): void
+    {
+        $configPath = dirname(base_path()).'/docker/nginx/default.conf';
+
+        $this->assertFileExists($configPath);
+
+        $config = (string) file_get_contents($configPath);
+
+        $this->assertStringContainsString(
+            'if ($args != "") {',
+            $config,
+            '带查询参数的请求必须回源动态页，确保分页等动态列表不被静态快照覆盖。'
+        );
+        $this->assertStringContainsString(
+            'set $serve_static 0;',
+            $config,
+            '查询参数命中后必须禁用静态直出。'
+        );
+    }
+
     private function extractLocationBlock(string $config, string $signature): string
     {
         $offset = strpos($config, $signature);

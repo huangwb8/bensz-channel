@@ -6,6 +6,23 @@
 
 ## [Unreleased]
 
+### Added（新增）
+
+- 新增了 BAC 贡献记录账本：`docs/contribution.bac` 现按 `init-project` v2.3.0 默认规范初始化，用于记录人类、AI 与工具协作过程
+- 新增了 `AGENTS.md` 的"项目目录约定"与"贡献记录"章节：明确 `docs/plans/`、`scripts/test/`、`tmp/`、`self/` 的目录边界，以及 `docs/contribution.bac` 的启用、安全和审计约定
+
+### Changed（变更）
+
+- 优化了公共文章列表展示逻辑：`app/app/Support/CommunityViewData.php`、`app/resources/views/home.blade.php`、`app/resources/views/channels/show.blade.php` 与 `app/resources/views/partials/pagination.blade.php` 现将首页全部文章和频道文章列表改为分页展示，保留从新到旧排序，并允许用户继续翻阅较旧文章
+- 优化了静态快照回源策略：`docker/nginx/default.conf` 现会让带查询参数的首页/频道页请求回源 Laravel 动态页，避免分页链接被静态第一页覆盖
+- 优化了 Web 镜像构建的 PECL Redis 安装流程：`docker/web/Dockerfile` 现会先更新 `pecl.php.net` 通道元数据，再安装 Redis 扩展，降低本地缓存构建时因 PECL 通道元数据陈旧导致的构建失败概率
+- 优化了 `AGENTS.md` 的 Codex CLI、代码优化、文档同步与变更记录规范：对齐 `init-project` 最新必需章节，明确计划文档统一放入 `docs/plans/`，并要求影响项目行为、结构、工作流、工程原则、指令文件或关键配置的变更优先写入 `[Unreleased]`
+- 更新了项目版本号：`app/config.toml` 已同步推进到 `1.42.6`
+
+### Fixed（修复）
+
+- 修复了“全部版块”固定只展示最新 12 篇文章、旧文章没有访问入口的问题：`app/tests/Feature/Articles/PublicArticlePaginationTest.php` 与 `app/tests/Feature/Static/StaticHtmlCachingConfigTest.php` 已补充回归覆盖
+
 ## [1.42.5] - 2026-05-31
 
 ### Added（新增）

@@ -12,6 +12,9 @@ use Illuminate\Support\Collection;
 
 class CommunityViewData
 {
+    private const HOME_ARTICLES_PER_PAGE = 12;
+    private const CHANNEL_ARTICLES_PER_PAGE = 20;
+
     public function __construct(
         private readonly ArticleBodyFormatter $articleBodyFormatter,
         private readonly SeoMetadataFactory $seoMetadataFactory,
@@ -57,13 +60,16 @@ class CommunityViewData
             'pageTitle' => null,
             'seo' => $this->seoMetadataFactory->forHome(),
             'pinnedArticle' => $pinnedArticle,
+            'articleTotal' => Article::query()
+                ->published()
+                ->count(),
             'latestArticles' => Article::query()
                 ->published()
                 ->when($pinnedArticle instanceof Article, fn ($query) => $query->whereKeyNot($pinnedArticle->id))
                 ->with(['channel', 'author', 'tags'])
                 ->latestPublished()
-                ->limit(12)
-                ->get(),
+                ->paginate(self::HOME_ARTICLES_PER_PAGE)
+                ->withQueryString(),
         ];
     }
 
@@ -86,8 +92,8 @@ class CommunityViewData
             'currentChannel' => $channel,
             'seo' => $this->seoMetadataFactory->forChannel($channel),
             'channelArticles' => $articleQuery
-                ->limit(20)
-                ->get(),
+                ->paginate(self::CHANNEL_ARTICLES_PER_PAGE)
+                ->withQueryString(),
         ];
     }
 

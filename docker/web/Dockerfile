@@ -51,6 +51,7 @@ RUN apk add --no-cache \
     supervisor \
     $PHPIZE_DEPS \
     && docker-php-ext-install intl opcache pdo_pgsql zip \
+    && pecl channel-update pecl.php.net \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del $PHPIZE_DEPS
