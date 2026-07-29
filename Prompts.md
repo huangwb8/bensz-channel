@@ -29,13 +29,17 @@
 根据目前项目的最新代码， skills/bensz-channel-devtools 要不要调整下？ 使用 awesome-code skill 辅助规划、优化。所有问题都要解决。 如果工作时有疑问，或者有更好的方案，自己选个最优方案优化，不要问我。不要破坏其它功能。要保证最终成品能正常、稳定、高效地工作。 docker重新布署后供我审查。
 ```
 
-- RN3服务器里更新
+- `ssh rn3`RN3服务器里更新
 
 ```
 cd /docker/bensz-channel; docker compose down; docker compose pull; docker compose up -d
 ```
 
 # 日常
+
+---
+
+最近，我发现我布署的channel不能正常工作了。 你帮我ssh rn3进去  /docker/bensz-channel 文件夹里，调查一下是怎么回事。 然后在 docs/events 里写一个调查报告。 我实际的网站是 https://channel.benszresearch.com 
 
 ---
 

@@ -8,6 +8,7 @@
 
 ### Added（新增）
 
+- 新增了 Channel 公网域名故障调查报告：`docs/events/2026-07-29-channel-public-domain-outage-investigation.md` 记录 `channel.benszresearch.com` 的 DNS、反向代理与应用健康证据，定位域名入口缺失这一技术根因，并给出恢复与复验建议
 - 新增了 BAC 贡献记录账本：`docs/contribution.bac` 现按 `init-project` v2.3.0 默认规范初始化，用于记录人类、AI 与工具协作过程
 - 新增了 `AGENTS.md` 的"项目目录约定"与"贡献记录"章节：明确 `docs/plans/`、`scripts/test/`、`tmp/`、`self/` 的目录边界，以及 `docs/contribution.bac` 的启用、安全和审计约定
 

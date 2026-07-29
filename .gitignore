@@ -105,6 +105,7 @@ build/
 # 示例：
 # local-config.yml
 *.backup
+.bensz-api/
 
 self/
 
